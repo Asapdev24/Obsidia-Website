@@ -76,7 +76,7 @@ function AutomationPanel({ visible }: { visible: boolean }) {
           return (
             <g key={n.id}>
               <rect x={n.cx - 14} y={n.cy - 12} width={28} height={24} rx={2}
-                fill={isActive ? '#1C1010' : '#161616'}
+                fill={isActive ? '#0D1020' : '#111318'}
                 stroke={isActive ? 'var(--accent)' : '#2A2A28'}
                 strokeWidth={0.8} />
               {isActive && <rect x={n.cx - 14} y={n.cy - 12} width={2.5} height={24} rx={1} fill="var(--accent)" />}
@@ -229,7 +229,7 @@ function AppPanel({ visible }: { visible: boolean }) {
                 style={{ transition: 'fill 300ms ease' }} />
               {isActive && <rect x="80" y={y} width="2.5" height="22" fill="var(--accent)" />}
               <rect x="88" y={y + 6} width="10" height="10" rx="2"
-                fill={isActive ? '#1C1010' : '#161616'}
+                fill={isActive ? '#0D1020' : '#111318'}
                 stroke={isActive ? 'var(--accent)' : '#2A2A28'} strokeWidth="0.6" />
               <text x="94" y={y + 13} textAnchor="middle" dominantBaseline="middle"
                 fontFamily="var(--font-mono), monospace" fontSize="5.5"
@@ -301,23 +301,6 @@ export default function ServiceTriptych() {
         What We Build
       </div>
 
-      {/* Status dot */}
-      <div style={{
-        position: 'absolute', top: '22px', right: '24px', zIndex: 2,
-        display: 'flex', alignItems: 'center', gap: '6px',
-      }}>
-        <div style={{
-          width: '6px', height: '6px', borderRadius: '50%',
-          backgroundColor: '#22C55E',
-          animation: 'statPulse 2s ease-in-out infinite',
-        }} />
-        <span style={{
-          fontFamily: 'var(--font-body), sans-serif',
-          fontSize: '9px', letterSpacing: '0.14em', textTransform: 'uppercase', color: '#3A3A38',
-        }}>
-          Active
-        </span>
-      </div>
 
       {/* Three panels */}
       {panels.map(({ key, Panel }, i) => (
@@ -327,7 +310,7 @@ export default function ServiceTriptych() {
             position: 'relative',
             zIndex: 1,
             borderRight: i < 2 ? '1px solid transparent' : 'none',
-            backgroundImage: i < 2 ? 'linear-gradient(#0A0A0A, #0A0A0A), linear-gradient(180deg, #3D52E6, #7B4FD4)' : 'none',
+            backgroundImage: i < 2 ? 'linear-gradient(var(--dark-bg), var(--dark-bg)), linear-gradient(180deg, var(--accent), var(--violet))' : 'none',
             backgroundOrigin: i < 2 ? 'border-box' : 'initial',
             backgroundClip: i < 2 ? 'padding-box, border-box' : 'initial',
             opacity: visible ? 1 : 0,

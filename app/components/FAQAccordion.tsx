@@ -1,36 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-
-const FAQS = [
-  {
-    q: 'What kinds of workflows can you automate?',
-    a: 'Anything that has a clear trigger and a repeatable outcome — approval chains, data syncing between tools, report generation, lead routing, invoice processing, onboarding sequences, and more. If your team does it manually on a schedule or in response to an event, it can almost certainly be automated.',
-  },
-  {
-    q: 'How long does a typical project take?',
-    a: 'Most workflows go live within 4–6 weeks of the first conversation. Simple, single-system automations can be done in under two weeks. Multi-system integrations with complex logic take longer. We give you a realistic timeline after the audit — not before.',
-  },
-  {
-    q: 'Do we need any technical knowledge on our end?',
-    a: 'No. We handle all the technical work. You need to be able to describe your current process clearly and tell us what a good outcome looks like. We do the architecture, the build, and the documentation. Your team learns to monitor the output, not the code.',
-  },
-  {
-    q: 'Which tools do you work with?',
-    a: 'We work with any tool that has an API or native integration support — n8n, Make, Zapier, HubSpot, Notion, Airtable, Slack, Google Workspace, Monday.com, and many others. If the tool exists, there is almost certainly a way to connect it.',
-  },
-  {
-    q: 'What happens if something breaks after launch?',
-    a: 'The first 30 days of fixes are included at no charge. We monitor for errors during that period and resolve anything that surfaces. After 30 days, optional maintenance packages are available. Every workflow comes with full documentation so you\'re never dependent on us.',
-  },
-  {
-    q: 'How is Obsidia different from hiring a developer or using a no-code tool ourselves?',
-    a: 'A developer builds to your brief — which means you need to know what to brief. A no-code tool requires your team to learn it, maintain it, and debug it. We do all three: we map the process, design the logic, build the automation, and hand it over with documentation. You get the outcome without the overhead.',
-  },
-];
+import { useTranslations } from 'next-intl';
 
 interface ItemProps {
-  faq: typeof FAQS[0];
+  faq: { q: string; a: string };
   index: number;
   isOpen: boolean;
   onToggle: () => void;
@@ -46,6 +20,8 @@ function FAQItem({ faq, index, isOpen, onToggle, dark = false }: ItemProps) {
     >
       <button
         onClick={onToggle}
+        aria-expanded={isOpen}
+        aria-controls={`faq-panel-${index}`}
         style={{
           width: '100%',
           display: 'flex',
@@ -118,12 +94,15 @@ function FAQItem({ faq, index, isOpen, onToggle, dark = false }: ItemProps) {
       </button>
 
       <div
+        id={`faq-panel-${index}`}
+        role="region"
         style={{
-          overflow: 'hidden',
-          maxHeight: isOpen ? '300px' : '0px',
-          transition: 'max-height 420ms cubic-bezier(0.22, 1, 0.36, 1)',
+          display: 'grid',
+          gridTemplateRows: isOpen ? '1fr' : '0fr',
+          transition: 'grid-template-rows 420ms cubic-bezier(0.22, 1, 0.36, 1)',
         }}
       >
+      <div style={{ overflow: 'hidden', minHeight: 0 }}>
         <p
           className="font-body"
           style={{
@@ -138,6 +117,7 @@ function FAQItem({ faq, index, isOpen, onToggle, dark = false }: ItemProps) {
           {faq.a}
         </p>
       </div>
+      </div>
     </div>
   );
 }
@@ -150,10 +130,15 @@ interface FAQAccordionProps {
 
 export default function FAQAccordion({
   dark = false,
-  heading = 'Common questions.',
-  label = 'FAQ',
+  heading,
+  label,
 }: FAQAccordionProps) {
+  const t = useTranslations('faq');
+  const resolvedHeading = heading ?? t('defaultHeading');
+  const resolvedLabel = label ?? t('defaultLabel');
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+
+  const FAQS = [0, 1, 2, 3, 4, 5].map(i => ({ q: t(`q${i}`), a: t(`a${i}`) }));
 
   return (
     <div>
@@ -167,7 +152,7 @@ export default function FAQAccordion({
           }}
         >
           <span style={dark ? { '--label-line-color': 'var(--accent)' } as React.CSSProperties : {}}>
-            {label}
+            {resolvedLabel}
           </span>
         </div>
         <h2
@@ -180,7 +165,7 @@ export default function FAQAccordion({
             lineHeight: 1.1,
           }}
         >
-          {heading}
+          {resolvedHeading}
         </h2>
       </div>
 

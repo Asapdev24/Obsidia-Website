@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useState, ReactNode } from 'react';
+import { useRef, ReactNode } from 'react';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
 
 interface MagneticButtonProps {
   children: ReactNode;
@@ -10,8 +11,12 @@ interface MagneticButtonProps {
 
 export default function MagneticButton({ children, strength = 0.28, radius = 80 }: MagneticButtonProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [active, setActive] = useState(false);
+
+  const rawX = useMotionValue(0);
+  const rawY = useMotionValue(0);
+
+  const x = useSpring(rawX, { stiffness: 280, damping: 22, mass: 0.6 });
+  const y = useSpring(rawY, { stiffness: 280, damping: 22, mass: 0.6 });
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const rect = ref.current!.getBoundingClientRect();
@@ -22,33 +27,27 @@ export default function MagneticButton({ children, strength = 0.28, radius = 80 
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     if (dist < radius) {
-      setActive(true);
-      setOffset({ x: dx * strength, y: dy * strength });
+      rawX.set(dx * strength);
+      rawY.set(dy * strength);
     } else {
-      setActive(false);
-      setOffset({ x: 0, y: 0 });
+      rawX.set(0);
+      rawY.set(0);
     }
   };
 
   const handleMouseLeave = () => {
-    setActive(false);
-    setOffset({ x: 0, y: 0 });
+    rawX.set(0);
+    rawY.set(0);
   };
 
   return (
-    <div
+    <motion.div
       ref={ref}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      style={{
-        display: 'inline-block',
-        transform: `translate(${offset.x}px, ${offset.y}px)`,
-        transition: active
-          ? 'transform 120ms cubic-bezier(0.22, 1, 0.36, 1)'
-          : 'transform 500ms cubic-bezier(0.22, 1, 0.36, 1)',
-      }}
+      style={{ display: 'inline-block', x, y }}
     >
       {children}
-    </div>
+    </motion.div>
   );
 }

@@ -1,86 +1,137 @@
-﻿'use client';
+'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { ArrowRight, ArrowLeft, Check, Mail } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Link } from '@/i18n/navigation';
+import { ArrowRight, ArrowLeft, Check, Mail, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import FAQAccordion from '../components/FAQAccordion';
 
-/* ── Constants ────────────────────────────────────────────── */
-const BUDGET   = ['Under $2k', '$2k – $5k', '$5k – $10k', '$10k+', 'Not sure yet'];
-const TIMELINE = ['As soon as possible', 'Within 1 month', '1–3 months', 'Just exploring'];
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+const EMAIL = 'sales@obsidia.space';
 
-const PROCESS = [
-  { n: '01', title: 'Brief reviewed',    sub: 'Within one hour'         },
-  { n: '02', title: 'Discovery call',    sub: 'Scheduled in 24 hours'   },
-  { n: '03', title: 'Scope document',    sub: 'Delivered within 3 days' },
+/* ── Platform detection ───────────────────────────────────── */
+const EMAIL_CLIENTS = [
+  { label: 'Gmail',            icon: 'G', url: () => `https://mail.google.com/mail/?view=cm&to=${EMAIL}`, platforms: ['all'] },
+  { label: 'Outlook',          icon: 'O', url: () => `https://outlook.office.com/mail/deeplink/compose?to=${EMAIL}`, platforms: ['all'] },
+  { label: 'Apple Mail',       icon: 'A', url: () => `mailto:${EMAIL}`, platforms: ['ios', 'mac'] },
+  { label: 'Default mail app', icon: 'D', url: () => `mailto:${EMAIL}`, platforms: ['android', 'other'] },
 ];
 
-const STEP_LABELS = ['About you', 'Your challenge', 'Scope'];
+function detectPlatform(): 'ios' | 'mac' | 'android' | 'other' {
+  if (typeof navigator === 'undefined') return 'other';
+  const ua = navigator.userAgent;
+  if (/iPad|iPhone|iPod/.test(ua)) return 'ios';
+  if (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) return 'ios';
+  if (/Macintosh/.test(ua)) return 'mac';
+  if (/Android/.test(ua)) return 'android';
+  return 'other';
+}
 
-/* ── Pill selector ─────────────────────────────────────────── */
-function PillGrid({
-  options,
-  value,
-  onChange,
-}: {
-  options: string[];
-  value: string;
-  onChange: (v: string) => void;
-}) {
+/* ── Email chooser ─────────────────────────────────────────── */
+function EmailChooser({ email }: { email: string }) {
+  const t = useTranslations('contact');
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const platform = detectPlatform();
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const visibleClients = EMAIL_CLIENTS.filter(
+    c => c.platforms.includes('all') || c.platforms.includes(platform)
+  );
+
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-      {options.map((opt) => {
-        const active = value === opt;
-        return (
-          <button
-            key={opt}
-            type="button"
-            onClick={() => onChange(active ? '' : opt)}
+    <div ref={ref} style={{ position: 'relative', display: 'inline-flex' }}>
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: '10px',
+          fontFamily: 'var(--font-body), sans-serif', fontSize: '13px',
+          color: 'rgba(13,17,71,0.5)', background: 'none', border: 'none',
+          padding: 0, cursor: 'pointer', transition: 'color 200ms ease',
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--accent)'; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(13,17,71,0.5)'; }}
+        aria-haspopup="listbox" aria-expanded={open}
+      >
+        <Mail size={12} color="var(--accent)" strokeWidth={1.5} />
+        {email}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            role="listbox"
+            initial={{ opacity: 0, y: 6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.97 }}
+            transition={{ duration: 0.18, ease: EASE }}
             style={{
-              fontFamily: 'var(--font-body), sans-serif',
-              fontSize: '12px',
-              fontWeight: 500,
-              letterSpacing: '0.04em',
-              padding: '9px 20px',
-              border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-              backgroundColor: active ? 'var(--accent)' : 'transparent',
-              color: active ? '#FFFFFF' : 'var(--text-secondary)',
-              cursor: 'pointer',
-              transition: 'border-color 180ms ease, background-color 180ms ease, color 180ms ease',
-            }}
-            onMouseEnter={(e) => {
-              if (!active) {
-                (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-strong)';
-                (e.currentTarget as HTMLElement).style.color = 'var(--text)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!active) {
-                (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)';
-                (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
-              }
+              position: 'absolute', bottom: 'calc(100% + 10px)', left: 0,
+              backgroundColor: '#1A1A18', border: '1px solid rgba(255,255,255,0.1)',
+              padding: '6px', minWidth: '210px', zIndex: 200,
+              boxShadow: '0 16px 48px rgba(0,0,0,0.38)',
             }}
           >
-            {opt}
-          </button>
-        );
-      })}
+            <p style={{
+              fontFamily: 'var(--font-mono), monospace', fontSize: '9px',
+              fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase',
+              color: 'rgba(220,225,248,0.25)', padding: '6px 10px 8px',
+            }}>
+              {t('openWith')}
+            </p>
+            {visibleClients.map(client => (
+              <a
+                key={client.label}
+                href={client.url()}
+                target={client.label !== 'Apple Mail' && client.label !== 'Default mail app' ? '_blank' : undefined}
+                rel="noreferrer noopener"
+                onClick={() => setOpen(false)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '12px',
+                  padding: '9px 10px',
+                  fontFamily: 'var(--font-body), sans-serif', fontSize: '13px',
+                  color: 'rgba(220,225,248,0.7)', textDecoration: 'none',
+                  transition: 'background 150ms ease, color 150ms ease',
+                }}
+                onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.06)'; el.style.color = '#DCE1F5'; }}
+                onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'rgba(220,225,248,0.7)'; }}
+              >
+                <span style={{
+                  width: '22px', height: '22px',
+                  backgroundColor: 'rgba(255,255,255,0.07)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: 'var(--font-mono), monospace', fontSize: '9px',
+                  color: 'rgba(220,225,248,0.4)', flexShrink: 0,
+                }}>
+                  {client.icon}
+                </span>
+                {client.label}
+              </a>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-/* ── Form input (underline style) ─────────────────────────── */
+/* ── Light input field — animated cobalt underline on focus ── */
 interface FieldProps {
-  label: string;
-  name: string;
-  type?: string;
-  value: string;
+  label: string; name: string; type?: string; value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  required?: boolean;
-  placeholder?: string;
-  autoFocus?: boolean;
+  required?: boolean; placeholder?: string; autoFocus?: boolean;
 }
-
 function Field({ label, name, type = 'text', value, onChange, required, placeholder, autoFocus }: FieldProps) {
   const [focused, setFocused] = useState(false);
   return (
@@ -88,838 +139,999 @@ function Field({ label, name, type = 'text', value, onChange, required, placehol
       <label style={{
         display: 'block',
         fontFamily: 'var(--font-body), sans-serif',
-        fontSize: '10px',
-        fontWeight: 600,
-        letterSpacing: '0.16em',
-        textTransform: 'uppercase',
-        color: focused ? 'var(--accent)' : 'var(--text-muted)',
-        marginBottom: '9px',
-        transition: 'color 200ms ease',
-        userSelect: 'none',
+        fontSize: '11px', fontWeight: 400, letterSpacing: '0.03em',
+        marginBottom: '8px',
+        color: focused ? 'var(--accent)' : 'rgba(13,17,71,0.38)',
+        transition: 'color 220ms ease', userSelect: 'none',
       }}>
         {label}
-        {required && <span style={{ color: 'var(--accent)', marginLeft: '3px' }}>*</span>}
+        {required && <span style={{ color: 'var(--accent)', marginLeft: '4px' }}>*</span>}
       </label>
-      <input
-        name={name}
-        type={type}
-        value={value}
-        onChange={onChange}
-        required={required}
-        placeholder={placeholder}
-        autoFocus={autoFocus}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        style={{
-          width: '100%',
-          padding: '10px 0',
-          fontFamily: 'var(--font-body), sans-serif',
-          fontSize: '15px',
-          color: 'var(--text)',
-          backgroundColor: 'transparent',
-          border: 'none',
-          borderBottom: `1px solid ${focused ? 'var(--accent)' : 'var(--border)'}`,
-          outline: 'none',
-          boxSizing: 'border-box',
-          transition: 'border-color 200ms ease',
-        }}
-      />
-    </div>
-  );
-}
-
-/* ── Progress indicator ───────────────────────────────────── */
-function Progress({ step }: { step: number }) {
-  return (
-    <div style={{ marginBottom: '52px' }}>
-      <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            style={{
-              flex: 1,
-              height: '2px',
-              backgroundColor: i <= step ? 'var(--accent)' : 'var(--border)',
-              transition: 'background-color 400ms ease',
-            }}
-          />
-        ))}
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{
-          fontFamily: 'var(--font-mono), monospace',
-          fontSize: '10px',
-          letterSpacing: '0.1em',
-          color: 'var(--text-muted)',
-        }}>
-          {String(step).padStart(2, '0')} / 03
-        </span>
-        <span style={{
-          fontFamily: 'var(--font-body), sans-serif',
-          fontSize: '10px',
-          fontWeight: 600,
-          letterSpacing: '0.14em',
-          textTransform: 'uppercase',
-          color: 'var(--accent)',
-        }}>
-          {STEP_LABELS[step - 1]}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/* ── Step 1: About you ────────────────────────────────────── */
-function Step1({
-  form,
-  onChange,
-}: {
-  form: { name: string; company: string; email: string; role: string };
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}) {
-  return (
-    <div>
-      <div style={{ marginBottom: '44px' }}>
-        <h2 className="font-heading" style={{
-          fontSize: 'clamp(28px, 3vw, 42px)',
-          fontWeight: 500,
-          letterSpacing: '-0.025em',
-          color: 'var(--text)',
-          lineHeight: 1.05,
-          marginBottom: '10px',
-        }}>
-          First, who are you?
-        </h2>
-        <p className="font-body" style={{ fontSize: '14px', lineHeight: 1.7, color: 'var(--text-secondary)' }}>
-          We&rsquo;ll use this to personalize our reply.
-        </p>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px' }} className="form-two-col">
-          <Field label="Your name" name="name" value={form.name} onChange={onChange} required autoFocus />
-          <Field label="Company" name="company" value={form.company} onChange={onChange} />
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px' }} className="form-two-col">
-          <Field label="Work email" name="email" type="email" value={form.email} onChange={onChange} required />
-          <Field label="Your role" name="role" value={form.role} onChange={onChange} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Step 2: Description ──────────────────────────────────── */
-function Step2({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-}) {
-  const [focused, setFocused] = useState(false);
-  const words = value.trim().split(/\s+/).filter(Boolean).length;
-  const ready = words >= 10;
-
-  return (
-    <div>
-      <div style={{ marginBottom: '44px' }}>
-        <h2 className="font-heading" style={{
-          fontSize: 'clamp(28px, 3vw, 42px)',
-          fontWeight: 500,
-          letterSpacing: '-0.025em',
-          color: 'var(--text)',
-          lineHeight: 1.05,
-          marginBottom: '10px',
-        }}>
-          What&rsquo;s slowing you down?
-        </h2>
-        <p className="font-body" style={{ fontSize: '14px', lineHeight: 1.7, color: 'var(--text-secondary)' }}>
-          Describe the process as if explaining it to a new colleague.
-        </p>
-      </div>
-
-      <div>
-        <label style={{
-          display: 'block',
-          fontFamily: 'var(--font-body), sans-serif',
-          fontSize: '10px',
-          fontWeight: 600,
-          letterSpacing: '0.16em',
-          textTransform: 'uppercase',
-          color: focused ? 'var(--accent)' : 'var(--text-muted)',
-          marginBottom: '10px',
-          transition: 'color 200ms ease',
-          userSelect: 'none',
-        }}>
-          Describe the process
-          <span style={{ color: 'var(--accent)', marginLeft: '3px' }}>*</span>
-        </label>
-        <textarea
-          name="description"
-          value={value}
-          onChange={onChange}
-          required
-          rows={7}
-          autoFocus
-          placeholder="e.g. Every Monday, someone on my team spends two hours pulling numbers from our CRM, pasting them into a spreadsheet, formatting a table, and emailing a PDF to eight stakeholders. It's always late and occasionally wrong."
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
+      <div style={{ position: 'relative' }}>
+        <input
+          name={name} type={type} value={value} onChange={onChange}
+          required={required} placeholder={placeholder} autoFocus={autoFocus}
+          onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
           style={{
-            width: '100%',
-            padding: '12px 0',
-            fontFamily: 'var(--font-body), sans-serif',
-            fontSize: '14px',
-            lineHeight: 1.75,
-            color: 'var(--text)',
-            backgroundColor: 'transparent',
-            border: 'none',
-            borderBottom: `1px solid ${focused ? 'var(--accent)' : 'var(--border)'}`,
-            outline: 'none',
-            resize: 'none',
-            boxSizing: 'border-box',
-            transition: 'border-color 200ms ease',
+            width: '100%', padding: '10px 0',
+            fontFamily: 'var(--font-body), sans-serif', fontSize: '15px',
+            color: '#0D1147', backgroundColor: 'transparent',
+            border: 'none', borderBottom: '1px solid rgba(13,17,71,0.1)',
+            outline: 'none', boxSizing: 'border-box',
           }}
         />
+        {/* Cobalt underline grows from left on focus */}
         <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginTop: '8px',
-        }}>
-          <span style={{
-            fontFamily: 'var(--font-body), sans-serif',
-            fontSize: '11px',
-            color: 'var(--text-muted)',
-            lineHeight: 1.5,
-            maxWidth: '320px',
-          }}>
-            {!ready && 'A few sentences is enough.'}
-          </span>
-          <span style={{
-            fontFamily: 'var(--font-mono), monospace',
-            fontSize: '10px',
-            color: ready ? 'var(--accent)' : 'var(--text-muted)',
-            letterSpacing: '0.06em',
-            transition: 'color 300ms ease',
-            whiteSpace: 'nowrap',
-          }}>
-            {words} {words === 1 ? 'word' : 'words'}{ready ? ' ✓' : ''}
-          </span>
-        </div>
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: '1.5px',
+          backgroundColor: 'var(--accent)',
+          transform: focused ? 'scaleX(1)' : 'scaleX(0)',
+          transformOrigin: 'left center',
+          transition: focused
+            ? 'transform 320ms cubic-bezier(0.22,1,0.36,1)'
+            : 'transform 240ms cubic-bezier(0.76,0,0.24,1)',
+          pointerEvents: 'none',
+        }} />
       </div>
     </div>
   );
 }
 
-/* ── Step 3: Scope ────────────────────────────────────────── */
-function Step3({
-  budget,
-  timeline,
-  onBudget,
-  onTimeline,
-}: {
-  budget: string;
-  timeline: string;
-  onBudget: (v: string) => void;
-  onTimeline: (v: string) => void;
+/* ── Custom select — smooth dropdown, checkbox options ────── */
+function CustomSelect({ label, options, value, onChange, required, multi }: {
+  label: string; options: string[];
+  value: string | string[]; onChange: (v: string | string[]) => void;
+  required?: boolean; multi?: boolean;
 }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const selected: string[] = Array.isArray(value) ? value : (value ? [value] : []);
+
+  const toggle = (opt: string) => {
+    if (multi) {
+      const next = selected.includes(opt)
+        ? selected.filter(v => v !== opt)
+        : [...selected, opt];
+      (onChange as (v: string[]) => void)(next);
+    } else {
+      (onChange as (v: string) => void)(selected[0] === opt ? '' : opt);
+      setOpen(false);
+    }
+  };
+
+  const displayText = selected.length === 0
+    ? null
+    : multi && selected.length > 1
+    ? `${selected.length} selected`
+    : selected[0];
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <label style={{
+        display: 'block',
+        fontFamily: 'var(--font-body), sans-serif',
+        fontSize: '11px', fontWeight: 400, letterSpacing: '0.03em',
+        marginBottom: '8px',
+        color: open ? 'var(--accent)' : 'rgba(13,17,71,0.38)',
+        transition: 'color 220ms ease', userSelect: 'none',
+      }}>
+        {label}
+        {required && <span style={{ color: 'var(--accent)', marginLeft: '4px' }}>*</span>}
+      </label>
+
+      <div style={{ position: 'relative' }}>
+        <button
+          type="button"
+          onClick={() => setOpen(v => !v)}
+          style={{
+            width: '100%', padding: '10px 28px 10px 0',
+            display: 'flex', alignItems: 'center',
+            background: 'transparent', border: 'none',
+            borderBottom: '1px solid rgba(13,17,71,0.1)',
+            cursor: 'pointer', textAlign: 'left', outline: 'none',
+            fontFamily: 'var(--font-body), sans-serif', fontSize: '15px',
+            color: displayText ? '#0D1147' : 'rgba(13,17,71,0.28)',
+          }}
+        >
+          <span style={{ flex: 1 }}>{displayText ?? 'Select'}</span>
+        </button>
+
+        {/* Chevron */}
+        <ChevronDown
+          size={12}
+          style={{
+            position: 'absolute', right: 0, top: '50%',
+            transform: `translateY(-50%) rotate(${open ? 180 : 0}deg)`,
+            color: open ? 'var(--accent)' : 'rgba(13,17,71,0.28)',
+            transition: 'transform 240ms cubic-bezier(0.22,1,0.36,1), color 220ms ease',
+            pointerEvents: 'none',
+          }}
+        />
+
+        {/* Cobalt underline */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: '1.5px',
+          backgroundColor: 'var(--accent)',
+          transform: open ? 'scaleX(1)' : 'scaleX(0)',
+          transformOrigin: 'left center',
+          transition: open
+            ? 'transform 320ms cubic-bezier(0.22,1,0.36,1)'
+            : 'transform 240ms cubic-bezier(0.76,0,0.24,1)',
+          pointerEvents: 'none',
+        }} />
+
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ opacity: 0, scaleY: 0.9, y: -4 }}
+              animate={{ opacity: 1, scaleY: 1, y: 0 }}
+              exit={{ opacity: 0, scaleY: 0.9, y: -4 }}
+              transition={{ duration: 0.2, ease: EASE }}
+              style={{
+                position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0,
+                backgroundColor: '#FFFFFF',
+                border: '1px solid rgba(13,17,71,0.08)',
+                borderRadius: '12px',
+                boxShadow: '0 12px 48px rgba(13,17,71,0.12), 0 2px 8px rgba(13,17,71,0.06)',
+                zIndex: 300,
+                transformOrigin: 'top center',
+                padding: '6px',
+                overflow: 'hidden',
+              }}
+            >
+              {options.map(opt => {
+                const checked = selected.includes(opt);
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => toggle(opt)}
+                    style={{
+                      width: '100%', display: 'flex', alignItems: 'center', gap: '11px',
+                      padding: '10px 12px', background: 'none', border: 'none',
+                      cursor: 'pointer', textAlign: 'left', borderRadius: '7px',
+                      fontFamily: 'var(--font-body), sans-serif', fontSize: '14px',
+                      color: '#0D1147', transition: 'background 130ms ease',
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(61,82,230,0.05)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
+                  >
+                    <span style={{
+                      width: '15px', height: '15px', flexShrink: 0, borderRadius: '3px',
+                      border: `1.5px solid ${checked ? 'var(--accent)' : 'rgba(13,17,71,0.18)'}`,
+                      backgroundColor: checked ? 'var(--accent)' : 'transparent',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'border-color 140ms ease, background-color 140ms ease',
+                    }}>
+                      {checked && <Check size={9} color="white" strokeWidth={2.5} />}
+                    </span>
+                    {opt}
+                  </button>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+/* ── Step navigator — labeled tabs, cobalt underlines ──────── */
+function StepNavigator({ step, onBack }: { step: number; onBack: () => void }) {
+  const t = useTranslations('contact');
+  const steps = [
+    { n: '01', label: t('step1label') },
+    { n: '02', label: t('step2label') },
+  ];
+
+  return (
+    <div style={{ marginBottom: '44px', borderBottom: '1px solid rgba(13,17,71,0.08)' }}>
+      <div style={{ display: 'flex' }}>
+        {steps.map((s, i) => {
+          const sNum = i + 1;
+          const isActive = step === sNum;
+          const isDone = step > sNum;
+          return (
+            <div
+              key={s.n}
+              onClick={() => { if (isDone) onBack(); }}
+              style={{
+                flex: 1, paddingBottom: '18px',
+                paddingRight: i === 0 ? '24px' : '0',
+                borderBottom: isActive
+                  ? '2.5px solid var(--accent)'
+                  : isDone ? '2.5px solid rgba(61,82,230,0.2)' : '2.5px solid transparent',
+                marginBottom: '-1px',
+                cursor: isDone ? 'pointer' : 'default',
+                transition: 'border-color 380ms cubic-bezier(0.22,1,0.36,1)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{
+                  fontFamily: 'var(--font-mono), monospace',
+                  fontSize: '11px', fontWeight: 600, letterSpacing: '0.18em',
+                  color: isActive ? 'var(--accent)' : isDone ? 'rgba(61,82,230,0.35)' : 'rgba(13,17,71,0.18)',
+                  transition: 'color 380ms ease', flexShrink: 0,
+                }}>
+                  {s.n}
+                </span>
+                <span style={{
+                  fontFamily: 'var(--font-body), sans-serif',
+                  fontSize: '13px', fontWeight: isActive ? 500 : 400,
+                  color: isActive ? '#0D1147' : isDone ? 'rgba(13,17,71,0.32)' : 'rgba(13,17,71,0.22)',
+                  transition: 'color 380ms ease',
+                }}>
+                  {s.label}
+                </span>
+                {isDone && (
+                  <Check size={11} strokeWidth={2.5}
+                    style={{ color: 'rgba(61,82,230,0.42)', flexShrink: 0 }}
+                  />
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── Field group — quiet section dividers ─────────────────── */
+function FieldGroup({ legend, children }: { legend: string; children: React.ReactNode }) {
   return (
     <div>
-      <div style={{ marginBottom: '44px' }}>
-        <h2 className="font-heading" style={{
-          fontSize: 'clamp(28px, 3vw, 42px)',
-          fontWeight: 500,
-          letterSpacing: '-0.025em',
-          color: 'var(--text)',
-          lineHeight: 1.05,
-          marginBottom: '10px',
-        }}>
-          Last details.
-        </h2>
-        <p className="font-body" style={{ fontSize: '14px', lineHeight: 1.7, color: 'var(--text-secondary)' }}>
-          These help us prepare the right questions for your call. Both optional.
-        </p>
+      <div style={{
+        fontFamily: 'var(--font-mono), monospace',
+        fontSize: '8.5px', letterSpacing: '0.2em', textTransform: 'uppercase',
+        color: 'rgba(13,17,71,0.18)', marginBottom: '18px',
+      }}>
+        {legend}
       </div>
+      {children}
+    </div>
+  );
+}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
-        <div>
-          <div style={{
-            fontFamily: 'var(--font-body), sans-serif',
-            fontSize: '10px',
-            fontWeight: 600,
-            letterSpacing: '0.16em',
-            textTransform: 'uppercase',
-            color: 'var(--text-muted)',
-            marginBottom: '16px',
-          }}>
-            Budget range
-          </div>
-          <PillGrid options={BUDGET} value={budget} onChange={onBudget} />
+/* ── Step 1 ───────────────────────────────────────────────── */
+function Step1({
+  form, onChange, onService, error,
+}: {
+  form: { firstName: string; lastName: string; company: string; email: string; service: string[] };
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onService: (v: string[]) => void;
+  error: string;
+}) {
+  const t = useTranslations('contact');
+  const serviceOpts = [t('serviceOpt0'), t('serviceOpt1'), t('serviceOpt2'), t('serviceOpt3'), t('other')];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
+      <FieldGroup legend="Name">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px' }} className="form-two-col">
+          <Field label={t('firstName')} name="firstName" value={form.firstName} onChange={onChange} required autoFocus />
+          <Field label={t('lastName')}  name="lastName"  value={form.lastName}  onChange={onChange} required />
         </div>
-        <div>
-          <div style={{
-            fontFamily: 'var(--font-body), sans-serif',
-            fontSize: '10px',
-            fontWeight: 600,
-            letterSpacing: '0.16em',
-            textTransform: 'uppercase',
-            color: 'var(--text-muted)',
-            marginBottom: '16px',
-          }}>
-            Timeline
-          </div>
-          <PillGrid options={TIMELINE} value={timeline} onChange={onTimeline} />
+      </FieldGroup>
+
+      <FieldGroup legend="Contact">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px' }} className="form-two-col">
+          <Field label={t('email')}   name="email"   type="email" value={form.email}   onChange={onChange} required />
+          <Field label={t('company')} name="company"             value={form.company} onChange={onChange} />
         </div>
-      </div>
+      </FieldGroup>
+
+      <FieldGroup legend="Service needed">
+        <CustomSelect
+          label={t('service')}
+          options={serviceOpts}
+          value={form.service}
+          onChange={v => onService(v as string[])}
+          required
+          multi
+        />
+      </FieldGroup>
+
+      {error && (
+        <p role="alert" style={{
+          fontFamily: 'var(--font-body), sans-serif', fontSize: '12px',
+          color: 'var(--error)', letterSpacing: '0.02em',
+        }}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* ── Step 2 ───────────────────────────────────────────────── */
+function Step2({
+  description, budget, timeline, error,
+  onDescription, onBudget, onTimeline,
+}: {
+  description: string; budget: string; timeline: string; error: string;
+  onDescription: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onBudget: (v: string) => void; onTimeline: (v: string) => void;
+}) {
+  const t = useTranslations('contact');
+  const [focused, setFocused] = useState(false);
+  const words = description.trim().split(/\s+/).filter(Boolean).length;
+  const ready = words >= 10;
+  const budgetOpts   = [t('budgetOpt0'), t('budgetOpt1'), t('budgetOpt2'), t('budgetOpt3'), t('budgetOpt4')];
+  const timelineOpts = [t('timelineOpt0'), t('timelineOpt1'), t('timelineOpt2'), t('timelineOpt3')];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
+      <FieldGroup legend="Brief">
+        <div>
+          <label style={{
+            display: 'block',
+            fontFamily: 'var(--font-body), sans-serif',
+            fontSize: '11px', fontWeight: 400, letterSpacing: '0.03em',
+            marginBottom: '8px',
+            color: focused ? 'var(--accent)' : 'rgba(13,17,71,0.38)',
+            transition: 'color 220ms ease', userSelect: 'none',
+          }}>
+            {t('description')}
+            <span style={{ color: 'var(--accent)', marginLeft: '4px' }}>*</span>
+          </label>
+          <div style={{ position: 'relative' }}>
+            <textarea
+              name="description" value={description} onChange={onDescription}
+              required rows={5} autoFocus
+              placeholder={t('descriptionPlaceholder')}
+              onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+              style={{
+                width: '100%', padding: '10px 0',
+                fontFamily: 'var(--font-body), sans-serif', fontSize: '14px',
+                lineHeight: 1.8, color: '#0D1147', backgroundColor: 'transparent',
+                border: 'none', borderBottom: '1px solid rgba(13,17,71,0.1)',
+                outline: 'none', resize: 'none', boxSizing: 'border-box',
+              }}
+            />
+            <div style={{
+              position: 'absolute', bottom: 0, left: 0, right: 0, height: '1.5px',
+              backgroundColor: 'var(--accent)',
+              transform: focused ? 'scaleX(1)' : 'scaleX(0)',
+              transformOrigin: 'left center',
+              transition: focused
+                ? 'transform 320ms cubic-bezier(0.22,1,0.36,1)'
+                : 'transform 240ms cubic-bezier(0.76,0,0.24,1)',
+              pointerEvents: 'none',
+            }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+            <span style={{
+              fontFamily: 'var(--font-mono), monospace', fontSize: '9px',
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: ready ? 'var(--accent)' : 'rgba(13,17,71,0.18)',
+              transition: 'color 300ms ease',
+            }}>
+              {words} {words === 1 ? 'word' : 'words'}{ready ? ' — ready' : ' — 10 min'}
+            </span>
+          </div>
+        </div>
+      </FieldGroup>
+
+      <FieldGroup legend="Scope">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px' }} className="form-two-col">
+          <CustomSelect label={t('budget')}   options={budgetOpts}   value={budget}   onChange={v => onBudget(v as string)} />
+          <CustomSelect label={t('timeline')} options={timelineOpts} value={timeline} onChange={v => onTimeline(v as string)} />
+        </div>
+      </FieldGroup>
+
+      {error && (
+        <p role="alert" style={{
+          fontFamily: 'var(--font-body), sans-serif', fontSize: '12px',
+          color: 'var(--error)', letterSpacing: '0.02em',
+        }}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }
 
 /* ── Success state ────────────────────────────────────────── */
-function SuccessState() {
-  const [vis, setVis] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setVis(true), 80);
-    return () => clearTimeout(t);
-  }, []);
-
-  const next = [
-    'Your brief is in our inbox.',
-    "We'll review it and be in touch within one hour.",
-    'Expect a calendar invite for a 30-minute discovery call.',
-  ];
+function SuccessState({ requestCount }: { requestCount: number | null }) {
+  const t = useTranslations('contact');
+  const next = [t('process01title'), t('process02title'), t('process03title')];
+  const subs = [t('process01sub'),   t('process02sub'),   t('process03sub')];
 
   return (
-    <div style={{
-      maxWidth: '520px',
-      opacity: vis ? 1 : 0,
-      transform: vis ? 'translateY(0)' : 'translateY(20px)',
-      transition: 'opacity 600ms ease, transform 600ms ease',
-    }}>
-      {/* Check mark */}
-      <div style={{
-        width: '52px',
-        height: '52px',
-        border: '1px solid var(--accent)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: '36px',
-      }}>
-        <Check size={22} color="var(--accent)" strokeWidth={1.5} />
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: EASE }}
+      style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1], delay: 0.15 }}
+          style={{
+            width: '56px', height: '56px', flexShrink: 0,
+            border: '1px solid rgba(61,82,230,0.22)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backgroundColor: 'rgba(61,82,230,0.05)',
+          }}
+        >
+          <Check size={22} color="var(--accent)" strokeWidth={1.5} />
+        </motion.div>
+        <div>
+          <h2 className="font-heading" style={{
+            fontSize: 'clamp(32px, 3.5vw, 48px)', fontWeight: 500,
+            letterSpacing: '-0.03em', color: '#0D1147', lineHeight: 0.95, margin: 0,
+          }}>
+            {t('submitted')}
+          </h2>
+          {requestCount !== null && (
+            <div style={{
+              fontFamily: 'var(--font-mono), monospace', fontSize: '10px',
+              letterSpacing: '0.14em', color: 'var(--accent)', opacity: 0.5,
+              marginTop: '6px',
+            }}>
+              Brief #{requestCount}
+            </div>
+          )}
+        </div>
       </div>
 
-      <h2 className="font-heading" style={{
-        fontSize: 'clamp(36px, 4vw, 56px)',
-        fontWeight: 500,
-        letterSpacing: '-0.03em',
-        color: 'var(--text)',
-        lineHeight: 1.0,
-        marginBottom: '16px',
-      }}>
-        Brief received.
-      </h2>
-
       <p className="font-body" style={{
-        fontSize: '15px',
-        lineHeight: 1.8,
-        color: 'var(--text-secondary)',
-        marginBottom: '48px',
-        maxWidth: '380px',
+        fontSize: '15px', lineHeight: 1.8, color: 'rgba(13,17,71,0.46)', maxWidth: '400px',
       }}>
-        We&rsquo;ll read every word and come to the call prepared.
+        {t('submittedBody')}
       </p>
 
-      {/* What's next */}
-      <div style={{ borderTop: '1px solid var(--border)', paddingTop: '32px', marginBottom: '44px' }}>
+      <div style={{ borderTop: '1px solid rgba(13,17,71,0.08)', paddingTop: '32px' }}>
+        <span style={{
+          fontFamily: 'var(--font-mono), monospace', fontSize: '9px',
+          letterSpacing: '0.2em', textTransform: 'uppercase',
+          color: 'rgba(13,17,71,0.2)', display: 'block', marginBottom: '24px',
+        }}>
+          What happens next
+        </span>
         {next.map((text, i) => (
-          <div
+          <motion.div
             key={i}
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, ease: EASE, delay: 0.3 + i * 0.1 }}
             style={{
-              display: 'flex',
-              gap: '18px',
-              padding: '14px 0',
-              borderBottom: i < next.length - 1 ? '1px solid var(--border)' : 'none',
+              display: 'flex', gap: '20px',
+              paddingBottom: i < next.length - 1 ? '20px' : '0',
+              marginBottom: i < next.length - 1 ? '20px' : '0',
+              borderBottom: i < next.length - 1 ? '1px solid rgba(13,17,71,0.07)' : 'none',
             }}
           >
             <span style={{
-              fontFamily: 'var(--font-mono), monospace',
-              fontSize: '10px',
-              fontWeight: 500,
-              letterSpacing: '0.1em',
-              color: 'var(--accent)',
-              flexShrink: 0,
-              paddingTop: '2px',
+              fontFamily: 'var(--font-mono), monospace', fontSize: '10px',
+              color: 'var(--accent)', flexShrink: 0, paddingTop: '2px', opacity: 0.55,
             }}>
               {String(i + 1).padStart(2, '0')}
             </span>
-            <p className="font-body" style={{ fontSize: '13px', lineHeight: 1.7, color: 'var(--text-secondary)' }}>
-              {text}
-            </p>
-          </div>
+            <div>
+              <div style={{
+                fontFamily: 'var(--font-body), sans-serif', fontSize: '13px',
+                color: '#0D1147', fontWeight: 500, marginBottom: '2px',
+              }}>
+                {text}
+              </div>
+              <div style={{
+                fontFamily: 'var(--font-mono), monospace', fontSize: '9px',
+                letterSpacing: '0.1em', color: 'rgba(13,17,71,0.28)',
+              }}>
+                {subs[i]}
+              </div>
+            </div>
+          </motion.div>
         ))}
       </div>
 
       <Link
         href="/"
         style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          fontFamily: 'var(--font-body), sans-serif',
-          fontSize: '11px',
-          fontWeight: 600,
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
-          textDecoration: 'none',
-          color: 'var(--text-secondary)',
-          borderBottom: '1px solid var(--border)',
-          paddingBottom: '3px',
+          display: 'inline-flex', alignItems: 'center', gap: '8px',
+          fontFamily: 'var(--font-body), sans-serif', fontSize: '11px',
+          fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase',
+          textDecoration: 'none', color: 'rgba(13,17,71,0.28)',
+          borderBottom: '1px solid rgba(13,17,71,0.1)', paddingBottom: '3px',
           transition: 'color 200ms ease, border-color 200ms ease',
         }}
-        onMouseEnter={(e) => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.color = 'var(--accent)';
-          el.style.borderColor = 'var(--accent)';
-        }}
-        onMouseLeave={(e) => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.color = 'var(--text-secondary)';
-          el.style.borderColor = 'var(--border)';
-        }}
+        onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'var(--accent)'; el.style.borderColor = 'var(--accent)'; }}
+        onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(13,17,71,0.28)'; el.style.borderColor = 'rgba(13,17,71,0.1)'; }}
       >
-        Back to home <ArrowRight size={11} />
+        {t('back')} <ArrowRight size={11} />
       </Link>
-    </div>
+    </motion.div>
+  );
+}
+
+
+/* ── CTA button — premium hover state ─────────────────────── */
+function CTAButton({
+  onClick, type = 'button', disabled = false, children,
+}: {
+  onClick?: () => void; type?: 'button' | 'submit'; disabled?: boolean; children: React.ReactNode;
+}) {
+  return (
+    <motion.button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      whileHover={disabled ? {} : { y: -2 }}
+      whileTap={disabled ? {} : { y: 0, scale: 0.97 }}
+      transition={{ type: 'spring', stiffness: 380, damping: 26 }}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: '12px',
+        fontFamily: 'var(--font-body), sans-serif', fontSize: '13px',
+        fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase',
+        color: '#FFFFFF', backgroundColor: 'var(--accent)',
+        border: 'none', padding: '16px 40px', borderRadius: '50px',
+        cursor: disabled ? 'default' : 'pointer',
+        opacity: disabled ? 0.55 : 1,
+        position: 'relative', overflow: 'hidden',
+        boxShadow: '0 4px 22px rgba(61,82,230,0.32)',
+        transition: 'opacity 200ms ease, box-shadow 260ms ease',
+      }}
+      onMouseEnter={e => {
+        if (!disabled) (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 38px rgba(61,82,230,0.52)';
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 22px rgba(61,82,230,0.32)';
+      }}
+    >
+      {/* Periodic shine sweep */}
+      <span aria-hidden className="btn-shine" />
+      <span style={{ position: 'relative', zIndex: 1, display: 'inline-flex', alignItems: 'center', gap: '12px' }}>
+        {children}
+      </span>
+    </motion.button>
   );
 }
 
 /* ── Main page ────────────────────────────────────────────── */
 export default function ContactPage() {
-  const [step, setStep]         = useState(1);
-  const [animKey, setAnimKey]   = useState(0);
-  const [submitted, setSubmitted] = useState(false);
-  const [leftVis, setLeftVis]   = useState(false);
+  const t = useTranslations('contact');
 
-  const [form, setForm] = useState({
-    name: '', company: '', email: '', role: '',
-    budget: '', timeline: '', description: '',
+  const [step, setStep]               = useState(1);
+  const [animKey, setAnimKey]         = useState(0);
+  const [submitted, setSubmitted]     = useState(false);
+  const [revealed, setRevealed]       = useState(false);
+  const [requestCount, setRequestCount] = useState<number | null>(null);
+
+  const [form, setForm] = useState<{
+    firstName: string; lastName: string; company: string; email: string;
+    service: string[]; budget: string; timeline: string; description: string; _hp: string;
+  }>({
+    firstName: '', lastName: '', company: '', email: '',
+    service: [], budget: '', timeline: '', description: '', _hp: '',
   });
+  const [stepError, setStepError]       = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError]   = useState('');
 
   useEffect(() => {
-    const t = setTimeout(() => setLeftVis(true), 120);
-    return () => clearTimeout(t);
+    const controller = new AbortController();
+    fetch('/api/request-count', { signal: controller.signal })
+      .then(r => r.json())
+      .then(data => setRequestCount(data.count))
+      .catch(() => {});
+    return () => controller.abort();
   }, []);
 
-  const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
+  useEffect(() => {
+    const id = setTimeout(() => setRevealed(true), 80);
+    return () => clearTimeout(id);
+  }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    set(e.target.name, e.target.value);
-
-  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) =>
-    set(e.target.name, e.target.value);
+  const set = (k: string, v: string | string[]) => setForm(p => ({ ...p, [k]: v }));
+  const handleInputChange    = (e: React.ChangeEvent<HTMLInputElement>)    => { set(e.target.name, e.target.value); setStepError(''); };
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => { set(e.target.name, e.target.value); setStepError(''); };
 
   const wordCount = form.description.trim().split(/\s+/).filter(Boolean).length;
-
-  const canAdvance = () => {
-    if (step === 1) return form.name.trim().length > 0 && form.email.trim().length > 0;
-    if (step === 2) return wordCount >= 10;
-    return true;
-  };
+  const EMAIL_RE  = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
   const advance = () => {
-    if (!canAdvance()) return;
-    setStep((s) => s + 1);
-    setAnimKey((k) => k + 1);
+    if (form.firstName.trim().length < 1) { setStepError(t('errFirstName')); return; }
+    if (form.lastName.trim().length < 1)  { setStepError(t('errLastName'));  return; }
+    if (!form.email.trim())               { setStepError(t('errEmail'));      return; }
+    if (!EMAIL_RE.test(form.email.trim())) { setStepError(t('errEmailInvalid')); return; }
+    if (form.service.length === 0)        { setStepError(t('errService'));    return; }
+    setStepError('');
+    setStep(2);
+    setAnimKey(k => k + 1);
   };
 
   const retreat = () => {
-    setStep((s) => s - 1);
-    setAnimKey((k) => k + 1);
+    setStepError('');
+    setStep(s => s - 1);
+    setAnimKey(k => k + 1);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: { preventDefault(): void }) => {
     e.preventDefault();
-    setSubmitted(true);
+    if (step === 1) { advance(); return; }
+    if (wordCount < 10) { setStepError(t('errDescription')); return; }
+    if (form._hp) return;
+    setIsSubmitting(true);
+    setSubmitError('');
+    fetch('/api/request-count', { method: 'POST' })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(data => { setRequestCount(data.count); setSubmitted(true); })
+      .catch(() => { setSubmitError('Something went wrong. Please try again.'); setIsSubmitting(false); });
   };
 
   return (
     <>
-      <section
-        style={{ minHeight: '100vh', display: 'grid', gridTemplateColumns: '42% 58%', paddingTop: '68px' }}
-        className="contact-grid"
-      >
-        {/* ── Left: info panel ─────────────────────────────── */}
+      <div style={{ backgroundColor: 'var(--bg)', minHeight: '100dvh', position: 'relative' }}>
         <div style={{
-          backgroundColor: 'var(--dark-bg)',
-          padding: '80px 56px 80px 40px',
-          display: 'flex',
-          flexDirection: 'column',
-          position: 'relative',
-          overflow: 'hidden',
+          maxWidth: '1200px', margin: '0 auto',
+          padding: '0 32px', paddingTop: '76px',
+          position: 'relative', zIndex: 1,
         }}>
-          {/* Dot grid */}
-          <div aria-hidden style={{
-            position: 'absolute', inset: 0,
-            backgroundImage: 'radial-gradient(circle, var(--dark-surface) 1px, transparent 1px)',
-            backgroundSize: '28px 28px',
-            pointerEvents: 'none',
-          }} />
-          {/* Crimson bloom */}
-          <div aria-hidden style={{
-            position: 'absolute', bottom: '-80px', left: '-80px',
-            width: '500px', height: '500px',
-            background: 'radial-gradient(circle, rgba(61,82,230,0.08) 0%, transparent 65%)',
-            pointerEvents: 'none',
-          }} />
+          <div
+            className="contact-split"
+            style={{ display: 'grid', gridTemplateColumns: '42% 1fr', minHeight: 'calc(100dvh - 76px)' }}
+          >
 
-          {/* Large step watermark — changes with each step */}
-          <div aria-hidden style={{
-            position: 'absolute',
-            right: '-16px',
-            bottom: '-16px',
-            fontFamily: 'var(--font-mono), monospace',
-            fontSize: 'clamp(160px, 22vw, 260px)',
-            fontWeight: 400,
-            color: '#FFFFFF',
-            opacity: submitted ? 0.04 : 0.028,
-            lineHeight: 1,
-            letterSpacing: '-0.04em',
-            userSelect: 'none',
-            pointerEvents: 'none',
-            transition: 'opacity 400ms ease',
-          }}>
-            {submitted ? '✓' : String(step).padStart(2, '0')}
-          </div>
+            {/* ════ LEFT: trust + context ════ */}
+            <div
+              className="contact-left"
+              style={{
+                position: 'sticky', top: '76px',
+                height: 'calc(100dvh - 76px)',
+                display: 'flex', flexDirection: 'column',
+                padding: '72px 56px 56px 0',
+                borderRight: '1px solid rgba(61,82,230,0.09)',
+                overflow: 'hidden',
+              }}
+            >
+              {/* Dot grid */}
+              <div aria-hidden style={{
+                position: 'absolute', inset: 0,
+                backgroundImage: 'radial-gradient(circle, rgba(61,82,230,0.14) 1px, transparent 1px)',
+                backgroundSize: '28px 28px',
+                opacity: 0.22, pointerEvents: 'none',
+              }} />
+              <div aria-hidden style={{
+                position: 'absolute', inset: 0,
+                background: 'linear-gradient(160deg, rgba(61,82,230,0.024) 0%, transparent 55%)',
+                pointerEvents: 'none',
+              }} />
 
-          <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column' }}>
-            {/* Label */}
-            <div style={{
-              marginBottom: '40px',
-              opacity: leftVis ? 1 : 0,
-              transform: leftVis ? 'translateY(0)' : 'translateY(12px)',
-              transition: 'opacity 500ms ease 100ms, transform 500ms ease 100ms',
-            }}>
-              <div className="section-label">Start Here</div>
-            </div>
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
 
-            {/* Headline */}
-            <h1 className="font-heading" style={{
-              fontSize: 'clamp(36px, 4vw, 56px)',
-              fontWeight: 500,
-              letterSpacing: '-0.03em',
-              color: 'var(--dark-text)',
-              lineHeight: 1.05,
-              marginBottom: '24px',
-              opacity: leftVis ? 1 : 0,
-              transform: leftVis ? 'translateY(0)' : 'translateY(16px)',
-              transition: 'opacity 600ms ease 200ms, transform 600ms ease 200ms',
-            }}>
-              The conversation
-              <br />
-              starts here.
-            </h1>
+                {/* Eyebrow — muted, earns its position */}
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: revealed ? 1 : 0, y: revealed ? 0 : 12 }}
+                  transition={{ duration: 0.55, ease: EASE }}
+                  style={{ marginBottom: '32px' }}
+                >
+                  <span style={{
+                    fontFamily: 'var(--font-mono), monospace', fontSize: '9px',
+                    fontWeight: 500, letterSpacing: '0.22em', textTransform: 'uppercase',
+                    color: 'rgba(13,17,71,0.3)',
+                  }}>
+                    {t('heroLabel')}
+                  </span>
+                </motion.div>
 
-            {/* Body */}
-            <p className="font-body" style={{
-              fontSize: '15px',
-              lineHeight: 1.8,
-              color: 'var(--dark-muted)',
-              marginBottom: '56px',
-              maxWidth: '340px',
-              opacity: leftVis ? 1 : 0,
-              transform: leftVis ? 'translateY(0)' : 'translateY(12px)',
-              transition: 'opacity 600ms ease 350ms, transform 600ms ease 350ms',
-            }}>
-              Describe your process, not your budget. We&rsquo;ll diagnose before we prescribe.
-            </p>
-
-            {/* What happens next */}
-            <div style={{
-              borderTop: '1px solid var(--dark-border)',
-              paddingTop: '36px',
-              marginBottom: 'auto',
-              opacity: leftVis ? 1 : 0,
-              transition: 'opacity 600ms ease 480ms',
-            }}>
-              <div style={{
-                fontFamily: 'var(--font-body), sans-serif',
-                fontSize: '9px',
-                fontWeight: 600,
-                letterSpacing: '0.22em',
-                textTransform: 'uppercase',
-                color: 'var(--dark-muted)',
-                marginBottom: '28px',
-              }}>
-                What happens next
-              </div>
-
-              {PROCESS.map((ps, i) => (
-                <div
-                  key={i}
+                {/* H1 — typographic anchor */}
+                <motion.h1
+                  className="font-heading"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: revealed ? 1 : 0, y: revealed ? 0 : 20 }}
+                  transition={{ duration: 0.7, ease: EASE, delay: 0.08 }}
                   style={{
-                    display: 'flex',
-                    gap: '20px',
-                    padding: '16px 0',
-                    borderBottom: i < PROCESS.length - 1 ? '1px solid var(--dark-border)' : 'none',
-                    opacity: leftVis ? 1 : 0,
-                    transition: `opacity 500ms ease ${560 + i * 100}ms`,
+                    fontSize: 'clamp(52px, 6.4vw, 88px)', fontWeight: 500,
+                    letterSpacing: '-0.045em', color: '#0D1147',
+                    lineHeight: 0.95, marginBottom: '24px',
                   }}
                 >
-                  <div style={{
-                    fontFamily: 'var(--font-mono), monospace',
-                    fontSize: '10px',
-                    fontWeight: 500,
-                    letterSpacing: '0.12em',
-                    color: 'var(--accent)',
-                    flexShrink: 0,
-                    paddingTop: '2px',
-                  }}>
-                    {ps.n}
-                  </div>
-                  <div>
-                    <div style={{
-                      fontFamily: 'var(--font-body), sans-serif',
-                      fontSize: '13px',
-                      fontWeight: 500,
-                      color: 'var(--dark-text)',
-                      marginBottom: '3px',
-                    }}>
-                      {ps.title}
-                    </div>
-                    <div style={{
-                      fontFamily: 'var(--font-mono), monospace',
-                      fontSize: '10px',
-                      letterSpacing: '0.06em',
-                      color: 'var(--dark-muted)',
-                    }}>
-                      {ps.sub}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  {t('heroHeadline')}
+                </motion.h1>
 
-            {/* Contact footer */}
-            <div style={{
-              borderTop: '1px solid var(--dark-border)',
-              paddingTop: '28px',
-              marginTop: '40px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              opacity: leftVis ? 1 : 0,
-              transition: 'opacity 600ms ease 860ms',
-            }}>
-              <a
-                href="mailto:hello@seeraflow.com"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  fontFamily: 'var(--font-body), sans-serif',
-                  fontSize: '13px',
-                  color: 'var(--dark-muted)',
-                  textDecoration: 'none',
-                  transition: 'color 200ms ease',
-                }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--dark-text)'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--dark-muted)'; }}
-              >
-                <Mail size={12} color="var(--accent)" strokeWidth={1.5} />
-                hello@seeraflow.com
-              </a>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontFamily: 'var(--font-body), sans-serif',
-                fontSize: '11px',
-                letterSpacing: '0.04em',
-                color: 'var(--dark-muted)',
-              }}>
-                <span style={{ color: 'var(--accent)', fontSize: '14px', lineHeight: 1 }}>—</span>
-                No commitment required
+                {/* Tagline */}
+                <motion.p
+                  className="font-body"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: revealed ? 1 : 0, y: revealed ? 0 : 12 }}
+                  transition={{ duration: 0.55, ease: EASE, delay: 0.16 }}
+                  style={{
+                    fontSize: '14px', lineHeight: 1.75,
+                    color: 'rgba(13,17,71,0.44)',
+                    maxWidth: '340px', marginBottom: '28px',
+                  }}
+                >
+                  {t('heroTagline')}
+                </motion.p>
+
+                {/* Response promise — trust signal, no decorative dot */}
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: revealed ? 1 : 0, y: revealed ? 0 : 8 }}
+                  transition={{ duration: 0.5, ease: EASE, delay: 0.24 }}
+                  style={{
+                    padding: '14px 18px',
+                    border: '1px solid rgba(61,82,230,0.15)',
+                    backgroundColor: 'rgba(61,82,230,0.04)',
+                  }}
+                >
+                  <p className="font-body" style={{
+                    fontSize: '12px', lineHeight: 1.7,
+                    color: 'rgba(13,17,71,0.5)', margin: 0,
+                  }}>
+                    We review every brief and respond within 24 hours with a preliminary assessment, not a sales call.
+                  </p>
+                </motion.div>
+
+                {/* Flex spacer */}
+                <div style={{ flex: 1, minHeight: '32px' }} />
+
+                {/* Bottom: email + counter */}
+                <div style={{
+                  borderTop: '1px solid rgba(61,82,230,0.08)',
+                  paddingTop: '22px',
+                  opacity: revealed ? 1 : 0,
+                  transition: 'opacity 500ms ease 960ms',
+                }}>
+                  <div style={{ marginBottom: '14px' }}>
+                    <div style={{
+                      fontFamily: 'var(--font-mono), monospace', fontSize: '9px',
+                      letterSpacing: '0.16em', textTransform: 'uppercase',
+                      color: 'rgba(13,17,71,0.2)', marginBottom: '8px',
+                    }}>
+                      {t('emailLabel')}
+                    </div>
+                    <EmailChooser email={EMAIL} />
+                  </div>
+                  {requestCount !== null && (
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                      <span style={{
+                        fontFamily: 'var(--font-heading), Georgia, serif',
+                        fontSize: 'clamp(18px, 2vw, 26px)', fontWeight: 300,
+                        fontStyle: 'italic', color: 'var(--accent)',
+                        letterSpacing: '-0.03em', lineHeight: 1,
+                      }}>
+                        {requestCount}
+                      </span>
+                      <span style={{
+                        fontFamily: 'var(--font-mono), monospace', fontSize: '9px',
+                        letterSpacing: '0.14em', textTransform: 'uppercase',
+                        color: 'rgba(13,17,71,0.2)',
+                      }}>
+                        {t('counterLabel')}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
               </div>
             </div>
+
+            {/* ════ RIGHT: form ════ */}
+            <div
+              className="contact-right"
+              style={{ padding: '72px 0 96px 64px', display: 'flex', alignItems: 'flex-start' }}
+            >
+              <div style={{ width: '100%', maxWidth: '520px' }}>
+                {submitted ? (
+                  <SuccessState requestCount={requestCount} />
+                ) : (
+                  <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+                    <button
+                      type="submit" aria-hidden tabIndex={-1}
+                      style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', height: 0, width: 0, border: 'none', padding: 0 }}
+                    />
+                    <input
+                      name="_hp" value={form._hp} onChange={handleInputChange}
+                      tabIndex={-1} autoComplete="off" aria-hidden="true"
+                      style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', height: 0, width: 0, border: 'none', padding: 0 }}
+                    />
+
+                    <StepNavigator step={step} onBack={retreat} />
+
+                    {/* Step heading + sub — coordinated exit/enter */}
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={`heading-${animKey}`}
+                        initial={{ opacity: 0, y: 14 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.28, ease: EASE }}
+                        style={{ marginBottom: '44px' }}
+                      >
+                        <h2 className="font-heading" style={{
+                          fontSize: 'clamp(30px, 3.2vw, 44px)', fontWeight: 500,
+                          letterSpacing: '-0.03em', color: '#0D1147',
+                          lineHeight: 1.0, margin: '0 0 10px',
+                        }}>
+                          {step === 1 ? t('step1label') : t('step2label')}
+                        </h2>
+                        <p className="font-body" style={{
+                          fontSize: '13px', lineHeight: 1.7,
+                          color: 'rgba(13,17,71,0.36)', margin: 0,
+                        }}>
+                          {step === 1
+                            ? 'Who we are speaking with and what you need.'
+                            : 'Describe the challenge, budget, and ideal timeline.'}
+                        </p>
+                      </motion.div>
+                    </AnimatePresence>
+
+                    {/* Step content */}
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={`step-${animKey}`}
+                        initial={{ opacity: 0, y: 18 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.32, ease: EASE }}
+                        aria-live="polite" aria-atomic="true"
+                      >
+                        {step === 1 && (
+                          <Step1
+                            form={{ firstName: form.firstName, lastName: form.lastName, company: form.company, email: form.email, service: form.service }}
+                            onChange={handleInputChange}
+                            onService={v => set('service', v)}
+                            error={stepError}
+                          />
+                        )}
+                        {step === 2 && (
+                          <Step2
+                            description={form.description}
+                            budget={form.budget}
+                            timeline={form.timeline}
+                            error={stepError}
+                            onDescription={handleTextareaChange}
+                            onBudget={v => set('budget', v)}
+                            onTimeline={v => set('timeline', v)}
+                          />
+                        )}
+                      </motion.div>
+                    </AnimatePresence>
+
+                    {/* Navigation */}
+                    <div style={{
+                      display: 'flex', alignItems: 'center',
+                      justifyContent: step > 1 ? 'space-between' : 'flex-end',
+                      marginTop: '52px', paddingTop: '28px',
+                      borderTop: '1px solid rgba(13,17,71,0.08)',
+                    }}>
+                      {step > 1 && (
+                        <button
+                          type="button" onClick={retreat}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '8px',
+                            fontFamily: 'var(--font-body), sans-serif', fontSize: '13px',
+                            fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase',
+                            color: 'rgba(13,17,71,0.3)', backgroundColor: 'transparent',
+                            border: 'none', cursor: 'pointer', padding: 0,
+                            borderRadius: '50px',
+                            transition: 'color 200ms ease',
+                          }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#0D1147'; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(13,17,71,0.3)'; }}
+                        >
+                          <ArrowLeft size={11} /> {t('back')}
+                        </button>
+                      )}
+
+                      {step < 2 ? (
+                        <CTAButton onClick={advance}>
+                          {t('next')} <ArrowRight size={12} />
+                        </CTAButton>
+                      ) : (
+                        <CTAButton type="submit" disabled={isSubmitting}>
+                          {isSubmitting ? t('submitting') : t('submit')}
+                          <ArrowRight size={12} />
+                        </CTAButton>
+                      )}
+                    </div>
+
+                    {submitError && (
+                      <p style={{
+                        marginTop: '12px',
+                        fontFamily: 'var(--font-body), sans-serif', fontSize: '12px',
+                        color: 'var(--error)', letterSpacing: '0.02em',
+                      }}>
+                        {submitError}
+                      </p>
+                    )}
+                  </form>
+                )}
+              </div>
+            </div>
+
           </div>
         </div>
+      </div>
 
-        {/* ── Right: form panel ─────────────────────────────── */}
-        <div style={{
-          backgroundColor: 'var(--bg)',
-          padding: '80px 56px 80px 72px',
-          borderLeft: '1px solid var(--border)',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-        }}>
-          {submitted ? (
-            <SuccessState />
-          ) : (
-            <form onSubmit={handleSubmit} style={{ maxWidth: '520px', width: '100%' }}>
-              <Progress step={step} />
-
-              {/* Animated step content */}
-              <div key={animKey} className="step-content">
-                {step === 1 && (
-                  <Step1
-                    form={{ name: form.name, company: form.company, email: form.email, role: form.role }}
-                    onChange={handleInputChange}
-                  />
-                )}
-                {step === 2 && (
-                  <Step2
-                    value={form.description}
-                    onChange={handleTextareaChange}
-                  />
-                )}
-                {step === 3 && (
-                  <Step3
-                    budget={form.budget}
-                    timeline={form.timeline}
-                    onBudget={(v) => set('budget', v)}
-                    onTimeline={(v) => set('timeline', v)}
-                  />
-                )}
-              </div>
-
-              {/* Navigation */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: step > 1 ? 'space-between' : 'flex-end',
-                marginTop: '44px',
-                paddingTop: '28px',
-                borderTop: '1px solid var(--border)',
-              }}>
-                {step > 1 && (
-                  <button
-                    type="button"
-                    onClick={retreat}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      fontFamily: 'var(--font-body), sans-serif',
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      letterSpacing: '0.1em',
-                      textTransform: 'uppercase',
-                      color: 'var(--text-muted)',
-                      backgroundColor: 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      padding: 0,
-                      transition: 'color 200ms ease',
-                    }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text)'; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)'; }}
-                  >
-                    <ArrowLeft size={12} /> Back
-                  </button>
-                )}
-
-                {step < 3 ? (
-                  <button
-                    type="button"
-                    onClick={advance}
-                    disabled={!canAdvance()}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      fontFamily: 'var(--font-body), sans-serif',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      letterSpacing: '0.1em',
-                      textTransform: 'uppercase',
-                      color: canAdvance() ? '#FFFFFF' : 'var(--text-muted)',
-                      backgroundColor: canAdvance() ? 'var(--accent)' : 'var(--surface)',
-                      border: `1px solid ${canAdvance() ? 'var(--accent)' : 'var(--border)'}`,
-                      padding: '14px 36px',
-                      cursor: canAdvance() ? 'pointer' : 'default',
-                      transition: 'background-color 200ms ease, color 200ms ease, border-color 200ms ease',
-                    }}
-                  >
-                    Continue <ArrowRight size={12} />
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      fontFamily: 'var(--font-body), sans-serif',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      letterSpacing: '0.1em',
-                      textTransform: 'uppercase',
-                      color: '#FFFFFF',
-                      backgroundColor: 'var(--accent)',
-                      border: '1px solid var(--accent)',
-                      padding: '14px 36px',
-                      cursor: 'pointer',
-                      transition: 'background-color 200ms ease',
-                    }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--accent-hover)'; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--accent)'; }}
-                  >
-                    Send Brief <ArrowRight size={12} />
-                  </button>
-                )}
-              </div>
-            </form>
-          )}
-        </div>
-      </section>
-
-      {/* ── FAQ ─────────────────────────────────────────────── */}
-      <section style={{
-        backgroundColor: 'var(--dark-bg)',
-        borderTop: '1px solid var(--dark-border)',
-        padding: '96px 32px',
-      }}>
+      {/* ══ FAQ — tinted surface rhythm ══ */}
+      <section
+        id="contact-faq"
+        data-section-label="FAQ"
+        style={{
+          backgroundColor: '#F2F3FC',
+          borderTop: '1px solid rgba(61,82,230,0.09)',
+          padding: '96px 32px',
+        }}
+      >
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <FAQAccordion dark heading="Still have questions?" label="FAQ" />
+          <FAQAccordion heading={t('faqHeading')} label={t('faqLabel')} />
         </div>
       </section>
 
       <style>{`
         @media (max-width: 1024px) {
-          .contact-grid {
-            grid-template-columns: 1fr !important;
+          .contact-split { grid-template-columns: 1fr !important; min-height: auto !important; }
+          .contact-left {
+            position: relative !important; top: auto !important;
+            height: auto !important;
+            padding: 72px 0 48px !important;
+            border-right: none !important;
+            border-bottom: 1px solid rgba(61,82,230,0.08) !important;
           }
-          .contact-grid > div:first-child {
-            padding: 64px 32px !important;
-          }
-          .contact-grid > div:last-child {
-            padding: 64px 32px !important;
-            border-left: none !important;
-            border-top: 1px solid var(--border) !important;
-          }
+          .contact-right { padding: 56px 0 80px !important; }
         }
         @media (max-width: 600px) {
           .form-two-col { grid-template-columns: 1fr !important; }
+          .contact-left { padding: 48px 0 40px !important; }
+          .contact-right { padding: 40px 0 64px !important; }
         }
 
-        @keyframes stepFadeIn {
-          from { opacity: 0; transform: translateY(18px); }
-          to   { opacity: 1; transform: translateY(0);    }
-        }
-        .step-content {
-          animation: stepFadeIn 380ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        }
+        select option { color: #0D1147; background: #fff; }
 
-        /* Remove default input autofill background */
         input:-webkit-autofill,
         input:-webkit-autofill:focus {
-          transition: background-color 0s 600000s, color 0s 600000s;
+          -webkit-box-shadow: 0 0 0 1000px #FFFFFF inset !important;
+          -webkit-text-fill-color: #0D1147 !important;
+          transition: background-color 0s 600000s;
         }
 
-        /* Placeholder color */
-        ::placeholder { color: var(--text-muted); opacity: 0.55; }
+        ::placeholder { color: rgba(13,17,71,0.16); opacity: 1; }
+        textarea::placeholder { color: rgba(13,17,71,0.16); }
+
+        /* CTA button shine sweep */
+        .btn-shine {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          pointer-events: none;
+        }
+        .btn-shine::after {
+          content: '';
+          position: absolute;
+          top: 0; bottom: 0;
+          left: -80%;
+          width: 50%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+          animation: btnShine 3s cubic-bezier(0.4,0,0.6,1) infinite;
+          animation-delay: 1.2s;
+        }
+        @keyframes btnShine {
+          0%   { left: -80%; opacity: 0; }
+          10%  { opacity: 1; }
+          50%  { left: 150%; opacity: 0; }
+          100% { left: 150%; opacity: 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .btn-shine::after { animation: none; }
+        }
       `}</style>
     </>
   );

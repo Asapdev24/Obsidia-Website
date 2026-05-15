@@ -2,26 +2,35 @@
 
 /* ─── Design Tokens ─────────────────────────────────────────── */
 :root {
-  --bg:             #FAFAFA;
-  --surface:        #F2F2F4;
-  --text:           #0A0B0F;
-  --dark-text:      #E8EAF2;
-  --text-secondary: #5C5C6E;
-  --muted:          #8A8FA8;
-  --accent:         #3D52E6;
-  --accent-hover:   #2D40D4;
-  --accent-subtle:  #EEF0FD;
-  --violet:         #7B4FD4;
-  --border:         #E2E3EA;
-  --dark-bg:        #0A0B0F;
-  --dark-surface:   #3D5A6B;
-  --dark-border:    #1E2130;
+  --bg:             #FFFFFF;   /* pure white */
+  --surface:        #ECEDFD;   /* card/chip surfaces */
+  --text:           #08090E;   /* near-black with a cool undertone */
+  --dark-text:      #DCE1F5;   /* cool blue-white — text on dark sections */
+  --text-secondary: #52566A;   /* secondary copy */
+  --muted:          #878DAB;   /* placeholders, captions */
+  --accent:         #3D52E6;   /* cobalt — primary brand */
+  --accent-hover:   #2D40D4;   /* darker cobalt for hover */
+  --accent-subtle:  #E6E9FF;   /* very light accent tint */
+  --violet:         #8860E6;   /* vivid purple — more energy than #7B4FD4 */
+  --sky:            #60A5FA;   /* light electric blue — gradients & glows */
+  --success:        #22C55E;   /* status green */
+  --border:         #D8D9EF;   /* blue-tinted border — replaces warm gray */
+  --dark-bg:        #06080F;   /* deep obsidian — richer than flat black */
+  --dark-surface:   #0D1020;   /* rich navy — replaces the wrong teal #3D5A6B */
+  --dark-border:    #16193A;   /* navy border for dark sections */
+  --error:          #C94040;   /* form validation error */
 
-  /* Backward-compat aliases */
+  /* Aliases used across components */
   --text-muted:     var(--muted);
   --dark-muted:     var(--muted);
   --surface-alt:    var(--surface);
   --border-strong:  var(--border);
+
+  /* RGB channel values — for rgba(var(--accent-rgb) / 0.08) syntax */
+  --accent-rgb:     61 82 230;
+  --violet-rgb:     136 96 230;
+  --sky-rgb:        96 165 250;
+
 }
 
 /* ─── Tailwind Theme Registration ───────────────────────────── */
@@ -41,6 +50,8 @@
   --color-accent-hover:   var(--accent-hover);
   --color-accent-subtle:  var(--accent-subtle);
   --color-violet:         var(--violet);
+  --color-sky:            var(--sky);
+  --color-success:        var(--success);
   --color-border:         var(--border);
   --color-border-strong:  var(--border-strong);
   --color-dark-bg:        var(--dark-bg);
@@ -59,6 +70,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 72px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -85,6 +97,12 @@ body {
   background-size: 200px 200px;
   animation: grain 8s steps(4) infinite;
   will-change: transform;
+  contain: layout style paint;
+}
+
+/* Pause grain when tab is hidden — JS toggles this class */
+.grain-overlay.paused {
+  animation-play-state: paused;
 }
 
 /* ─── Custom cursor ─────────────────────────────────────────── */
@@ -92,6 +110,32 @@ body {
   *, *::before, *::after {
     cursor: none !important;
   }
+}
+
+/* ─── Skip-to-content ───────────────────────────────────────── */
+.skip-to-content {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 9999;
+  padding: 12px 20px;
+  background-color: var(--accent);
+  color: #fff;
+  font-family: var(--font-body), sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: top 200ms ease;
+}
+
+.skip-to-content:focus {
+  top: 16px;
+}
+
+/* ─── Focus ring ────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 /* ─── Selection ─────────────────────────────────────────────── */
@@ -117,6 +161,11 @@ body {
 /* ─── Optical sizing on all large headings ──────────────────── */
 h1, h2, h3 {
   font-optical-sizing: auto;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
 }
 
 /* ─── Section Label ─────────────────────────────────────────── */
@@ -204,8 +253,8 @@ h1, h2, h3 {
 }
 
 @keyframes nodeGlow {
-  0%, 100% { filter: drop-shadow(0 0 3px rgba(61, 82, 230, 0.25)); }
-  50%       { filter: drop-shadow(0 0 10px rgba(61, 82, 230, 0.55)); }
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(61, 82, 230, 0.3)); }
+  50%       { filter: drop-shadow(0 0 12px rgba(136, 96, 230, 0.65)); }
 }
 
 @keyframes grain {
@@ -241,6 +290,11 @@ h1, h2, h3 {
   100% { background-position: 400% center;  }
 }
 
+@keyframes ctaPulse {
+  0%, 100% { opacity: 0;   transform: scale(0.8); }
+  50%       { opacity: 1;   transform: scale(1.1); }
+}
+
 @keyframes fadeInScale {
   from { opacity: 0; transform: scale(0.94) translateY(12px); }
   to   { opacity: 1; transform: scale(1)    translateY(0px);  }
@@ -263,4 +317,62 @@ h1, h2, h3 {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ─── RTL (Arabic) overrides ────────────────────────────────── */
+[dir="rtl"] {
+  /* Use Tajawal as the body font for Arabic */
+  font-family: var(--font-tajawal), 'Tajawal', system-ui, sans-serif;
+}
+
+[dir="rtl"] body {
+  font-family: var(--font-tajawal), 'Tajawal', system-ui, sans-serif;
+}
+
+/* Keep Latin display headings as Cormorant; switch body/mono to Tajawal */
+[dir="rtl"] .font-body,
+[dir="rtl"] p,
+[dir="rtl"] li,
+[dir="rtl"] span:not(.font-heading),
+[dir="rtl"] button,
+[dir="rtl"] a {
+  font-family: var(--font-tajawal), 'Tajawal', system-ui, sans-serif;
+  letter-spacing: 0 !important;
+}
+
+/* Flip section label pseudo-element to appear on the right in RTL */
+[dir="rtl"] .section-label {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .section-label::before {
+  display: none;
+}
+
+[dir="rtl"] .section-label::after {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 1px;
+  background-color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* Nav underline should originate from right in RTL */
+[dir="rtl"] .nav-underline::after {
+  transform-origin: right center;
+}
+
+[dir="rtl"] .nav-underline:hover::after {
+  transform-origin: right center;
+}
+
+[dir="rtl"] .nav-underline:not(:hover)::after {
+  transform-origin: left center;
+}
+
+/* Skip link position */
+[dir="rtl"] .skip-to-content {
+  left: auto;
+  right: 16px;
 }

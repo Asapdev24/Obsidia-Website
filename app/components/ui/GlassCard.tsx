@@ -21,8 +21,8 @@ const BASE: Record<GlassVariant, { bg: string; bgHover: string; border: string; 
     blur:        'blur(16px)',
   },
   elevated: {
-    bg:          'rgba(61,90,107,0.45)',
-    bgHover:     'rgba(61,90,107,0.55)',
+    bg:          'rgba(255,255,255,0.03)',
+    bgHover:     'rgba(255,255,255,0.06)',
     border:      'rgba(255,255,255,0.10)',
     borderHover: 'rgba(61,82,230,0.35)',
     blur:        'blur(20px)',
@@ -70,7 +70,7 @@ export default function GlassCard({
             left:       0,
             right:      0,
             height:     '2px',
-            background: 'linear-gradient(135deg, #3D52E6, #7B4FD4)',
+            background: 'linear-gradient(135deg, var(--accent), var(--violet))',
             zIndex:     1,
           }}
         />

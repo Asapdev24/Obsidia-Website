@@ -7,8 +7,19 @@ export default function CustomCursor() {
   const ringRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    /* Only activate on fine-pointer devices (no touch) */
-    if (!window.matchMedia('(pointer: fine)').matches) return;
+    /* Pause grain overlay animation when tab is backgrounded */
+    const grain = document.querySelector<HTMLElement>('.grain-overlay');
+    const onVisibilityChange = () => {
+      if (!grain) return;
+      if (document.hidden) grain.classList.add('paused');
+      else grain.classList.remove('paused');
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    /* Only activate custom cursor on fine-pointer devices (no touch) */
+    if (!window.matchMedia('(pointer: fine)').matches) {
+      return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+    }
 
     const dot  = dotRef.current;
     const ring = ringRef.current;
@@ -37,8 +48,8 @@ export default function CustomCursor() {
       dot.style.left = `${mx - 4}px`;
       dot.style.top  = `${my - 4}px`;
 
-      /* Ring: lerp follow, centred on its own size */
-      const ringSize = hovering ? 40 : 28;
+      /* Ring: lerp follow, centred on fixed 28px size (scale doesn't affect positioning) */
+      const ringSize = 28;
       ring.style.left = `${rx - ringSize / 2}px`;
       ring.style.top  = `${ry - ringSize / 2}px`;
 
@@ -47,28 +58,26 @@ export default function CustomCursor() {
 
     const onEnter = () => {
       hovering = true;
-      dot.style.transform  = 'scale(0)';
-      ring.style.width     = '40px';
-      ring.style.height    = '40px';
-      ring.style.opacity   = '0.35';
+      dot.style.transform   = 'scale(0)';
+      ring.style.transform  = 'scale(1.43)';
+      ring.style.opacity    = '0.35';
     };
 
     const onLeave = () => {
       hovering = false;
-      dot.style.transform  = 'scale(1)';
-      ring.style.width     = '28px';
-      ring.style.height    = '28px';
-      ring.style.opacity   = '0.6';
+      dot.style.transform   = 'scale(1)';
+      ring.style.transform  = 'scale(1)';
+      ring.style.opacity    = '0.6';
     };
 
     const onMouseDown = () => {
-      dot.style.transform = hovering ? 'scale(0)' : 'scale(0.6)';
+      dot.style.transform  = hovering ? 'scale(0)' : 'scale(0.6)';
       ring.style.transform = 'scale(0.85)';
     };
 
     const onMouseUp = () => {
       dot.style.transform  = hovering ? 'scale(0)' : 'scale(1)';
-      ring.style.transform = 'scale(1)';
+      ring.style.transform = hovering ? 'scale(1.43)' : 'scale(1)';
     };
 
     window.addEventListener('mousemove', onMouseMove, { passive: true });
@@ -76,26 +85,30 @@ export default function CustomCursor() {
     window.addEventListener('mouseup', onMouseUp);
     rafId = requestAnimationFrame(tick);
 
-    /* Attach hover listeners to all interactive elements */
-    const attachHover = () => {
-      document.querySelectorAll<HTMLElement>('a, button, [role="button"], input, textarea, select, label').forEach((el) => {
-        el.addEventListener('mouseenter', onEnter);
-        el.addEventListener('mouseleave', onLeave);
-      });
+    /* Event delegation — single listeners on document, no DOM querying or MutationObserver */
+    const onEnterEl = (e: MouseEvent) => {
+      if ((e.target as Element)?.closest?.('a, button, input, textarea, select, label, [role="button"]')) {
+        onEnter();
+      }
     };
 
-    attachHover();
+    const onLeaveEl = (e: MouseEvent) => {
+      if ((e.target as Element)?.closest?.('a, button, input, textarea, select, label, [role="button"]')) {
+        onLeave();
+      }
+    };
 
-    /* Re-attach when DOM changes (SPA navigation) */
-    const mo = new MutationObserver(attachHover);
-    mo.observe(document.body, { childList: true, subtree: true });
+    document.addEventListener('mouseover', onEnterEl, { passive: true });
+    document.addEventListener('mouseout', onLeaveEl, { passive: true });
 
     return () => {
       cancelAnimationFrame(rafId);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mouseup', onMouseUp);
-      mo.disconnect();
+      document.removeEventListener('mouseover', onEnterEl);
+      document.removeEventListener('mouseout', onLeaveEl);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, []);
 
@@ -132,7 +145,7 @@ export default function CustomCursor() {
           pointerEvents: 'none',
           zIndex: 99998,
           opacity: 0,
-          transition: 'width 200ms ease, height 200ms ease, opacity 300ms ease, transform 150ms ease',
+          transition: 'transform 200ms ease, opacity 300ms ease',
           willChange: 'left, top',
         }}
       />

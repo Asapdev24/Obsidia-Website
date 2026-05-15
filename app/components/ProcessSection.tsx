@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useRef, useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 const ACCENT     = 'var(--accent)';
 const LINE_COLOR = '#E5E5E3';
@@ -22,40 +23,12 @@ export interface PSStat {
   label: string;
 }
 
-const DEFAULT_STEPS: PSStep[] = [
-  {
-    number: '01', title: 'Audit',
-    detail: 'We spend time with your team mapping every manual touchpoint and ranking each by cost. You get a prioritised list of what to automate before we design anything.',
-    deliverable: 'Prioritised automation roadmap',
-  },
-  {
-    number: '02', title: 'Design',
-    detail: "We architect the full logic — triggers, conditions, transformations — then share the design for your sign-off. No code is written until you've seen exactly how it works.",
-    deliverable: 'Signed-off workflow blueprint',
-  },
-  {
-    number: '03', title: 'Build',
-    detail: 'We build and test in a staging environment that mirrors production. Every workflow ships with full documentation, structured logging, and retry logic.',
-    deliverable: 'Tested, documented automation',
-  },
-  {
-    number: '04', title: 'Handoff',
-    detail: 'We deploy to production, walk your team through every workflow, and hand over complete documentation. The first 30 days of fixes are included.',
-    deliverable: 'Full handover with 30-day support',
-  },
-];
-
-const DEFAULT_STATS: PSStat[] = [
-  { value: '04',      label: 'stages, every engagement' },
-  { value: '100%',    label: 'your sign-off before we build' },
-  { value: '4–6 wks', label: 'first call to live automation' },
-];
 
 /* ── Step column ─────────────────────────────────────────────── */
 function StepCol({
-  step, index, active, pipeline,
+  step, index, active, pipeline, deliverableLabel,
 }: {
-  step: PSStep; index: number; active: boolean; pipeline?: boolean;
+  step: PSStep; index: number; active: boolean; pipeline?: boolean; deliverableLabel: string;
 }) {
   const [hovered, setHovered] = useState(false);
 
@@ -162,7 +135,7 @@ function StepCol({
         letterSpacing: '0.1em', textTransform: 'uppercase',
         color:         ACCENT,
       }}>
-        Deliverable — {step.deliverable}
+        {deliverableLabel}: {step.deliverable}
       </div>
     </div>
   );
@@ -170,9 +143,9 @@ function StepCol({
 
 /* ── Main component ──────────────────────────────────────────── */
 export default function ProcessSection({
-  headline = 'From first call to live automation.',
-  steps    = DEFAULT_STEPS,
-  stats    = DEFAULT_STATS,
+  headline,
+  steps,
+  stats,
   variant  = 'default',
 }: {
   headline?: string;
@@ -180,8 +153,27 @@ export default function ProcessSection({
   stats?:    PSStat[];
   variant?:  'default' | 'pipeline';
 } = {}) {
+  const t = useTranslations('process');
   const ref = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
+
+  const defaultSteps: PSStep[] = [
+    { number: '01', title: t('defaultStep01title'), detail: t('defaultStep01detail'), deliverable: t('defaultStep01deliverable') },
+    { number: '02', title: t('defaultStep02title'), detail: t('defaultStep02detail'), deliverable: t('defaultStep02deliverable') },
+    { number: '03', title: t('defaultStep03title'), detail: t('defaultStep03detail'), deliverable: t('defaultStep03deliverable') },
+    { number: '04', title: t('defaultStep04title'), detail: t('defaultStep04detail'), deliverable: t('defaultStep04deliverable') },
+  ];
+
+  const defaultStats: PSStat[] = [
+    { value: t('defaultStat0value'), label: t('defaultStat0label') },
+    { value: t('defaultStat1value'), label: t('defaultStat1label') },
+    { value: t('defaultStat2value'), label: t('defaultStat2label') },
+  ];
+
+  const resolvedHeadline = headline ?? t('defaultHeadline');
+  const resolvedSteps = steps ?? defaultSteps;
+  const resolvedStats = stats ?? defaultStats;
+  const deliverableLabel = t('deliverableLabel');
 
   useEffect(() => {
     const el = ref.current;
@@ -205,13 +197,13 @@ export default function ProcessSection({
           transform:  active ? 'translateY(0)' : 'translateY(18px)',
           transition: 'opacity 700ms ease, transform 700ms ease',
         }}>
-          <div className="section-label" style={{ marginBottom: '20px' }}>How We Work</div>
+          <div className="section-label" style={{ marginBottom: '20px' }}>{t('label')}</div>
           <h2 className="font-heading" style={{
             fontSize:      'clamp(36px, 4vw, 56px)',
             fontWeight:    500, letterSpacing: '-0.025em',
             color:         'var(--text)', lineHeight: 1.08, maxWidth: '600px',
           }}>
-            {headline}
+            {resolvedHeadline}
           </h2>
         </div>
       </div>
@@ -232,7 +224,7 @@ export default function ProcessSection({
           <div aria-hidden style={{ position: 'absolute', top: 0, bottom: 0, left: '33.333%',  width: '1px', backgroundColor: 'rgba(61,82,230,0.2)' }} />
           <div aria-hidden style={{ position: 'absolute', top: 0, bottom: 0, left: '66.667%', width: '1px', backgroundColor: 'rgba(61,82,230,0.2)' }} />
 
-          {stats.map((s, i) => (
+          {resolvedStats.map((s, i) => (
             <div key={i} className="stat-item" style={{
               paddingLeft:  i === 0 ? 0 : '48px',
               paddingRight: i === 2 ? 0 : '48px',
@@ -297,13 +289,14 @@ export default function ProcessSection({
               position:            'relative',
               zIndex:              1,
             }}>
-              {steps.map((step, i) => (
+              {resolvedSteps.map((step, i) => (
                 <StepCol
                   key={i}
                   step={step}
                   index={i}
                   active={active}
                   pipeline={variant === 'pipeline'}
+                  deliverableLabel={deliverableLabel}
                 />
               ))}
             </div>
@@ -381,7 +374,7 @@ export const APP_STEPS: PSStep[] = [
   },
   {
     number: '03', title: 'Build',
-    detail: 'Iterative development with regular demos. You see the product every sprint — no surprises at handoff, no scope drift.',
+    detail: 'Iterative development with regular demos. You see the product every sprint. No surprises at handoff, no scope drift.',
     deliverable: 'Tested, documented application',
   },
   {

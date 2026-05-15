@@ -1,14 +1,14 @@
 ﻿'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { ArrowRight } from 'lucide-react';
 
 const SERVICES = [
   {
     number:   '01',
     title:    'Workflow Automation',
-    summary:  'We replace your manual processes with digital workflows that run without anyone touching them — approval chains, data syncs, reporting pipelines, and operations at any scale.',
+    summary:  'We replace your manual processes with digital workflows that run without anyone touching them: approval chains, data syncs, reporting pipelines, and operations at any scale.',
     outcomes: [
       'Approval cycles cut from days to minutes',
       'Cross-system data moves without manual entry',
@@ -25,7 +25,7 @@ const SERVICES = [
   {
     number:   '02',
     title:    'Website Development',
-    summary:  'We build websites that convert visitors, load fast, and work correctly on every device — from corporate sites and landing pages to e-commerce and web applications.',
+    summary:  'We build websites that convert visitors, load fast, and work correctly on every device, from corporate sites and landing pages to e-commerce and web applications.',
     outcomes: [
       'Purpose-built for your specific audience',
       'Performance-first: sub-2s load on every page',
@@ -42,7 +42,7 @@ const SERVICES = [
   {
     number:   '03',
     title:    'Application Development',
-    summary:  'We build the custom tools your team actually needs — mobile apps, internal dashboards, client portals, and operational software designed around how your business works.',
+    summary:  'We build the custom tools your team actually needs: mobile apps, internal dashboards, client portals, and operational software designed around how your business works.',
     outcomes: [
       'Built to your workflow, not forced into a template',
       'Mobile and desktop, native or progressive web',

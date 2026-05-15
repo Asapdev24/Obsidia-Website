@@ -1,1203 +1,954 @@
-﻿'use client';
+'use client';
 
-import { useRef, useEffect, useState } from 'react';
-import Link from 'next/link';
-import { ArrowRight, Check } from 'lucide-react';
+import { useRef, useEffect, useState, useCallback } from 'react';
+import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { Link } from '@/i18n/navigation';
+import { ArrowRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
-/* ── IntersectionObserver reveal hook ─────────────────────── */
-function useReveal(threshold = 0.1) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+
+/* ── Scroll direction ─────────────────────────────────────── */
+function useScrollDirection() {
+  const [dir, setDir] = useState<'down' | 'up'>('down');
+  const lastY = useRef(0);
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) { setVisible(true); obs.disconnect(); }
-      },
-      { threshold }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [threshold]);
-  return { ref, visible };
+    const onScroll = () => {
+      const y = window.scrollY;
+      setDir(y > lastY.current ? 'down' : 'up');
+      lastY.current = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  return dir;
 }
 
-/* ── Data ─────────────────────────────────────────────────── */
-const PHASES = [
-  {
-    number: '01',
-    name: 'Audit',
-    descriptor: 'Map everything slowing the business down',
-    description:
-      'We begin with a structured conversation — not a questionnaire. Over one or two calls, we map every manual step in your highest-cost processes, identify the workflows that consume the most time, and rank them by ROI. You receive a prioritized list of what to automate and why before we\'ve agreed to build anything.',
-    insight: 'The brief is never complete until we\'ve seen the work firsthand.',
-    deliverables: ['Process map', 'Friction audit', 'ROI ranking', 'Automation scope'],
-    weeks: 'Week 1',
-    bg: 'var(--bg)',
-  },
-  {
-    number: '02',
-    name: 'Design',
-    descriptor: 'Blueprint the automation before a line is built',
-    description:
-      'Before any tool is opened, we design the full automation logic. Every trigger, condition, data transformation, and error path is defined in a format you can read and follow. You approve the design before we proceed — if you can\'t follow the logic, we haven\'t explained it well enough.',
-    insight: 'If you can\'t follow the logic, we haven\'t explained it well enough.',
-    deliverables: ['Logic blueprint', 'Edge case map', 'Error handling spec', 'Client sign-off'],
-    weeks: 'Week 2',
-    bg: 'var(--surface)',
-  },
-  {
-    number: '03',
-    name: 'Build',
-    descriptor: 'Production-grade, tested, documented delivery',
-    description:
-      'We build in a staging environment that mirrors your production setup exactly. Every automation is tested against real data, real edge cases, and real failure conditions — nothing ships without structured logging, retry logic, and failure alerts built in from the start.',
-    insight: 'Untested automations are just slow, expensive bugs waiting to surface.',
-    deliverables: ['Staging build', 'Test log', 'Error handling', 'Full documentation'],
-    weeks: 'Weeks 3–4',
-    bg: 'var(--bg)',
-  },
-  {
-    number: '04',
-    name: 'Handoff',
-    descriptor: 'Yours to own. Ours to support.',
-    description:
-      'We deploy to production with your team present, walk through every workflow, and confirm your team can operate what we\'ve built independently. The first 30 days of fixes are included — after that, optional maintenance packages are available.',
-    insight: 'If your team can\'t run it without us, the project isn\'t finished.',
-    deliverables: ['Production deploy', 'Team walkthrough', '30-day support', 'Maintenance options'],
-    weeks: 'Weeks 5–6',
-    bg: 'var(--surface)',
-  },
-];
+/* ── Types ────────────────────────────────────────────────── */
+type Phase = {
+  number: string; name: string; id: string;
+  descriptor: string; deliverables: string[];
+  body: string; image: string;
+};
 
-const PRINCIPLES = [
-  {
-    number: '01',
-    title: 'We audit before we build.',
-    body: 'Every project starts with a process map — we never design automation for a workflow we haven\'t observed ourselves. The brief is never complete until we\'ve seen the work.',
-  },
-  {
-    number: '02',
-    title: 'We build to hand off.',
-    body: 'You should be able to run what we build without us present. Full documentation and a team walkthrough are required deliverables on every engagement.',
-  },
-  {
-    number: '03',
-    title: 'We measure the outcome.',
-    body: 'Every automation has a defined success metric agreed before build begins. If we can\'t measure it, we haven\'t scoped it correctly.',
-  },
-];
+type Principle = {
+  number: string; title: string; body: string; image: string;
+};
 
-const TIMELINE = [
-  { week: 'Week 1',   phase: '01', label: 'Audit',   task: 'Discovery call + process mapping',    output: 'Process map, friction audit, ROI ranking' },
-  { week: 'Week 2',   phase: '02', label: 'Design',  task: 'Automation blueprint delivered',       output: 'Logic blueprint, error handling spec' },
-  { week: 'Week 3',   phase: '03', label: 'Build',   task: 'Staging environment + first build',    output: 'Working automation in staging' },
-  { week: 'Week 4',   phase: '03', label: 'Build',   task: 'Edge case testing + documentation',    output: 'Test log, full documentation' },
-  { week: 'Week 5',   phase: '03', label: 'Build',   task: 'Client review and revisions',          output: 'Approved, production-ready build' },
-  { week: 'Week 6',   phase: '04', label: 'Handoff', task: 'Deployment + team walkthrough',        output: 'Live automation, 30-day support begins' },
-];
+/* ── Principle row ────────────────────────────────────────── */
+function PrincipleRow({ principle, index, scrollDir, total }: {
+  principle: Principle; index: number;
+  scrollDir: 'down' | 'up'; total: number;
+}) {
+  const rowRef = useRef<HTMLDivElement>(null);
+  const mouseX = useMotionValue(-200);
+  const mouseY = useMotionValue(-200);
+  const spotX = useTransform(mouseX, v => v - 200);
+  const spotY = useTransform(mouseY, v => v - 200);
 
-/* ── Phase row ────────────────────────────────────────────── */
-function PhaseRow({ phase, index }: { phase: typeof PHASES[0]; index: number }) {
-  const { ref, visible } = useReveal();
-  const [rowHovered, setRowHovered] = useState(false);
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const rect = rowRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    mouseX.set(e.clientX - rect.left);
+    mouseY.set(e.clientY - rect.top);
+  }, [mouseX, mouseY]);
+
+  const handleMouseLeave = useCallback(() => {
+    mouseX.set(-200);
+    mouseY.set(-200);
+  }, [mouseX, mouseY]);
 
   return (
-    <div
-      ref={ref}
-      onMouseEnter={() => setRowHovered(true)}
-      onMouseLeave={() => setRowHovered(false)}
-      style={{
-        backgroundColor: phase.bg,
-        borderTop: '1px solid var(--border)',
-        padding: '104px 32px',
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(28px)',
-        transition: `opacity 700ms ease ${index * 80}ms, transform 700ms ease ${index * 80}ms`,
+    <motion.div
+      ref={rowRef as React.RefObject<HTMLDivElement>}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      custom={{ index, scrollDir, total }}
+      variants={{
+        hidden: { opacity: 0, y: 28 },
+        visible: ({ index: i, scrollDir: dir, total: n }: { index: number; scrollDir: string; total: number }) => ({
+          opacity: 1, y: 0,
+          transition: {
+            duration: 0.65, ease: EASE,
+            delay: dir === 'up' ? (n - 1 - i) * 0.12 + 0.1 : i * 0.12 + 0.15,
+          },
+        }),
+        hovered: { opacity: 1, y: 0 },
       }}
+      initial="hidden"
+      whileInView="visible"
+      whileHover="hovered"
+      viewport={{ once: false, amount: 0.25 }}
+      style={{ position: 'relative', overflow: 'hidden', cursor: 'default' }}
     >
-      <div
-        className="phase-row-inner"
+      {/* Static divider */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0,
+        height: 1, backgroundColor: 'var(--dark-border)', zIndex: 1,
+      }} />
+
+      {/* Accent line — grows on hover */}
+      <motion.div
+        variants={{
+          hidden: { scaleX: 0, opacity: 0 },
+          visible: { scaleX: 0, opacity: 0 },
+          hovered: { scaleX: 1, opacity: 0.75 },
+        }}
+        transition={{ type: 'spring', stiffness: 280, damping: 28 }}
         style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
+          position: 'absolute', top: 0, left: 0, right: 0, height: 1,
+          backgroundColor: 'var(--accent)', transformOrigin: 'center', zIndex: 2,
+        }}
+      />
+
+      {/* Background image — fades in on hover */}
+      <motion.div
+        variants={{
+          hidden: { opacity: 0 },
+          visible: { opacity: 0 },
+          hovered: { opacity: 1 },
+        }}
+        transition={{ duration: 0.55 }}
+        style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: `url(${principle.image})`,
+          backgroundSize: 'cover', backgroundPosition: 'center',
+          filter: 'grayscale(55%) brightness(0.28)',
+          zIndex: 0,
+        }}
+      />
+
+      {/* Cursor spotlight */}
+      <motion.div
+        style={{
+          position: 'absolute', top: 0, left: 0,
+          x: spotX, y: spotY,
+          width: 400, height: 400,
+          background: 'radial-gradient(circle, rgba(61,82,230,0.1) 0%, transparent 65%)',
+          pointerEvents: 'none', zIndex: 1,
+        }}
+      />
+
+      <div
+        className="principle-row-inner"
+        style={{
+          position: 'relative', zIndex: 3,
           display: 'grid',
-          gridTemplateColumns: '40% 60%',
-          gap: '72px',
-          alignItems: 'start',
+          gridTemplateColumns: '88px 2fr 1.5fr',
+          gap: '48px',
+          padding: '36px 0',
+          alignItems: 'center',
         }}
       >
-        {/* Left */}
-        <div style={{ position: 'relative' }}>
-          <div
-            aria-hidden
+        <motion.div
+          variants={{
+            hidden: { color: 'rgba(255,255,255,0.04)' },
+            visible: { color: 'rgba(255,255,255,0.055)' },
+            hovered: { color: 'rgba(61,82,230,0.65)' },
+          }}
+          transition={{ duration: 0.3 }}
+          style={{
+            fontFamily: 'var(--font-mono), monospace',
+            fontSize: 'clamp(72px, 9vw, 108px)',
+            fontWeight: 300, letterSpacing: '-0.04em', lineHeight: 1,
+            userSelect: 'none',
+          }}
+        >
+          {principle.number}
+        </motion.div>
+
+        <div>
+          <motion.h3
+            className="font-heading"
+            variants={{
+              hidden: { color: 'var(--dark-text)' },
+              visible: { color: 'var(--dark-text)' },
+              hovered: { color: '#ffffff' },
+            }}
+            transition={{ duration: 0.25 }}
             style={{
-              position: 'absolute',
-              top: '-20px',
-              left: '-16px',
-              fontFamily: 'var(--font-mono), monospace',
-              fontSize: 'clamp(96px, 13vw, 160px)',
-              fontWeight: 400,
-              color: 'var(--text)',
-              opacity: rowHovered ? 0.1 : 0.05,
-              lineHeight: 1,
-              userSelect: 'none',
-              pointerEvents: 'none',
-              transition: 'opacity 200ms ease',
+              fontSize: 'clamp(28px, 3.5vw, 48px)',
+              fontWeight: 500, letterSpacing: '-0.028em', lineHeight: 1.06,
             }}
           >
-            {phase.number}
-          </div>
+            {principle.title}
+          </motion.h3>
 
-          <div style={{ position: 'relative', zIndex: 1, paddingTop: '24px' }}>
-            {/* Phase progress bars */}
-            <div style={{ display: 'flex', gap: '5px', marginBottom: '28px' }}>
-              {PHASES.map((_, i) => (
-                <div
-                  key={i}
-                  style={{
-                    height: '3px',
-                    width: i === index ? '28px' : '8px',
-                    backgroundColor: i === index ? 'var(--accent)' : 'var(--border)',
-                    transition: 'width 300ms ease, background-color 300ms ease',
-                  }}
-                />
-              ))}
-            </div>
-
-            <h2
-              className="font-heading"
-              style={{
-                fontSize: 'clamp(48px, 5.5vw, 72px)',
-                fontWeight: 500,
-                letterSpacing: '-0.03em',
-                color: 'var(--text)',
-                lineHeight: 1.0,
-                marginBottom: '12px',
-                transform: rowHovered ? 'translateX(6px)' : 'translateX(0)',
-                transition: 'transform 200ms ease',
-              }}
-            >
-              {phase.name}
-            </h2>
-
-            <p
-              style={{
-                fontFamily: 'var(--font-body), sans-serif',
-                fontSize: '10px',
-                fontWeight: 600,
-                letterSpacing: '0.16em',
-                textTransform: 'uppercase',
-                color: 'var(--accent)',
-                lineHeight: 1.5,
-                maxWidth: '260px',
-                marginBottom: '28px',
-              }}
-            >
-              {phase.descriptor}
-            </p>
-
-            {/* Week chip */}
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '6px 14px',
-                border: '1px solid var(--border)',
-              }}
-            >
-              <div
-                style={{
-                  width: '5px',
-                  height: '5px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--accent)',
-                }}
-              />
-              <span
-                style={{
-                  fontFamily: 'var(--font-mono), monospace',
-                  fontSize: '10px',
-                  letterSpacing: '0.1em',
-                  color: 'var(--text-secondary)',
-                }}
-              >
-                {phase.weeks}
-              </span>
-            </div>
-          </div>
+          <motion.div
+            variants={{
+              hidden: { opacity: 0, x: -10 },
+              visible: { opacity: 0, x: -10 },
+              hovered: { opacity: 1, x: 0 },
+            }}
+            transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+            style={{ marginTop: 18, display: 'inline-flex', alignItems: 'center', gap: 10 }}
+          >
+            <div style={{ width: 24, height: 1, backgroundColor: 'var(--accent)' }} />
+            <ArrowRight size={12} style={{ color: 'var(--accent)' }} />
+          </motion.div>
         </div>
 
-        {/* Right */}
-        <div style={{ paddingTop: '4px' }}>
-          <p
-            className="font-body"
-            style={{
-              fontSize: '16px',
-              lineHeight: 1.9,
-              color: 'var(--text-secondary)',
-              marginBottom: '28px',
-            }}
-          >
-            {phase.description}
-          </p>
-
-          {/* Insight callout */}
-          <div
-            style={{
-              borderLeft: '2px solid var(--accent)',
-              paddingLeft: '20px',
-              marginBottom: '36px',
-            }}
-          >
-            <p
-              className="font-heading"
-              style={{
-                fontSize: 'clamp(15px, 1.4vw, 18px)',
-                fontStyle: 'italic',
-                fontWeight: 400,
-                color: 'var(--text)',
-                lineHeight: 1.5,
-                letterSpacing: '-0.01em',
-              }}
-            >
-              &ldquo;{phase.insight}&rdquo;
-            </p>
-          </div>
-
-          {/* Deliverables */}
-          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '24px' }}>
-            <div
-              style={{
-                fontFamily: 'var(--font-body), sans-serif',
-                fontSize: '9px',
-                fontWeight: 600,
-                letterSpacing: '0.22em',
-                textTransform: 'uppercase',
-                color: 'var(--text-muted)',
-                marginBottom: '16px',
-              }}
-            >
-              Deliverables
-            </div>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '12px',
-              }}
-            >
-              {phase.deliverables.map((item) => (
-                <div
-                  key={item}
-                  style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
-                >
-                  <div
-                    style={{
-                      width: '18px',
-                      height: '18px',
-                      flexShrink: 0,
-                      border: '1px solid var(--accent)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Check size={10} color="var(--accent)" strokeWidth={2.5} />
-                  </div>
-                  <span
-                    style={{
-                      fontFamily: 'var(--font-body), sans-serif',
-                      fontSize: '13px',
-                      fontWeight: 500,
-                      color: 'var(--text)',
-                    }}
-                  >
-                    {item}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <motion.p
+          className="font-body"
+          variants={{
+            hidden: { color: 'var(--dark-muted)' },
+            visible: { color: 'var(--dark-muted)' },
+            hovered: { color: 'rgba(220,225,245,0.78)' },
+          }}
+          transition={{ duration: 0.25 }}
+          style={{ fontSize: 15, lineHeight: 1.88 }}
+        >
+          {principle.body}
+        </motion.p>
       </div>
+    </motion.div>
+  );
+}
+
+/* ── Phase image — cinematic wipe entry + grayscale-to-color hover ── */
+function PhaseImage({ phase, from }: { phase: Phase; from: 'left' | 'right' }) {
+  const [hov, setHov] = useState(false);
+  const xInit = from === 'right' ? 36 : -36;
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: xInit }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: false, amount: 0.15 }}
+      transition={{ duration: 0.88, ease: EASE }}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{ position: 'relative', aspectRatio: '4 / 3', overflow: 'hidden' }}
+    >
+      <img
+        src={phase.image}
+        alt={`${phase.name} phase — ${phase.descriptor}`}
+        style={{
+          width: '100%', height: '100%',
+          objectFit: 'cover', objectPosition: 'center',
+          display: 'block',
+          filter: hov
+            ? 'grayscale(0%) brightness(0.95) contrast(1.04)'
+            : 'grayscale(55%) brightness(0.7)',
+          transform: hov ? 'scale(1.04)' : 'scale(1.0)',
+          transition: 'filter 1s cubic-bezier(0.22,1,0.36,1), transform 1.2s cubic-bezier(0.22,1,0.36,1)',
+        }}
+      />
+      {/* Accent frame traces the border on hover */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        boxShadow: hov
+          ? 'inset 0 0 0 1px rgba(61,82,230,0.55)'
+          : 'inset 0 0 0 0px rgba(61,82,230,0)',
+        transition: 'box-shadow 600ms ease',
+        pointerEvents: 'none', zIndex: 2,
+      }} />
+      {/* Metadata slides up on hover */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0,
+        padding: '48px 20px 18px',
+        background: 'linear-gradient(to top, rgba(0,0,0,0.52) 0%, transparent 100%)',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
+        opacity: hov ? 1 : 0,
+        transform: hov ? 'translateY(0)' : 'translateY(10px)',
+        transition: 'opacity 450ms ease, transform 500ms cubic-bezier(0.22,1,0.36,1)',
+        pointerEvents: 'none', zIndex: 2,
+      }}>
+        <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.75)' }}>{phase.name}</span>
+        <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: 9, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.38)' }}>{phase.number} / 04</span>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ── Phase text — staggered slide-in from its side of the timeline ── */
+function PhaseText({ phase, from }: { phase: Phase; from: 'left' | 'right' }) {
+  const x = from === 'left' ? -52 : 52;
+  const vp = { once: false, amount: 0.2 };
+  return (
+    <div>
+      <motion.h2
+        className="font-heading"
+        initial={{ opacity: 0, x }} whileInView={{ opacity: 1, x: 0 }} viewport={vp}
+        transition={{ duration: 0.78, ease: EASE, delay: 0.05 }}
+        style={{ fontSize: 'clamp(34px, 4.2vw, 58px)', fontWeight: 500, letterSpacing: '-0.032em', color: 'var(--text)', lineHeight: 1.0, marginBottom: 20 }}
+      >
+        {phase.name}
+      </motion.h2>
+      <motion.p
+        className="font-body"
+        initial={{ opacity: 0, x }} whileInView={{ opacity: 1, x: 0 }} viewport={vp}
+        transition={{ duration: 0.72, ease: EASE, delay: 0.15 }}
+        style={{ fontSize: 'clamp(14px, 1.2vw, 16px)', lineHeight: 1.85, color: 'var(--text-secondary)', marginBottom: 36, maxWidth: '420px' }}
+      >
+        {phase.body}
+      </motion.p>
+      <motion.div
+        initial={{ opacity: 0, x }} whileInView={{ opacity: 1, x: 0 }} viewport={vp}
+        transition={{ duration: 0.65, ease: EASE, delay: 0.25 }}
+        style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}
+      >
+        {phase.deliverables.map(d => (
+          <span key={d} style={{ fontFamily: 'var(--font-mono), monospace', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent)', border: '1px solid rgba(61,82,230,0.22)', padding: '6px 14px', background: 'rgba(61,82,230,0.035)' }}>{d}</span>
+        ))}
+      </motion.div>
     </div>
   );
 }
 
-/* ── Principle row ────────────────────────────────────────── */
-function PrincipleRow({
-  principle,
-  index,
-  visible,
-}: {
-  principle: typeof PRINCIPLES[0];
-  index: number;
-  visible: boolean;
-}) {
-  const [hovered, setHovered] = useState(false);
-
+/* ── Phase timeline node — rotating diamond with counter-rotating number ── */
+function PhaseNode({ number }: { number: string }) {
   return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="principle-row"
-      style={{
-        display: 'grid',
-        gridTemplateColumns: '88px 1fr 1fr',
-        gap: '48px',
-        padding: '40px 0',
-        borderTop: `1px solid ${hovered ? 'rgba(61,82,230,0.35)' : 'var(--dark-border)'}`,
-        alignItems: 'start',
-        cursor: 'default',
-        transition: 'border-color 200ms ease',
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(20px)',
-      }}
-      /* stagger via inline, can't use transition-delay in the shorthand above */
-    >
-      <div
+    <div style={{ position: 'relative', zIndex: 2, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {/* Static outer glow ring */}
+      <div aria-hidden style={{ position: 'absolute', width: 58, height: 58, transform: 'rotate(45deg)', border: '1px solid rgba(61,82,230,0.1)', pointerEvents: 'none' }} />
+      {/* Diamond — rotates into place, number stays upright */}
+      <motion.div
+        initial={{ scale: 0, opacity: 0, rotate: 0 }}
+        whileInView={{ scale: 1, opacity: 1, rotate: 45 }}
+        viewport={{ once: false, amount: 0.6 }}
+        transition={{ type: 'spring', stiffness: 190, damping: 15, delay: 0.12 }}
         style={{
-          fontFamily: 'var(--font-mono), monospace',
-          fontSize: 'clamp(40px, 5vw, 64px)',
-          fontWeight: 400,
-          letterSpacing: '-0.02em',
-          lineHeight: 1,
-          color: hovered ? 'var(--accent)' : 'var(--dark-border)',
-          transition: 'color 200ms ease',
-          userSelect: 'none',
+          width: 34, height: 34,
+          backgroundColor: 'var(--bg)',
+          border: '1.5px solid var(--accent)',
+          boxShadow: '0 0 0 5px rgba(61,82,230,0.07), 0 0 28px rgba(61,82,230,0.22)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0,
         }}
       >
-        {principle.number}
-      </div>
-      <h3
-        className="font-heading"
-        style={{
-          fontSize: 'clamp(20px, 2.2vw, 28px)',
-          fontWeight: 500,
-          letterSpacing: '-0.02em',
-          color: 'var(--dark-text)',
-          lineHeight: 1.2,
-          paddingTop: '8px',
-        }}
-      >
-        {principle.title}
-      </h3>
-      <p
-        className="font-body"
-        style={{
-          fontSize: '14px',
-          lineHeight: 1.8,
-          color: 'var(--dark-muted)',
-          paddingTop: '8px',
-        }}
-      >
-        {principle.body}
-      </p>
+        <span style={{ transform: 'rotate(-45deg)', fontFamily: 'var(--font-mono), monospace', fontSize: 8, letterSpacing: '0.06em', color: 'var(--accent)', fontWeight: 600, userSelect: 'none', lineHeight: 1 }}>
+          {number}
+        </span>
+      </motion.div>
     </div>
   );
 }
 
 /* ── Page ─────────────────────────────────────────────────── */
 export default function ApproachClient() {
+  const t = useTranslations('approach');
   const [lineDrawn, setLineDrawn] = useState(false);
-  const [heroPhaseIndex, setHeroPhaseIndex] = useState(-1);
-  const [ctaHovered, setCtaHovered] = useState(false);
+  const scrollDir = useScrollDirection();
+
+  const PHASES: Phase[] = [
+    { number: '01', name: t('phase01name'), id: 'phase-audit',   descriptor: t('phase01descriptor'), deliverables: [t('phase01d0'), t('phase01d1'), t('phase01d2')], body: t('phase01body'), image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80' },
+    { number: '02', name: t('phase02name'), id: 'phase-design',  descriptor: t('phase02descriptor'), deliverables: [t('phase02d0'), t('phase02d1'), t('phase02d2')], body: t('phase02body'), image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=1200&q=80' },
+    { number: '03', name: t('phase03name'), id: 'phase-build',   descriptor: t('phase03descriptor'), deliverables: [t('phase03d0'), t('phase03d1'), t('phase03d2')], body: t('phase03body'), image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80' },
+    { number: '04', name: t('phase04name'), id: 'phase-handoff', descriptor: t('phase04descriptor'), deliverables: [t('phase04d0'), t('phase04d1'), t('phase04d2')], body: t('phase04body'), image: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=1200&q=80' },
+  ];
+
+  const PRINCIPLES: Principle[] = [
+    { number: '01', title: t('p01title'), body: t('p01body'), image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1600&q=80' },
+    { number: '02', title: t('p02title'), body: t('p02body'), image: 'https://images.unsplash.com/photo-1521737852567-6949f3f9f2b5?auto=format&fit=crop&w=1600&q=80' },
+    { number: '03', title: t('p03title'), body: t('p03body'), image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1600&q=80' },
+  ];
 
   useEffect(() => {
-    const t1 = setTimeout(() => setLineDrawn(true), 300);
-    const timers = PHASES.map((_, i) =>
-      setTimeout(() => setHeroPhaseIndex(i), 600 + i * 150)
-    );
-    return () => {
-      clearTimeout(t1);
-      timers.forEach(clearTimeout);
-    };
+    const id = setTimeout(() => setLineDrawn(true), 500);
+    return () => clearTimeout(id);
   }, []);
-
-  const { ref: philoRef, visible: philoVisible } = useReveal();
-  const { ref: principlesRef, visible: principlesVisible } = useReveal();
-  const { ref: timelineRef, visible: timelineVisible } = useReveal();
-  const { ref: ctaRef, visible: ctaVisible } = useReveal(0.15);
 
   return (
     <>
-      {/* ════════════════════════════════════════════════════
+      {/* ════════════════════════════════════════════════
           S1 — HERO
-      ════════════════════════════════════════════════════ */}
+      ════════════════════════════════════════════════ */}
       <section
+        id="approach-hero"
+        data-section-label="Overview"
         data-nav-theme="dark"
         style={{
           backgroundColor: 'var(--dark-bg)',
-          padding: '152px 32px 0',
+          minHeight: '100dvh',
+          display: 'flex',
+          flexDirection: 'column',
           position: 'relative',
           overflow: 'hidden',
         }}
       >
         {/* Dot grid */}
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            inset: 0,
-            backgroundImage:
-              'radial-gradient(circle, var(--dark-surface) 1px, transparent 1px)',
-            backgroundSize: '28px 28px',
-            pointerEvents: 'none',
-          }}
-        />
-        {/* Ambient glow */}
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '35%',
-            transform: 'translate(-50%, -50%)',
-            width: '900px',
-            height: '900px',
-            background:
-              'radial-gradient(circle, rgba(61,82,230,0.07) 0%, transparent 65%)',
-            pointerEvents: 'none',
-          }}
-        />
+        <div aria-hidden style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px)',
+          backgroundSize: '28px 28px',
+          pointerEvents: 'none', zIndex: 0,
+        }} />
 
-        <div
-          style={{
-            position: 'relative',
-            zIndex: 1,
-            maxWidth: '1200px',
-            margin: '0 auto',
-          }}
+        {/* Right-side technical image */}
+        <div aria-hidden style={{
+          position: 'absolute', top: 0, right: 0,
+          width: '45%', height: '100%', overflow: 'hidden', zIndex: 0,
+        }}>
+          <img
+            src="https://picsum.photos/seed/obsidia-datacenter-rack/1920/1080"
+            alt=""
+            style={{
+              width: '100%', height: '100%',
+              objectFit: 'cover', objectPosition: 'center',
+              filter: 'grayscale(60%) brightness(0.3)',
+              display: 'block',
+            }}
+          />
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(to right, var(--dark-bg) 0%, rgba(6,8,15,0.72) 42%, rgba(6,8,15,0.12) 100%)',
+          }} />
+        </div>
+
+        {/* Outlined "04" watermark */}
+        <div aria-hidden style={{
+          position: 'absolute', top: '50%', right: '-3%',
+          transform: 'translateY(-50%)',
+          fontFamily: 'var(--font-heading), Georgia, serif',
+          fontSize: 'clamp(240px, 32vw, 480px)',
+          fontWeight: 600, letterSpacing: '-0.04em', lineHeight: 1,
+          color: 'transparent',
+          WebkitTextStroke: '1px rgba(61,82,230,0.06)',
+          userSelect: 'none', pointerEvents: 'none', zIndex: 1,
+        }}>
+          04
+        </div>
+
+        {/* Cobalt ambient glow */}
+        <div aria-hidden style={{
+          position: 'absolute', top: '15%', left: '-8%',
+          width: '900px', height: '900px',
+          background: 'radial-gradient(circle, rgba(61,82,230,0.09) 0%, transparent 60%)',
+          pointerEvents: 'none', zIndex: 0,
+        }} />
+
+        {/* Main content */}
+        <div style={{
+          flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center',
+          position: 'relative', zIndex: 2,
+          maxWidth: '1200px', width: '100%', margin: '0 auto',
+          padding: '120px 32px 60px',
+        }}>
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE, delay: 0.1 }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginBottom: 52 }}
+          >
+            <div style={{ width: 28, height: 1, backgroundColor: 'var(--accent)', opacity: 0.7 }} />
+            <span style={{
+              fontFamily: 'var(--font-mono), monospace',
+              fontSize: 11, fontWeight: 500, letterSpacing: '0.22em',
+              textTransform: 'uppercase', color: 'var(--accent)',
+            }}>
+              {t('heroLabel')}
+            </span>
+          </motion.div>
+
+          <motion.h1
+            className="font-heading"
+            initial={{ opacity: 0, y: 36 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: EASE, delay: 0.2 }}
+            style={{
+              fontSize: 'clamp(56px, 8.5vw, 116px)',
+              fontWeight: 500, letterSpacing: '-0.04em',
+              color: 'var(--dark-text)', lineHeight: 0.94,
+              marginBottom: 44, maxWidth: '820px',
+            }}
+          >
+            Built around
+            <br />
+            the process,
+            <br />
+            <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>not the tool.</em>
+          </motion.h1>
+
+          <motion.p
+            className="font-body"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: EASE, delay: 0.46 }}
+            style={{
+              fontSize: 'clamp(15px, 1.5vw, 18px)', lineHeight: 1.8,
+              color: 'rgba(220,225,245,0.52)', maxWidth: '500px',
+            }}
+          >
+            Most automation projects fail because the process was never mapped before the build started. Here is exactly how ours works, and why it succeeds.
+          </motion.p>
+        </div>
+
+        {/* Phase tracker — taller, clickable anchors */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.7, ease: EASE, delay: 0.85 }}
+          style={{ position: 'relative', zIndex: 2 }}
         >
-          <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '55% 45%', gap: '80px', alignItems: 'center' }}>
-            {/* Left: headline block */}
-            <div>
-              <div className="section-label" style={{ marginBottom: '36px' }}>
-                Our Approach
-              </div>
+          {/* Animated accent rule */}
+          <div aria-hidden style={{
+            position: 'absolute', top: 0, left: 0, height: 1, width: '100%',
+            backgroundColor: 'var(--accent)',
+            transformOrigin: 'left center',
+            transform: lineDrawn ? 'scaleX(1)' : 'scaleX(0)',
+            transition: 'transform 1.8s cubic-bezier(0.22,1,0.36,1)',
+            opacity: 0.4,
+          }} />
 
-              <h1
-                className="font-heading"
-                style={{
-                  fontSize: 'clamp(48px, 6vw, 88px)',
-                  fontWeight: 500,
-                  letterSpacing: '-0.035em',
-                  color: 'var(--dark-text)',
-                  lineHeight: 0.97,
-                  marginBottom: '32px',
-                }}
-              >
-                Built around
-                <br />
-                the process,
-                <br />
-                <em style={{ color: 'var(--accent)', fontStyle: 'normal' }}>
-                  not the tool.
-                </em>
-              </h1>
-
-              <p
-                className="font-body"
-                style={{
-                  fontSize: 'clamp(15px, 1.4vw, 17px)',
-                  lineHeight: 1.8,
-                  color: 'var(--dark-muted)',
-                  maxWidth: '460px',
-                  marginBottom: '52px',
-                }}
-              >
-                Most automation projects fail because the process was never
-                understood before the build started. Here is exactly how ours
-                works — and why it doesn&rsquo;t fail.
-              </p>
-
-              {/* Mini stats */}
-              <div className="hero-stats" style={{ display: 'flex', gap: '40px', flexWrap: 'wrap' }}>
-                {[
-                  { value: '04', label: 'Phases' },
-                  { value: '06', label: 'Weeks' },
-                  { value: '30', label: 'Day support' },
-                ].map(({ value, label }) => (
-                  <div
-                    key={label}
-                    style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-mono), monospace',
-                        fontSize: '32px',
-                        fontWeight: 500,
-                        color: 'var(--dark-text)',
-                        letterSpacing: '-0.02em',
-                      }}
-                    >
-                      {value}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-body), sans-serif',
-                        fontSize: '10px',
-                        fontWeight: 600,
-                        letterSpacing: '0.12em',
-                        textTransform: 'uppercase',
-                        color: 'var(--dark-muted)',
-                      }}
-                    >
-                      {label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right: phase preview list */}
+          <div style={{ borderTop: '1px solid var(--dark-border)' }}>
             <div
-              className="hero-phases"
+              className="phase-tracker"
               style={{
-                borderLeft: '1px solid var(--dark-border)',
-                paddingLeft: '56px',
+                maxWidth: '1200px', margin: '0 auto',
+                padding: '0 32px',
+                display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
               }}
             >
-              {PHASES.map((p, i) => (
-                <div
-                  key={p.number}
+              {PHASES.map((phase, i) => (
+                <a
+                  key={phase.id}
+                  href={`#${phase.id}`}
+                  className="phase-tracker-item"
                   style={{
-                    padding: '22px 0',
-                    borderBottom:
-                      i < PHASES.length - 1
-                        ? '1px solid var(--dark-border)'
-                        : 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '16px',
-                    opacity: heroPhaseIndex >= i ? 1 : 0,
-                    transform:
-                      heroPhaseIndex >= i ? 'translateX(0)' : 'translateX(18px)',
-                    transition: 'opacity 450ms ease, transform 450ms ease',
+                    display: 'flex', alignItems: 'flex-start', gap: 16,
+                    padding: '28px 0',
+                    borderLeft: i > 0 ? '1px solid var(--dark-border)' : 'none',
+                    paddingLeft: i > 0 ? 28 : 0,
+                    textDecoration: 'none',
                   }}
                 >
+                  <span className="phase-num" style={{
+                    fontFamily: 'var(--font-mono), monospace',
+                    fontSize: 10, fontWeight: 500, letterSpacing: '0.18em',
+                    color: 'rgba(61,82,230,0.5)',
+                    paddingTop: 3,
+                    transition: 'color 200ms ease',
+                    flexShrink: 0,
+                  }}>
+                    {phase.number}
+                  </span>
                   <div>
-                    <div
-                      style={{
-                        fontFamily: 'var(--font-mono), monospace',
-                        fontSize: '9px',
-                        fontWeight: 500,
-                        letterSpacing: '0.18em',
-                        color: 'var(--accent)',
-                        marginBottom: '6px',
-                      }}
-                    >
-                      {p.number}
-                    </div>
-                    <div
-                      className="font-heading"
-                      style={{
-                        fontSize: 'clamp(18px, 2vw, 22px)',
-                        fontWeight: 500,
-                        letterSpacing: '-0.02em',
-                        color: 'var(--dark-text)',
-                        lineHeight: 1.1,
-                        marginBottom: '3px',
-                      }}
-                    >
-                      {p.name}
-                    </div>
-                    <div
-                      style={{
-                        fontFamily: 'var(--font-body), sans-serif',
-                        fontSize: '11px',
-                        color: 'var(--dark-muted)',
-                        letterSpacing: '0.04em',
-                      }}
-                    >
-                      {p.weeks}
-                    </div>
+                    <span className="phase-name" style={{
+                      fontFamily: 'var(--font-body), sans-serif',
+                      fontSize: 12, fontWeight: 500, letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      color: 'rgba(220,225,245,0.3)',
+                      display: 'block',
+                      transition: 'color 200ms ease',
+                    }}>
+                      {phase.name}
+                    </span>
+                    <span className="phase-desc" style={{
+                      fontFamily: 'var(--font-body), sans-serif',
+                      fontSize: 11,
+                      color: 'rgba(220,225,245,0.16)',
+                      display: 'block', marginTop: 5,
+                      lineHeight: 1.55,
+                      transition: 'color 200ms ease',
+                    }}>
+                      {phase.descriptor}
+                    </span>
                   </div>
-                  <ArrowRight size={13} color="var(--dark-border)" />
-                </div>
+                </a>
               ))}
             </div>
           </div>
-
-          {/* Crimson line draws across on load */}
-          <div
-            aria-hidden
-            style={{
-              height: '1px',
-              backgroundColor: 'var(--accent)',
-              marginTop: '88px',
-              width: lineDrawn ? '100%' : '0%',
-              transition: 'width 1.4s ease-in-out',
-            }}
-          />
-        </div>
+        </motion.div>
       </section>
 
-      {/* ════════════════════════════════════════════════════
-          S2 — PHILOSOPHY
-      ════════════════════════════════════════════════════ */}
+      {/* ════════════════════════════════════════════════
+          PHASES HEADER
+      ════════════════════════════════════════════════ */}
       <section
         style={{
           backgroundColor: 'var(--bg)',
-          padding: '120px 32px',
           borderTop: '1px solid var(--border)',
+          padding: '88px 32px 72px',
         }}
       >
-        <div
-          ref={philoRef}
-          className="philo-grid"
-          style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '80px',
-            alignItems: 'start',
-            opacity: philoVisible ? 1 : 0,
-            transform: philoVisible ? 'translateY(0)' : 'translateY(28px)',
-            transition: 'opacity 800ms ease, transform 800ms ease',
-          }}
-        >
-          {/* Left: pull quote */}
-          <div>
-            <div
-              aria-hidden
-              className="font-heading"
-              style={{
-                fontSize: 'clamp(80px, 10vw, 128px)',
-                color: 'var(--accent)',
-                lineHeight: 0.75,
-                marginBottom: '12px',
-                opacity: 0.65,
-                userSelect: 'none',
-              }}
-            >
-              &ldquo;
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.5 }}
+            transition={{ duration: 0.65, ease: EASE }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
+              <div style={{ width: 28, height: 1, backgroundColor: 'var(--accent)' }} />
+              <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: 10, fontWeight: 500, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--accent)' }}>{t('processLabel')}</span>
             </div>
-            <p
-              className="font-heading"
-              style={{
-                fontSize: 'clamp(20px, 2.4vw, 30px)',
-                fontWeight: 400,
-                fontStyle: 'italic',
-                lineHeight: 1.5,
-                letterSpacing: '-0.01em',
-                color: 'var(--text)',
-                maxWidth: '480px',
-              }}
-            >
-              Every engagement starts with an audit, not a proposal. We map
-              the process before we design the solution.
+            <h2 className="font-heading" style={{ fontSize: 'clamp(42px, 5.8vw, 78px)', fontWeight: 500, letterSpacing: '-0.038em', color: 'var(--text)', lineHeight: 0.97, marginBottom: 24 }}>
+              {t('processHeadline')}<br />
+              <em style={{ fontStyle: 'italic', color: 'var(--accent)', fontWeight: 400 }}>{t('processHeadlineAccent')}</em>
+            </h2>
+            <p className="font-body" style={{ fontSize: 15, lineHeight: 1.8, color: 'var(--text-secondary)', maxWidth: '400px', marginTop: 8 }}>
+              Every engagement runs through the same four phases, in the same order, without exception.
             </p>
-            <div
-              style={{
-                width: '48px',
-                height: '1px',
-                backgroundColor: 'var(--accent)',
-                marginTop: '36px',
-              }}
-            />
-          </div>
-
-          {/* Right: commitments */}
-          <div style={{ paddingTop: '8px' }}>
-            <div
-              style={{
-                fontFamily: 'var(--font-body), sans-serif',
-                fontSize: '10px',
-                fontWeight: 600,
-                letterSpacing: '0.2em',
-                textTransform: 'uppercase',
-                color: 'var(--text-muted)',
-                marginBottom: '24px',
-              }}
-            >
-              What this means in practice
-            </div>
-            {[
-              'You receive a scope document before any build begins.',
-              'Every automation ships with full documentation.',
-              'Success metrics are agreed before the first line of logic.',
-            ].map((item, i) => (
-              <div
-                key={i}
-                style={{
-                  display: 'flex',
-                  gap: '18px',
-                  padding: '20px 0',
-                  borderTop: '1px solid var(--border)',
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: 'var(--font-mono), monospace',
-                    fontSize: '10px',
-                    fontWeight: 500,
-                    letterSpacing: '0.1em',
-                    color: 'var(--accent)',
-                    flexShrink: 0,
-                    paddingTop: '2px',
-                  }}
-                >
-                  {String(i + 1).padStart(2, '0')}
-                </div>
-                <p
-                  className="font-body"
-                  style={{
-                    fontSize: '14px',
-                    lineHeight: 1.75,
-                    color: 'var(--text-secondary)',
-                  }}
-                >
-                  {item}
-                </p>
-              </div>
-            ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════════════
-          S3 — FOUR PHASES
-      ════════════════════════════════════════════════════ */}
-      <div>
-        {PHASES.map((phase, i) => (
-          <PhaseRow key={phase.number} phase={phase} index={i} />
-        ))}
-      </div>
-
-      {/* ════════════════════════════════════════════════════
-          S4 — PRINCIPLES
-      ════════════════════════════════════════════════════ */}
-      <section
-        style={{
-          backgroundColor: 'var(--dark-bg)',
-          borderTop: '1px solid var(--dark-border)',
-          padding: '112px 32px',
-        }}
-      >
-        <div
-          ref={principlesRef}
-          style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-          }}
-        >
-          <div
+      {/* ════════════════════════════════════════════════
+          S2–S5 — PHASE SECTIONS (alternating + timeline)
+      ════════════════════════════════════════════════ */}
+      {PHASES.map((phase, i) => {
+        const isReversed = i % 2 === 1;
+        return (
+          <section
+            key={phase.id}
+            id={phase.id}
+            data-section-label={phase.name}
             style={{
-              display: 'flex',
-              alignItems: 'flex-end',
-              justifyContent: 'space-between',
-              marginBottom: '16px',
-              flexWrap: 'wrap',
-              gap: '16px',
+              backgroundColor: 'var(--bg)',
+              borderTop: '1px solid var(--border)',
+              position: 'relative',
             }}
           >
             <div
               style={{
-                fontFamily: 'var(--font-body), sans-serif',
-                fontSize: '10px',
-                fontWeight: 600,
-                letterSpacing: '0.2em',
-                textTransform: 'uppercase',
-                color: 'var(--accent)',
+                maxWidth: '1200px', margin: '0 auto',
+                padding: '0 32px',
+                display: 'grid',
+                gridTemplateColumns: '1fr 72px 1fr',
+                alignItems: 'stretch',
               }}
             >
-              What we hold ourselves to
+              {/* Left column */}
+              <div style={{ padding: '88px 48px 88px 0', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                {isReversed
+                  ? <PhaseImage phase={phase} from="left" />
+                  : <PhaseText phase={phase} from="left" />}
+              </div>
+
+              {/* Timeline column (center) */}
+              <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', paddingTop: 88, flexShrink: 0 }}>
+                {/* Vertical guide line */}
+                <div aria-hidden style={{
+                  position: 'absolute', top: 0, bottom: 0,
+                  left: '50%', transform: 'translateX(-50%)',
+                  width: 1,
+                  background: 'linear-gradient(to bottom, rgba(61,82,230,0.45) 0%, rgba(61,82,230,0.06) 100%)',
+                  zIndex: 0,
+                }} />
+                <PhaseNode number={phase.number} />
+              </div>
+
+              {/* Right column */}
+              <div style={{ padding: '88px 0 88px 48px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                {isReversed
+                  ? <PhaseText phase={phase} from="right" />
+                  : <PhaseImage phase={phase} from="right" />}
+              </div>
             </div>
-            <h2
-              className="font-heading"
-              style={{
-                fontSize: 'clamp(28px, 3vw, 40px)',
-                fontWeight: 500,
-                letterSpacing: '-0.025em',
-                color: 'var(--dark-text)',
-                lineHeight: 1.1,
-              }}
-            >
-              Three rules we don&rsquo;t bend.
+          </section>
+        );
+      })}
+
+      {/* ════════════════════════════════════════════════
+          S6 — PRINCIPLES
+      ════════════════════════════════════════════════ */}
+      <section
+        id="approach-principles"
+        data-section-label="Principles"
+        data-nav-theme="dark"
+        style={{
+          backgroundColor: 'var(--dark-bg)',
+          borderTop: '1px solid var(--dark-border)',
+          padding: '64px 32px 72px',
+        }}
+      >
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.4 }}
+            transition={{ duration: 0.65, ease: EASE }}
+            style={{ marginBottom: 44 }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
+              <div style={{ width: 28, height: 1, backgroundColor: 'var(--accent)', opacity: 0.7 }} />
+              <span style={{
+                fontFamily: 'var(--font-mono), monospace',
+                fontSize: 10, fontWeight: 500, letterSpacing: '0.22em',
+                textTransform: 'uppercase', color: 'var(--accent)', opacity: 0.8,
+              }}>
+                {t('principlesLabel')}
+              </span>
+            </div>
+            <h2 className="font-heading" style={{
+              fontSize: 'clamp(36px, 4.8vw, 64px)',
+              fontWeight: 500, letterSpacing: '-0.032em',
+              color: 'var(--dark-text)', lineHeight: 1.02, marginBottom: 18,
+            }}>
+              {t('principlesHeadline')}
             </h2>
-          </div>
+            <p style={{
+              fontFamily: 'var(--font-body), sans-serif',
+              fontSize: 15, color: 'var(--dark-muted)',
+              lineHeight: 1.75, maxWidth: '400px',
+            }}>
+              Non-negotiable standards applied to every engagement, without exception.
+            </p>
+          </motion.div>
 
           {PRINCIPLES.map((p, i) => (
-            <PrincipleRow
-              key={p.number}
-              principle={p}
-              index={i}
-              visible={principlesVisible}
-            />
+            <PrincipleRow key={p.number} principle={p} index={i} scrollDir={scrollDir} total={PRINCIPLES.length} />
           ))}
 
-          {/* Final border */}
           <div style={{ borderTop: '1px solid var(--dark-border)' }} />
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════════════
-          S5 — TIMELINE
-      ════════════════════════════════════════════════════ */}
+      {/* ════════════════════════════════════════════════
+          S7 — PHILOSOPHY + CTA (merged split-screen)
+      ════════════════════════════════════════════════ */}
       <section
+        id="approach-philosophy"
+        data-section-label="Philosophy"
+        data-nav-theme="dark"
         style={{
-          backgroundColor: 'var(--surface)',
-          borderTop: '1px solid var(--border)',
-          padding: '112px 32px',
-        }}
-      >
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div
-            ref={timelineRef}
-            style={{
-              opacity: timelineVisible ? 1 : 0,
-              transform: timelineVisible ? 'translateY(0)' : 'translateY(24px)',
-              transition: 'opacity 700ms ease, transform 700ms ease',
-            }}
-          >
-            {/* Header */}
-            <div
-              className="timeline-header"
-              style={{
-                display: 'flex',
-                alignItems: 'flex-end',
-                justifyContent: 'space-between',
-                marginBottom: '56px',
-                flexWrap: 'wrap',
-                gap: '24px',
-              }}
-            >
-              <div>
-                <div className="section-label" style={{ marginBottom: '16px' }}>
-                  What to Expect
-                </div>
-                <h2
-                  className="font-heading"
-                  style={{
-                    fontSize: 'clamp(32px, 4vw, 52px)',
-                    fontWeight: 500,
-                    letterSpacing: '-0.03em',
-                    color: 'var(--text)',
-                    lineHeight: 1.05,
-                  }}
-                >
-                  The first 6 weeks,
-                  <br />
-                  mapped out.
-                </h2>
-              </div>
-              <p
-                className="font-body timeline-subtitle"
-                style={{
-                  fontSize: '15px',
-                  lineHeight: 1.7,
-                  color: 'var(--text-secondary)',
-                  maxWidth: '320px',
-                  textAlign: 'right',
-                }}
-              >
-                From first conversation to a live, running automation.
-              </p>
-            </div>
-
-            {/* Table */}
-            <div>
-              {/* Column headers */}
-              <div
-                className="timeline-table-row"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '96px 96px 1fr 1fr',
-                  gap: '24px',
-                  paddingBottom: '14px',
-                  borderBottom: '1px solid var(--border-strong)',
-                }}
-              >
-                {['Week', 'Phase', 'Activity', 'What you receive'].map((h) => (
-                  <div
-                    key={h}
-                    style={{
-                      fontFamily: 'var(--font-body), sans-serif',
-                      fontSize: '9px',
-                      fontWeight: 600,
-                      letterSpacing: '0.22em',
-                      textTransform: 'uppercase',
-                      color: 'var(--text-muted)',
-                    }}
-                  >
-                    {h}
-                  </div>
-                ))}
-              </div>
-
-              {/* Rows */}
-              {TIMELINE.map((row, i) => (
-                <div
-                  key={i}
-                  className="timeline-table-row"
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '96px 96px 1fr 1fr',
-                    gap: '24px',
-                    padding: '22px 0',
-                    borderBottom: '1px solid var(--border)',
-                    opacity: timelineVisible ? 1 : 0,
-                    transform: timelineVisible ? 'translateX(0)' : 'translateX(-12px)',
-                    transition: `opacity 500ms ease ${i * 90 + 300}ms, transform 500ms ease ${i * 90 + 300}ms`,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-mono), monospace',
-                      fontSize: '11px',
-                      fontWeight: 500,
-                      letterSpacing: '0.08em',
-                      color: 'var(--accent)',
-                      paddingTop: '2px',
-                    }}
-                  >
-                    {row.week}
-                  </div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '6px',
-                      paddingTop: '2px',
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-mono), monospace',
-                        fontSize: '10px',
-                        fontWeight: 500,
-                        letterSpacing: '0.06em',
-                        color: 'var(--text-muted)',
-                      }}
-                    >
-                      {row.phase}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-body), sans-serif',
-                        fontSize: '11px',
-                        fontWeight: 500,
-                        letterSpacing: '0.04em',
-                        color: 'var(--text-secondary)',
-                      }}
-                    >
-                      {row.label}
-                    </span>
-                  </div>
-                  <p
-                    className="font-body"
-                    style={{
-                      fontSize: '14px',
-                      lineHeight: 1.6,
-                      color: 'var(--text)',
-                      fontWeight: 500,
-                    }}
-                  >
-                    {row.task}
-                  </p>
-                  <p
-                    className="font-body"
-                    style={{
-                      fontSize: '13px',
-                      lineHeight: 1.6,
-                      color: 'var(--text-secondary)',
-                    }}
-                  >
-                    {row.output}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════
-          S6 — CTA
-      ════════════════════════════════════════════════════ */}
-      <section
-        style={{
-          backgroundColor: 'var(--dark-bg)',
-          padding: '140px 32px',
+          backgroundColor: 'var(--dark-surface)',
           borderTop: '1px solid var(--dark-border)',
-          position: 'relative',
           overflow: 'hidden',
         }}
       >
         <div
-          aria-hidden
+          className="philo-cta-grid"
           style={{
-            position: 'absolute',
-            inset: 0,
-            backgroundImage:
-              'radial-gradient(circle, var(--dark-surface) 1px, transparent 1px)',
-            backgroundSize: '28px 28px',
-            pointerEvents: 'none',
-            opacity: 0.5,
-          }}
-        />
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            bottom: '-200px',
-            right: '-100px',
-            width: '600px',
-            height: '600px',
-            background:
-              'radial-gradient(circle, rgba(61,82,230,0.06) 0%, transparent 65%)',
-            pointerEvents: 'none',
-          }}
-        />
-
-        <div
-          ref={ctaRef}
-          style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            position: 'relative',
-            zIndex: 1,
-            opacity: ctaVisible ? 1 : 0,
-            transform: ctaVisible ? 'translateY(0)' : 'translateY(28px)',
-            transition: 'opacity 800ms ease, transform 800ms ease',
+            maxWidth: '1200px', margin: '0 auto',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            minHeight: '85dvh',
           }}
         >
-          <div
-            className="cta-grid"
+          {/* Left — Philosophy */}
+          <motion.div
+            initial={{ opacity: 0, x: -24 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: false, amount: 0.18 }}
+            transition={{ duration: 0.85, ease: EASE }}
             style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr auto',
-              gap: '80px',
-              alignItems: 'center',
+              padding: '88px 64px 88px 32px',
+              borderRight: '1px solid var(--dark-border)',
+              display: 'flex', flexDirection: 'column', justifyContent: 'center',
             }}
           >
-            <div>
-              <div
-                style={{
-                  fontFamily: 'var(--font-body), sans-serif',
-                  fontSize: '10px',
-                  fontWeight: 600,
-                  letterSpacing: '0.2em',
-                  textTransform: 'uppercase',
-                  color: 'var(--accent)',
-                  marginBottom: '24px',
-                }}
-              >
-                Start the process
-              </div>
-              <h2
-                className="font-heading"
-                style={{
-                  fontSize: 'clamp(36px, 5vw, 72px)',
-                  fontWeight: 500,
-                  letterSpacing: '-0.03em',
-                  color: 'var(--dark-text)',
-                  lineHeight: 1.0,
-                  maxWidth: '680px',
-                }}
-              >
-                See exactly what we&rsquo;d automate
-                <br />
-                for your business.
-              </h2>
+            <div aria-hidden className="font-heading" style={{
+              fontSize: 'clamp(80px, 11vw, 136px)',
+              color: 'var(--accent)', lineHeight: 0.7,
+              marginBottom: 8, opacity: 0.28, userSelect: 'none',
+            }}>
+              &ldquo;
             </div>
 
-            <Link
-              href="/contact"
-              onMouseEnter={() => setCtaHovered(true)}
-              onMouseLeave={() => setCtaHovered(false)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '10px',
+            <p className="font-heading" style={{
+              fontSize: 'clamp(20px, 2.3vw, 31px)',
+              fontWeight: 400, fontStyle: 'italic',
+              lineHeight: 1.46, letterSpacing: '-0.014em',
+              color: 'var(--dark-text)', maxWidth: '440px', marginBottom: 40,
+            }}>
+              Every engagement starts with an audit, not a proposal. We map the process before we design the solution.
+            </p>
+
+            <div style={{ width: 40, height: 1, backgroundColor: 'var(--accent)', marginBottom: 24, opacity: 0.55 }} />
+
+            <div style={{ marginBottom: 52 }}>
+              <div style={{
                 fontFamily: 'var(--font-body), sans-serif',
-                fontSize: '12px',
-                fontWeight: 600,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                textDecoration: 'none',
-                color: ctaHovered ? 'var(--dark-text)' : 'var(--dark-bg)',
-                backgroundColor: ctaHovered ? 'var(--accent)' : 'var(--dark-text)',
-                padding: '18px 44px',
-                transition: 'background-color 220ms ease, color 220ms ease',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Book a free audit <ArrowRight size={13} />
-            </Link>
-          </div>
+                fontSize: 14, fontWeight: 600, color: 'var(--dark-text)',
+                letterSpacing: '0.01em', marginBottom: 5,
+              }}>
+                Omar Attar
+              </div>
+              <div style={{
+                fontFamily: 'var(--font-mono), monospace',
+                fontSize: 10, letterSpacing: '0.16em',
+                textTransform: 'uppercase', color: 'var(--muted)',
+              }}>
+                CEO, Obsidia
+              </div>
+            </div>
+
+            <span style={{
+              fontFamily: 'var(--font-mono), monospace',
+              fontSize: 9, fontWeight: 500, letterSpacing: '0.22em',
+              textTransform: 'uppercase', color: 'var(--accent)',
+              display: 'block', opacity: 0.75, marginBottom: 20,
+            }}>
+              What this means in practice
+            </span>
+
+            {[
+              'You receive a scope document before any build begins.',
+              'Every automation ships with full documentation.',
+              'Success metrics are agreed before the first line of logic.',
+            ].map((item, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, x: 16 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: false, amount: 0.5 }}
+                transition={{ duration: 0.55, ease: EASE, delay: idx * 0.1 + 0.25 }}
+                style={{
+                  display: 'flex', gap: 20, padding: '18px 0',
+                  borderTop: '1px solid var(--dark-border)',
+                }}
+              >
+                <div style={{
+                  fontFamily: 'var(--font-mono), monospace',
+                  fontSize: 10, fontWeight: 500, letterSpacing: '0.12em',
+                  color: 'rgba(61,82,230,0.55)', flexShrink: 0, paddingTop: 3,
+                }}>
+                  {String(idx + 1).padStart(2, '0')}
+                </div>
+                <p className="font-body" style={{
+                  fontSize: 15, lineHeight: 1.8, color: 'rgba(220,225,245,0.58)',
+                }}>
+                  {item}
+                </p>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Right — CTA */}
+          <motion.div
+            initial={{ opacity: 0, x: 24 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: false, amount: 0.18 }}
+            transition={{ duration: 0.85, ease: EASE, delay: 0.1 }}
+            style={{
+              padding: '88px 32px 88px 64px',
+              display: 'flex', flexDirection: 'column', justifyContent: 'center',
+              position: 'relative', overflow: 'hidden',
+            }}
+          >
+            {/* Ambient glow */}
+            <div aria-hidden style={{
+              position: 'absolute', bottom: '-15%', right: '-15%',
+              width: '500px', height: '500px',
+              background: 'radial-gradient(circle, rgba(61,82,230,0.12) 0%, transparent 65%)',
+              pointerEvents: 'none',
+            }} />
+
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginBottom: 44 }}>
+                <div style={{ width: 28, height: 1, backgroundColor: 'var(--accent)', opacity: 0.5 }} />
+                <span style={{
+                  fontFamily: 'var(--font-mono), monospace',
+                  fontSize: 10, fontWeight: 500, letterSpacing: '0.22em',
+                  textTransform: 'uppercase', color: 'var(--accent)', opacity: 0.7,
+                }}>
+                  {t('ctaLabel')}
+                </span>
+              </div>
+
+              <h2 className="font-heading" style={{
+                fontSize: 'clamp(38px, 5vw, 74px)',
+                fontWeight: 500, letterSpacing: '-0.04em',
+                color: 'var(--dark-text)', lineHeight: 0.96, marginBottom: 32,
+              }}>
+                Describe the problem.
+                <br />
+                <em style={{ color: 'var(--accent)' }}>We handle</em>
+                <br />
+                everything from there.
+              </h2>
+
+              <p style={{
+                fontFamily: 'var(--font-body), sans-serif',
+                fontSize: 15, lineHeight: 1.82,
+                color: 'rgba(220,225,245,0.42)',
+                maxWidth: '380px', marginBottom: 52,
+              }}>
+                Book a free call. We map your highest-value opportunities and hand you a prioritised plan — no commitment required.
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'flex-start' }}>
+                <Link href="/contact" className="approach-cta-btn">
+                  {t('ctaButton')} <ArrowRight size={14} />
+                </Link>
+                <Link href="/services" className="approach-link-secondary">
+                  {t('ctaBody')}
+                </Link>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ── Responsive ────────────────────────────────────── */}
+      {/* ── Styles ──────────────────────────────────────── */}
       <style>{`
-        @media (max-width: 960px) {
-          .hero-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .hero-phases {
-            border-left: none !important;
-            border-top: 1px solid var(--dark-border) !important;
-            padding-left: 0 !important;
-            padding-top: 40px !important;
-            display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
-          }
-          .hero-phases > div {
-            border-bottom: none !important;
-            border-top: 1px solid var(--dark-border) !important;
-          }
-          .hero-phases > div:nth-child(1),
-          .hero-phases > div:nth-child(2) {
-            border-top: none !important;
-          }
+        /* Phase tracker hover */
+        .phase-tracker-item:hover .phase-name { color: rgba(220,225,245,0.72) !important; }
+        .phase-tracker-item:hover .phase-num  { color: var(--accent) !important; opacity: 1 !important; }
+        .phase-tracker-item:hover .phase-desc { color: rgba(220,225,245,0.32) !important; }
+
+        /* Phase image zoom */
+        .phase-img:hover { transform: scale(1.03); }
+
+        /* CTA button */
+        .approach-cta-btn {
+          display: inline-flex; align-items: center; gap: 10px;
+          font-family: var(--font-body), sans-serif;
+          font-size: 13px; font-weight: 500;
+          letter-spacing: 0.1em; text-transform: uppercase;
+          color: #fff; text-decoration: none;
+          background-color: var(--accent);
+          padding: 18px 44px;
+          border: 1px solid rgba(255,255,255,0.1);
+          box-shadow: 0 4px 24px rgba(61,82,230,0.28);
+          transition: background-color 200ms ease, box-shadow 280ms ease,
+                      transform 280ms cubic-bezier(0.22,1,0.36,1), gap 200ms ease;
+          will-change: transform;
+        }
+        .approach-cta-btn:hover {
+          background-color: var(--accent-hover);
+          box-shadow: 0 0 0 1px var(--accent), 0 8px 40px rgba(61,82,230,0.48),
+                      0 2px 12px rgba(61,82,230,0.28);
+          transform: translateY(-2px); gap: 14px;
+        }
+        .approach-cta-btn:active {
+          transform: translateY(0) scale(0.98);
+          box-shadow: 0 2px 12px rgba(61,82,230,0.25);
         }
 
-        @media (max-width: 768px) {
-          .phase-row-inner {
+        .approach-link-secondary {
+          font-family: var(--font-body), sans-serif;
+          font-size: 12px; color: rgba(220,225,245,0.32);
+          text-decoration: none;
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+          padding-bottom: 3px;
+          transition: color 200ms ease, border-color 200ms ease;
+        }
+        .approach-link-secondary:hover {
+          color: rgba(220,225,245,0.68);
+          border-color: rgba(255,255,255,0.25);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+          .phase-content-grid { gap: 40px !important; }
+        }
+        @media (max-width: 900px) {
+          .philo-cta-grid {
             grid-template-columns: 1fr !important;
-            gap: 48px !important;
+            min-height: auto !important;
           }
-          .philo-grid {
-            grid-template-columns: 1fr !important;
-            gap: 48px !important;
+          .philo-cta-grid > div:first-child {
+            border-right: none !important;
+            border-bottom: 1px solid var(--dark-border) !important;
           }
-          .hero-phases {
-            grid-template-columns: 1fr !important;
+          .philo-cta-grid > div:first-child,
+          .philo-cta-grid > div:last-child {
+            padding-left: 32px !important;
+            padding-right: 32px !important;
           }
-          .hero-phases > div {
-            border-top: 1px solid var(--dark-border) !important;
+          .principle-row-inner {
+            grid-template-columns: 56px 1fr !important;
+            gap: 16px !important;
           }
-          .principle-row {
-            grid-template-columns: 48px 1fr !important;
-            gap: 20px !important;
-          }
-          .principle-row > *:nth-child(3) {
-            grid-column: 2 !important;
-          }
-          .timeline-table-row {
-            grid-template-columns: 72px 1fr !important;
-          }
-          .timeline-table-row > *:nth-child(2),
-          .timeline-table-row > *:nth-child(4) {
-            display: none !important;
-          }
-          .cta-grid {
-            grid-template-columns: 1fr !important;
-            gap: 40px !important;
-          }
-          .timeline-subtitle {
-            text-align: left !important;
-          }
-          .hero-stats {
-            gap: 24px !important;
-          }
+          .principle-row-inner > *:nth-child(3) { grid-column: 2 !important; }
+          .phase-tracker { grid-template-columns: repeat(2, 1fr) !important; }
+          .phase-content-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+          .phase-content-grid > *:nth-child(2) { order: 2 !important; }
+        }
+        @media (max-width: 640px) {
+          .phase-tracker { grid-template-columns: repeat(2, 1fr) !important; }
         }
       `}</style>
     </>

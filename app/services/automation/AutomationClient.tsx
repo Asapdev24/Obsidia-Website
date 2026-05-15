@@ -1,16 +1,17 @@
-﻿'use client';
+'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
-import { ArrowRight, Plus, Minus } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
+import { Link } from '@/i18n/navigation';
+import { ArrowRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import WorkflowGraph from '../../components/WorkflowGraph';
 import TrustBar from '../../components/TrustBar';
 import CTABand from '../../components/CTABand';
 import MagneticButton from '../../components/MagneticButton';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
-const CYCLE_WORDS = ['approval chains.', 'manual reports.', 'data entry.', 'repetitive ops.'];
+const CYCLE_COUNT = 4;
 
 function useReveal(threshold = 0.1) {
   const ref = useRef<HTMLDivElement>(null);
@@ -28,23 +29,6 @@ function useReveal(threshold = 0.1) {
   return { ref, visible };
 }
 
-function useCountUp(target: number, active: boolean, duration = 1500) {
-  const [count, setCount] = useState(0);
-  const raf = useRef<number>(0);
-  useEffect(() => {
-    if (!active) return;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min((now - start) / duration, 1);
-      setCount(Math.round((1 - Math.pow(1 - t, 3)) * target));
-      if (t < 1) raf.current = requestAnimationFrame(tick);
-      else setCount(target);
-    };
-    raf.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf.current);
-  }, [active, target, duration]);
-  return count;
-}
 
 /* ── Hero (unchanged) ─────────────────────────────────────── */
 const CONTAINER = {
@@ -61,15 +45,20 @@ const FADE_UP = {
 };
 
 function AutomationHero() {
+  const t = useTranslations('automation');
+  const tNav = useTranslations('nav');
   const [wordIdx, setWordIdx] = useState(0);
+  const cycleWords = [t('heroCycle0'), t('heroCycle1'), t('heroCycle2'), t('heroCycle3')];
   useEffect(() => {
-    const t = setInterval(() => setWordIdx(i => (i + 1) % CYCLE_WORDS.length), 2400);
-    return () => clearInterval(t);
+    const id = setInterval(() => setWordIdx(i => (i + 1) % CYCLE_COUNT), 2400);
+    return () => clearInterval(id);
   }, []);
 
   return (
     <section
       data-nav-theme="dark"
+      id="auto-hero"
+      data-section-label="Overview"
       style={{ position: 'relative', minHeight: '100vh', display: 'grid', gridTemplateColumns: '55% 45%', alignItems: 'stretch', overflow: 'hidden', backgroundColor: 'var(--dark-bg)', paddingTop: '76px' }}
       className="auto-hero-grid"
     >
@@ -78,7 +67,7 @@ function AutomationHero() {
 
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '80px 48px 80px 32px', maxWidth: '680px' }}>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }} style={{ marginBottom: '28px' }}>
-          <div className="section-label" style={{ color: 'var(--accent)' }}>Workflow Automation</div>
+          <div className="section-label" style={{ color: 'var(--accent)' }}>{tNav('automationLabel')}</div>
         </motion.div>
 
         <h1 className="font-heading" style={{ fontSize: 'clamp(44px, 5.5vw, 82px)', fontWeight: 500, lineHeight: 1.0, letterSpacing: '-0.03em', color: 'var(--dark-text)', marginBottom: '28px' }}>
@@ -88,10 +77,10 @@ function AutomationHero() {
                 <motion.span key={i} variants={WORD} style={{ display: 'inline-block' }}>{w}</motion.span>
               ))}
             </span>
-            <motion.span variants={WORD} style={{ display: 'block', minHeight: '1.05em' }}>
+            <motion.span variants={WORD} style={{ display: 'block', minHeight: '1.05em' }} aria-live="polite" aria-atomic="true">
               <AnimatePresence mode="wait">
                 <motion.span key={wordIdx} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} transition={{ duration: 0.3, ease: EASE }} style={{ display: 'inline-block', color: 'var(--accent)', fontStyle: 'italic' }}>
-                  {CYCLE_WORDS[wordIdx]}
+                  {cycleWords[wordIdx]}
                 </motion.span>
               </AnimatePresence>
             </motion.span>
@@ -99,12 +88,12 @@ function AutomationHero() {
         </h1>
 
         <motion.p variants={FADE_UP} custom={0.85} initial="hidden" animate="visible" className="font-body" style={{ fontSize: 'clamp(15px, 1.4vw, 17px)', lineHeight: 1.8, color: 'var(--dark-muted)', maxWidth: '460px', marginBottom: '44px' }}>
-          Your team is losing hours every week to tasks that should run automatically. We map those tasks, build the workflows, and hand them over — fully documented and production-ready.
+          Your team is losing hours every week to tasks that should run automatically. We map those tasks, build the workflows, and hand them over: fully documented and production-ready.
         </motion.p>
 
         <motion.div variants={FADE_UP} custom={1.05} initial="hidden" animate="visible" style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap', marginBottom: '32px' }}>
           <MagneticButton strength={0.22}>
-            <Link href="/contact" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', fontFamily: 'var(--font-body), sans-serif', fontSize: '12px', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fff', textDecoration: 'none', backgroundColor: 'var(--accent)', padding: '14px 28px', transition: 'background-color 200ms ease' }}
+            <Link href="/contact" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', fontFamily: 'var(--font-body), sans-serif', fontSize: '12px', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fff', textDecoration: 'none', backgroundColor: 'var(--accent)', padding: '14px 28px', borderRadius: '50px', transition: 'background-color 200ms ease' }}
               onMouseEnter={(e) => { (e.currentTarget).style.backgroundColor = 'var(--accent-hover)'; }}
               onMouseLeave={(e) => { (e.currentTarget).style.backgroundColor = 'var(--accent)'; }}>
               Start a Project <ArrowRight size={13} />
@@ -117,20 +106,6 @@ function AutomationHero() {
           </Link>
         </motion.div>
 
-        <motion.div variants={FADE_UP} custom={1.35} initial="hidden" animate="visible" style={{ display: 'inline-flex', alignItems: 'center', gap: '12px', border: '1px solid var(--dark-border)', backgroundColor: 'rgba(255,255,255,0.03)', padding: '10px 18px', width: 'fit-content' }}>
-          <div style={{ position: 'relative', width: '8px', height: '8px', flexShrink: 0 }}>
-            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', backgroundColor: '#22C55E', zIndex: 1 }} />
-            <div style={{ position: 'absolute', inset: '-5px', borderRadius: '50%', border: '1px solid #22C55E', animation: 'pulseRing 2.2s ease-out infinite' }} />
-          </div>
-          <span style={{ fontFamily: 'var(--font-body), sans-serif', fontSize: '11px', fontWeight: 500, letterSpacing: '0.06em', color: 'var(--dark-muted)' }}>
-            <span style={{ fontFamily: 'var(--font-mono), monospace', color: 'var(--dark-text)', fontWeight: 600 }}>47</span>{' '}workflows automated this month
-          </span>
-        </motion.div>
-
-        <div aria-hidden style={{ position: 'absolute', bottom: '32px', left: '32px', display: 'flex', alignItems: 'center', gap: '10px', animation: 'scrollBounce 2.6s ease-in-out infinite' }}>
-          <div style={{ width: '1px', height: '28px', backgroundColor: 'var(--dark-border)' }} />
-          <span style={{ fontFamily: 'var(--font-body), sans-serif', fontSize: '9px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--dark-muted)' }}>Scroll</span>
-        </div>
       </div>
 
       <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.4 }} style={{ position: 'relative', height: '100%', minHeight: '500px' }}>
@@ -144,388 +119,355 @@ function AutomationHero() {
   );
 }
 
-/* ── Stats band — dark ROI dashboard ─────────────────────── */
-interface AutoStat { num: number; suffix: string; label: string; context: string; fill: number; tag: string; }
-const AUTO_STATS: AutoStat[] = [
-  { num: 72, suffix: '+ hrs', label: 'Saved per employee, per month',       context: "That's a full work week, every month, per person.",      fill: 85, tag: 'TIME RECOVERED'  },
-  { num: 3,  suffix: '×',     label: 'Faster approval cycles',              context: 'Decisions that took 3 days now take 4 minutes.',          fill: 60, tag: 'VELOCITY'        },
-  { num: 60, suffix: '%',     label: 'Reduction in processing cost',        context: 'Less than half the overhead. Same output.',               fill: 60, tag: 'COST EFFICIENCY' },
-];
 
-function AutoStatItem({ stat, index, active }: { stat: AutoStat; index: number; active: boolean }) {
-  const count = useCountUp(stat.num, active, 1600 + index * 200);
-  return (
-    <div className="auto-stat-item" style={{
-      flex: 1,
-      padding: '64px 0',
-      borderRight: index < 2 ? '1px solid #1E1E1C' : 'none',
-      paddingRight: index < 2 ? '56px' : '0',
-      paddingLeft:  index > 0 ? '56px' : '0',
-      opacity:    active ? 1 : 0,
-      transform:  active ? 'translateY(0)' : 'translateY(20px)',
-      transition: `opacity 700ms ease ${index * 140}ms, transform 700ms cubic-bezier(0.22,1,0.36,1) ${index * 140}ms`,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
-        <div style={{ width: '5px', height: '5px', backgroundColor: '#22C55E', borderRadius: '50%', flexShrink: 0 }} />
-        <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '9px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#3A3A38' }}>{stat.tag}</span>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '3px', marginBottom: '18px' }}>
-        <span className="font-heading" style={{ fontSize: 'clamp(52px, 6.5vw, 84px)', fontWeight: 500, letterSpacing: '-0.04em', color: '#F0EFE9', lineHeight: 0.9 }}>{count}</span>
-        <span style={{ fontFamily: 'var(--font-body), sans-serif', fontSize: '20px', color: 'var(--accent)', fontWeight: 400, marginLeft: '4px' }}>{stat.suffix}</span>
-      </div>
-      <p style={{ fontFamily: 'var(--font-body), sans-serif', fontSize: '11px', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#4A4A48', marginBottom: '20px' }}>{stat.label}</p>
-      <div style={{ position: 'relative', height: '1px', backgroundColor: '#1E1E1C', marginBottom: '14px', overflow: 'hidden' }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          width: active ? `${stat.fill}%` : '0%',
-          backgroundColor: 'var(--accent)', opacity: 0.65,
-          transition: `width 2s cubic-bezier(0.22,1,0.36,1) ${index * 200 + 500}ms`,
-        }} />
-      </div>
-      <p style={{ fontFamily: 'var(--font-body), sans-serif', fontSize: '13px', lineHeight: 1.65, color: '#3A3A38', fontStyle: 'italic' }}>{stat.context}</p>
-    </div>
-  );
-}
 
-function AutomationStatsBand() {
-  const { ref, visible } = useReveal(0.25);
-  return (
-    <section ref={ref} style={{ backgroundColor: '#111111', borderTop: '1px solid #1E1E1C', borderBottom: '1px solid #1E1E1C' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 32px', display: 'flex' }} className="auto-stats-inner">
-        {AUTO_STATS.map((s, i) => <AutoStatItem key={i} stat={s} index={i} active={visible} />)}
-      </div>
-      <style>{`
-        @media (max-width: 768px) {
-          .auto-stats-inner  { flex-direction: column !important; }
-          .auto-stat-item    { border-right: none !important; border-bottom: 1px solid #1E1E1C !important; padding: 48px 0 !important; }
-          .auto-stat-item:last-child { border-bottom: none !important; }
-        }
-      `}</style>
-    </section>
-  );
-}
+/* ── What We Build — split panel ─────────────────────────── */
 
-/* ── Abstract SVG graphics for zig-zag rows ───────────────── */
-function ApprovalSVG() {
-  return (
-    <svg viewBox="0 0 280 160" fill="none" width="100%" style={{ maxWidth: '360px' }}>
-      <circle cx="44" cy="80" r="28" stroke="#D4D2CC" strokeWidth="1.5"/>
-      <circle cx="44" cy="80" r="8" fill="#D4D2CC"/>
-      <line x1="72" y1="80" x2="100" y2="80" stroke="#D4D2CC" strokeWidth="1" strokeDasharray="5,4"/>
-      <polygon points="98,76 106,80 98,84" fill="#D4D2CC"/>
-      <circle cx="140" cy="80" r="32" stroke="rgba(61,82,230,0.6)" strokeWidth="1.5" fill="rgba(61,82,230,0.04)"/>
-      <circle cx="140" cy="74" r="10" stroke="rgba(61,82,230,0.5)" strokeWidth="1.2" fill="none"/>
-      <line x1="140" y1="66" x2="140" y2="74" stroke="rgba(61,82,230,0.7)" strokeWidth="1.5"/>
-      <line x1="140" y1="74" x2="145" y2="74" stroke="rgba(61,82,230,0.7)" strokeWidth="1.5"/>
-      <text x="140" y="96" fontSize="8" fill="rgba(61,82,230,0.55)" textAnchor="middle" fontFamily="monospace" letterSpacing="1">+3 DAYS</text>
-      <line x1="172" y1="80" x2="200" y2="80" stroke="#1E1E1C" strokeWidth="1" strokeDasharray="5,4"/>
-      <polygon points="198,76 206,80 198,84" fill="#1E1E1C"/>
-      <circle cx="236" cy="80" r="28" stroke="#1E1E1C" strokeWidth="1" strokeDasharray="5,4"/>
-      <circle cx="236" cy="80" r="8" fill="#1E1E1C" opacity="0.3"/>
-    </svg>
-  );
-}
-
-function ManualDataSVG() {
-  return (
-    <svg viewBox="0 0 280 160" fill="none" width="100%" style={{ maxWidth: '360px' }}>
-      <rect x="8" y="28" width="100" height="104" rx="3" stroke="#D4D2CC" strokeWidth="1.5"/>
-      {[0,1,2,3].map(i => <line key={i} x1="8" y1={52 + i*24} x2="108" y2={52 + i*24} stroke="#E8E6E0" strokeWidth="1"/>)}
-      {[0,1,2].map(i => (
-        <rect key={i} x={16} y={56 + i*24} width={42} height={10} rx="1" fill="#E8E6E0"/>
-      ))}
-      {[0,1,2].map(i => (
-        <rect key={i} x={64} y={56 + i*24} width={28} height={10} rx="1" fill="#F0EEE8"/>
-      ))}
-      <path d="M 118 80 Q 140 60 162 80" stroke="rgba(61,82,230,0.4)" strokeWidth="1.5" strokeDasharray="4,3" fill="none"/>
-      <polygon points="159,75 165,81 157,83" fill="rgba(61,82,230,0.4)"/>
-      <text x="140" y="56" fontSize="8" fill="rgba(61,82,230,0.4)" textAnchor="middle" fontFamily="monospace">copy</text>
-      <rect x="172" y="28" width="100" height="104" rx="3" stroke="#D4D2CC" strokeWidth="1.5"/>
-      {[0,1,2,3].map(i => <line key={i} x1="172" y1={52 + i*24} x2="272" y2={52 + i*24} stroke="#E8E6E0" strokeWidth="1"/>)}
-      {[0,1,2].map(i => (
-        <rect key={i} x={180} y={56 + i*24} width={42} height={10} rx="1" fill={i === 0 ? 'rgba(61,82,230,0.08)' : '#E8E6E0'}/>
-      ))}
-      <text x="140" y="150" fontSize="8" fill="#9A9A98" textAnchor="middle" fontFamily="monospace" letterSpacing="1">1 IN 25 HAS AN ERROR</text>
-    </svg>
-  );
-}
-
-function SilosSVG() {
-  const tools = [
-    { x: 8,   y: 20,  label: 'CRM' },
-    { x: 100, y: 20,  label: 'ERP' },
-    { x: 8,   y: 96,  label: 'PM'  },
-    { x: 100, y: 96,  label: 'FIN' },
-  ];
-  return (
-    <svg viewBox="0 0 280 160" fill="none" width="100%" style={{ maxWidth: '360px' }}>
-      {tools.map((t, i) => (
-        <g key={i}>
-          <rect x={t.x} y={t.y} width="72" height="44" rx="4" stroke="#D4D2CC" strokeWidth="1.5" fill="none"/>
-          <text x={t.x + 36} y={t.y + 27} fontSize="9" fill="#9A9A98" textAnchor="middle" fontFamily="monospace" letterSpacing="1">{t.label}</text>
-        </g>
-      ))}
-      {/* Broken connectors in the center */}
-      <line x1="80" y1="42" x2="100" y2="42" stroke="#E0DEDC" strokeWidth="1" strokeDasharray="3,3"/>
-      <text x="90" y="38" fontSize="10" fill="rgba(61,82,230,0.4)" textAnchor="middle">×</text>
-      <line x1="80" y1="118" x2="100" y2="118" stroke="#E0DEDC" strokeWidth="1" strokeDasharray="3,3"/>
-      <text x="90" y="114" fontSize="10" fill="rgba(61,82,230,0.4)" textAnchor="middle">×</text>
-      <line x1="44" y1="64" x2="44" y2="96" stroke="#E0DEDC" strokeWidth="1" strokeDasharray="3,3"/>
-      <text x="40" y="83" fontSize="10" fill="rgba(61,82,230,0.4)" textAnchor="middle">×</text>
-      <line x1="136" y1="64" x2="136" y2="96" stroke="#E0DEDC" strokeWidth="1" strokeDasharray="3,3"/>
-      <text x="132" y="83" fontSize="10" fill="rgba(61,82,230,0.4)" textAnchor="middle">×</text>
-      {/* Central connector box — "bridge" that doesn't exist */}
-      <rect x="90" y="58" width="100" height="44" rx="3" stroke="rgba(61,82,230,0.25)" strokeDasharray="4,3" strokeWidth="1.2"/>
-      <text x="140" y="75" fontSize="7" fill="rgba(61,82,230,0.35)" textAnchor="middle" fontFamily="sans-serif">1 person manually</text>
-      <text x="140" y="88" fontSize="7" fill="rgba(61,82,230,0.35)" textAnchor="middle" fontFamily="sans-serif">keeps these in sync</text>
-    </svg>
-  );
-}
-
-function ReportsSVG() {
-  const bars = [0.45, 0.7, 0.55, 0.9, 0.65, 0.5];
-  return (
-    <svg viewBox="0 0 280 160" fill="none" width="100%" style={{ maxWidth: '360px' }}>
-      <line x1="32" y1="16" x2="32" y2="128" stroke="#D4D2CC" strokeWidth="1"/>
-      <line x1="32" y1="128" x2="240" y2="128" stroke="#D4D2CC" strokeWidth="1"/>
-      {bars.map((h, i) => (
-        <rect key={i} x={44 + i*32} y={128 - h*108} width="20" height={h*108} rx="1"
-          fill={i === 3 ? 'rgba(61,82,230,0.3)' : '#E8E6E0'}
-          stroke={i === 3 ? 'rgba(61,82,230,0.5)' : 'none'} strokeWidth="1"/>
-      ))}
-      {/* Hand cursor icon */}
-      <path d="M208 72 L208 96 L216 104 L226 104 L226 80 L220 80 L220 72 Z" stroke="#9A9A98" strokeWidth="1.2" fill="none"/>
-      <line x1="212" y1="80" x2="212" y2="72" stroke="#9A9A98" strokeWidth="1.2"/>
-      <line x1="216" y1="78" x2="216" y2="70" stroke="#9A9A98" strokeWidth="1.2"/>
-      <text x="140" y="148" fontSize="8" fill="rgba(61,82,230,0.5)" textAnchor="middle" fontFamily="monospace" letterSpacing="1">100+ HRS / YEAR</text>
-    </svg>
-  );
-}
-
-/* ── Zig-zag problem section ──────────────────────────────── */
-const AUTO_PROBLEMS = [
-  {
-    n: '01', title: 'Approval chains that take days',
-    body: 'Requests sit in inboxes while your team waits for sign-off. Every day of delay is a decision your business didn\'t make fast enough. The bottleneck is the process, not the people.',
-    Graphic: ApprovalSVG,
-  },
-  {
-    n: '02', title: 'Manual data entry at every step',
-    body: 'Your team copies data between systems by hand, and each transfer takes time it shouldn\'t. One in 25 manual transfers contains a mistake — and they compound quietly.',
-    Graphic: ManualDataSVG,
-  },
-  {
-    n: '03', title: 'Tools that don\'t talk to each other',
-    body: 'CRM, ERP, project management, finance — each system is a silo you pay someone to bridge. Keeping them in sync is a full-time job that produces zero business output.',
-    Graphic: SilosSVG,
-  },
-  {
-    n: '04', title: 'Reports that require a human to run',
-    body: 'Every week, someone spends two hours pulling the same numbers from the same places. That\'s over 100 hours a year producing reports that could run themselves.',
-    Graphic: ReportsSVG,
-  },
-];
-
-function AutomationZigZag() {
-  const { ref, visible } = useReveal(0.06);
-  return (
-    <section ref={ref} style={{ borderBottom: '1px solid var(--border)' }}>
-      {/* ── Red header panel ─────────────────────────────── */}
-      <div style={{ backgroundColor: '#8C0E1C', padding: '80px 32px 72px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{
-            opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'opacity 600ms ease, transform 600ms ease',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px', fontFamily: 'var(--font-body), sans-serif', fontSize: '10px', fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
-              <span style={{ display: 'block', width: '28px', height: '1px', backgroundColor: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />
-              The Problem
-            </div>
-            <h2 className="font-heading" style={{ fontSize: 'clamp(40px, 5vw, 66px)', fontWeight: 500, lineHeight: 1.02, letterSpacing: '-0.03em', color: '#FFFFFF', maxWidth: '720px' }}>
-              Your biggest operational cost<br />isn&rsquo;t salaries.
-            </h2>
-            <p className="font-body" style={{ marginTop: '28px', fontSize: '17px', lineHeight: 1.75, color: 'rgba(255,255,255,0.5)', maxWidth: '520px' }}>
-              Every hour spent on manual, repetitive work is an hour your business isn&rsquo;t growing. The inefficiency compounds quietly — and most companies don&rsquo;t measure it until it&rsquo;s costing them millions.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {AUTO_PROBLEMS.map((p, i) => {
-        const isReversed = i % 2 === 1;
-        const bg = i % 2 === 0 ? '#FFFFFF' : 'var(--surface)';
-        return (
-          <div
-            key={i}
-            style={{
-              borderTop: '1px solid var(--border)',
-              backgroundColor: bg,
-            }}
-          >
-            <div
-              className="auto-zigzag-row"
-              style={{
-                maxWidth: '1200px', margin: '0 auto', padding: '0 32px',
-                display: 'grid',
-                gridTemplateColumns: isReversed ? '40% 60%' : '60% 40%',
-                alignItems: 'center',
-                minHeight: '280px',
-                opacity: visible ? 1 : 0,
-                transform: visible ? 'translateY(0)' : 'translateY(24px)',
-                transition: `opacity 600ms ease ${i * 120 + 200}ms, transform 600ms ease ${i * 120 + 200}ms`,
-              }}
-            >
-              {/* Text side */}
-              <div style={{ order: isReversed ? 2 : 1, padding: isReversed ? '56px 0 56px 64px' : '56px 64px 56px 0' }} className="auto-zigzag-text">
-                <div style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '11px', letterSpacing: '0.12em', color: 'var(--accent)', marginBottom: '20px' }}>{p.n}</div>
-                <h3 className="font-heading" style={{ fontSize: 'clamp(22px, 2.2vw, 30px)', fontWeight: 500, letterSpacing: '-0.02em', color: 'var(--text)', lineHeight: 1.2, marginBottom: '20px' }}>{p.title}</h3>
-                <p className="font-body" style={{ fontSize: '15px', lineHeight: 1.8, color: 'var(--text-secondary)', maxWidth: '420px' }}>{p.body}</p>
-              </div>
-
-              {/* Graphic side */}
-              <div style={{
-                order: isReversed ? 1 : 2,
-                padding: '32px 20px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                borderLeft: !isReversed ? '1px solid var(--border)' : 'none',
-                borderRight: isReversed ? '1px solid var(--border)' : 'none',
-                height: '100%',
-              }}>
-                <p.Graphic />
-              </div>
-            </div>
-          </div>
-        );
-      })}
-
-      <style>{`
-        @media (max-width: 900px) {
-          .auto-zigzag-row { grid-template-columns: 1fr !important; }
-          .auto-zigzag-row > div:last-child { display: none !important; }
-          .auto-zigzag-text { order: 1 !important; padding: 40px 0 !important; }
-        }
-      `}</style>
-    </section>
-  );
-}
-
-/* ── Accordion services section ───────────────────────────── */
+/* ── What We Build — split panel ─────────────────────────── */
 const AUTO_SERVICES = [
   {
     n: '01', tag: 'Approval & Routing',
     title: 'Document & Approval Automation',
     body: 'We map your approval chain and replace each manual step with a triggered route. Documents reach the right person in seconds, not days.',
     outcome: 'Cut approval time by up to 80%',
+    metric: '80%',
+    metricLabel: 'faster approvals',
+    color: 'rgba(61,82,230,0.12)',
   },
   {
     n: '02', tag: 'Data & Integration',
     title: 'Data Integration & Sync',
     body: 'We connect your CRM, ERP, and finance tools so data moves between them without anyone touching it. One entry. Every system updated.',
     outcome: 'Eliminate cross-system data errors',
+    metric: '0',
+    metricLabel: 'manual re-entry',
+    color: 'rgba(61,82,230,0.08)',
   },
   {
     n: '03', tag: 'Reporting & Analytics',
     title: 'Automated Reporting Pipelines',
-    body: "We build pipelines that pull your numbers, format them, and deliver them on a schedule you set. Your weekly report runs without anyone opening a spreadsheet.",
+    body: 'We build pipelines that pull your numbers, format them, and deliver them on a schedule you set. Your weekly report runs without anyone opening a spreadsheet.',
     outcome: 'Reclaim hours of report-building per week',
+    metric: '100+',
+    metricLabel: 'hrs / year reclaimed',
+    color: 'rgba(61,82,230,0.1)',
   },
   {
     n: '04', tag: 'Operations',
     title: 'Custom Operations Workflows',
-    body: "We audit your highest-friction process and build the automation that removes it. Built to your exact spec, documented, and handed off to your team.",
+    body: 'We audit your highest-friction process and build the automation that removes it. Built to your exact spec, documented, and handed off to your team.',
     outcome: 'Workflows built to your exact spec',
+    metric: '4–6',
+    metricLabel: 'weeks to live',
+    color: 'rgba(61,82,230,0.09)',
   },
 ];
 
-function AccordionItem({
-  item, isOpen, onClick, index, active,
+const SERVICE_ICONS = [
+  <svg key="0" width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden>
+    <circle cx="7" cy="7" r="3" stroke="currentColor" strokeWidth="1.2"/>
+    <circle cx="23" cy="7" r="3" stroke="currentColor" strokeWidth="1.2"/>
+    <circle cx="15" cy="23" r="3" stroke="currentColor" strokeWidth="1.2"/>
+    <path d="M10 7h10M7 10v4a4 4 0 004 4h2M23 10v4a4 4 0 01-4 4h-2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+  </svg>,
+  <svg key="1" width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden>
+    <rect x="3" y="9" width="9" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+    <rect x="18" y="9" width="9" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+    <path d="M12 13h6M12 17h6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+    <path d="M12 15l2.5-2.5M12 15l2.5 2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>,
+  <svg key="2" width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden>
+    <rect x="3" y="19" width="5" height="8" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+    <rect x="12" y="13" width="5" height="14" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+    <rect x="21" y="7" width="5" height="20" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+    <path d="M2 5h26" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" opacity="0.4"/>
+  </svg>,
+  <svg key="3" width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden>
+    <circle cx="15" cy="15" r="4" stroke="currentColor" strokeWidth="1.2"/>
+    <path d="M15 4v3M15 23v3M4 15h3M23 15h3M7.5 7.5l2.1 2.1M20.4 20.4l2.1 2.1M7.5 22.5l2.1-2.1M20.4 9.6l2.1-2.1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+  </svg>,
+];
+
+function ServiceRow({
+  item, isActive, onEnter, index, visible,
 }: {
-  item: typeof AUTO_SERVICES[0]; isOpen: boolean;
-  onClick: () => void; index: number; active: boolean;
+  item: typeof AUTO_SERVICES[0];
+  isActive: boolean;
+  onEnter: () => void;
+  index: number;
+  visible: boolean;
 }) {
-  const [hovered, setHovered] = useState(false);
+  const rowRef = useRef<HTMLDivElement>(null);
+  const mouseX = useMotionValue(-400);
+  const spotX = useTransform(mouseX, v => v - 300);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const rect = rowRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    mouseX.set(e.clientX - rect.left);
+  }, [mouseX]);
+
   return (
     <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      ref={rowRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => { mouseX.set(200); onEnter(); }}
+      onMouseLeave={() => mouseX.set(-400)}
       style={{
+        position: 'relative', overflow: 'hidden',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
-        opacity:    active ? 1 : 0,
-        transform:  active ? 'translateY(0)' : 'translateY(24px)',
-        transition: `opacity 600ms ease ${index * 100 + 200}ms, transform 600ms ease ${index * 100 + 200}ms`,
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateX(0)' : 'translateX(-24px)',
+        transition: `opacity 600ms ease ${index * 110 + 200}ms, transform 600ms cubic-bezier(0.22,1,0.36,1) ${index * 110 + 200}ms`,
+        cursor: 'default',
       }}
     >
-      {/* Header */}
-      <button
-        onClick={onClick}
-        style={{
-          width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', gap: '20px',
-          padding: '28px 0',
-          textAlign: 'left',
-        }}
-      >
-        <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '11px', letterSpacing: '0.12em', color: isOpen ? 'var(--accent)' : '#3A3A38', flexShrink: 0, transition: 'color 200ms ease' }}>{item.n}</span>
-        <span style={{ fontFamily: 'var(--font-body), sans-serif', fontSize: '9px', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(240,239,233,0.35)', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', padding: '3px 8px', flexShrink: 0 }}>{item.tag}</span>
-        <span className="font-heading" style={{ flex: 1, fontSize: 'clamp(20px, 2.2vw, 28px)', fontWeight: 500, letterSpacing: '-0.02em', color: isOpen ? '#F0EFE9' : hovered ? '#C8C6C0' : '#6A6A68', lineHeight: 1.15, transition: 'color 200ms ease' }}>{item.title}</span>
-        <div style={{ flexShrink: 0, width: '28px', height: '28px', border: `1px solid ${isOpen ? 'rgba(61,82,230,0.5)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'border-color 200ms ease' }}>
-          {isOpen
-            ? <Minus size={12} color="var(--accent)" />
-            : <Plus size={12} color="#6A6A68" />
-          }
-        </div>
-      </button>
+      {/* Horizontal scan beam */}
+      <motion.div aria-hidden style={{
+        position: 'absolute', top: 0, x: spotX,
+        width: 560, height: '100%',
+        background: 'radial-gradient(ellipse 280px 100% at center, rgba(61,82,230,0.07) 0%, transparent 70%)',
+        pointerEvents: 'none', zIndex: 0,
+      }} />
 
-      {/* Expandable content */}
-      <div style={{ overflow: 'hidden', maxHeight: isOpen ? '200px' : '0', transition: 'max-height 380ms cubic-bezier(0.22,1,0.36,1)' }}>
-        <div style={{ padding: '0 0 32px 48px', display: 'grid', gridTemplateColumns: '1fr auto', gap: '40px', alignItems: 'start' }} className="accordion-content">
-          <p className="font-body" style={{ fontSize: '15px', lineHeight: 1.75, color: 'rgba(240,239,233,0.55)', margin: 0 }}>{item.body}</p>
-          <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'var(--font-mono), monospace', fontSize: '10px', letterSpacing: '0.1em', color: 'var(--accent)', whiteSpace: 'nowrap' }}>
-            <div style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: 'var(--accent)', flexShrink: 0 }} />
-            {item.outcome}
+      {/* Left accent bar */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, width: '2px', height: '100%',
+        background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.85) 50%, transparent)',
+        transform: `scaleY(${isActive ? 1 : 0})`,
+        transformOrigin: 'center',
+        transition: 'transform 500ms cubic-bezier(0.22,1,0.36,1)',
+        opacity: 0.8,
+      }} />
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '64px 1fr auto',
+        gap: '0 32px',
+        alignItems: 'center',
+        padding: '20px 0 20px 20px',
+        position: 'relative', zIndex: 1,
+      }} className="service-row-inner">
+        {/* Number */}
+        <span style={{
+          fontFamily: 'var(--font-mono), monospace', fontSize: '11px',
+          letterSpacing: '0.14em',
+          color: isActive ? 'var(--accent)' : '#FFFFFF',
+          transition: 'color 250ms ease',
+        }}>
+          {item.n}
+        </span>
+
+        {/* Title + tag */}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+            <span style={{
+              fontFamily: 'var(--font-body), sans-serif', fontSize: '9px', fontWeight: 500,
+              letterSpacing: '0.14em', textTransform: 'uppercase',
+              color: '#FFFFFF',
+              backgroundColor: isActive ? 'rgba(61,82,230,0.1)' : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${isActive ? 'rgba(61,82,230,0.65)' : 'rgba(255,255,255,0.25)'}`,
+              padding: '3px 8px',
+              transition: 'all 250ms ease',
+            }}>
+              {item.tag}
+            </span>
           </div>
+          <h3 className="font-heading" style={{
+            fontSize: 'clamp(20px, 2vw, 26px)', fontWeight: 500,
+            letterSpacing: '-0.02em', lineHeight: 1.15,
+            color: isActive ? '#F0EFE9' : '#6A6A68',
+            transition: 'color 250ms ease',
+          }}>
+            {item.title}
+          </h3>
+        </div>
+
+        {/* Icon */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+          paddingRight: '4px',
+          color: isActive ? 'var(--accent)' : '#FFFFFF',
+          transition: 'color 300ms ease',
+        }} className="service-metric">
+          {SERVICE_ICONS[index]}
         </div>
       </div>
     </div>
   );
 }
 
-function AutomationAccordion() {
-  const { ref, visible } = useReveal(0.08);
-  const [openIdx, setOpenIdx] = useState(0);
+function ServicePreviewPanel({ item }: { item: typeof AUTO_SERVICES[0] }) {
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={item.n}
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -12 }}
+        transition={{ duration: 0.38, ease: EASE }}
+        style={{
+          border: '1px solid rgba(255,255,255,0.08)',
+          padding: '48px 44px',
+          display: 'flex', flexDirection: 'column', gap: '32px',
+        }}
+      >
+        {/* Corner accent */}
+        <div aria-hidden style={{
+          position: 'absolute', top: 0, right: 0,
+          width: '120px', height: '120px',
+          background: 'radial-gradient(circle at top right, rgba(61,82,230,0.15) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <span style={{
+            fontFamily: 'var(--font-mono), monospace', fontSize: '10px', fontWeight: 600,
+            letterSpacing: '0.18em', textTransform: 'uppercase',
+            color: 'var(--accent)', opacity: 0.8, display: 'block', marginBottom: '20px',
+          }}>
+            {item.n}
+          </span>
+
+          <h3 className="font-heading" style={{
+            fontSize: 'clamp(26px, 2.6vw, 36px)', fontWeight: 500,
+            letterSpacing: '-0.025em', lineHeight: 1.1,
+            color: '#F0EFE9', marginBottom: '20px',
+          }}>
+            {item.title}
+          </h3>
+
+          <div style={{ height: '1px', background: 'linear-gradient(90deg, var(--accent) 0%, transparent 70%)', marginBottom: '24px', opacity: 0.4 }} />
+
+          <p className="font-body" style={{
+            fontSize: '15px', lineHeight: 1.8,
+            color: 'rgba(240,239,233,0.55)',
+            marginBottom: '32px',
+          }}>
+            {item.body}
+          </p>
+
+          {/* Outcome badge */}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '10px',
+            backgroundColor: 'rgba(61,82,230,0.1)',
+            border: '1px solid rgba(61,82,230,0.25)',
+            padding: '10px 16px',
+          }}>
+            <div style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: 'var(--accent)', boxShadow: '0 0 8px rgba(61,82,230,0.7)', flexShrink: 0 }} />
+            <span style={{
+              fontFamily: 'var(--font-body), sans-serif', fontSize: '12px',
+              color: 'rgba(61,82,230,0.85)', letterSpacing: '0.02em',
+            }}>
+              {item.outcome}
+            </span>
+          </div>
+        </div>
+
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+function AutomationServicesSection() {
+  const { ref, visible } = useReveal(0.06);
+  const [activeIdx, setActiveIdx] = useState(0);
 
   return (
-    <section ref={ref} style={{ backgroundColor: 'var(--dark-bg)', backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '24px 24px', padding: '112px 32px', position: 'relative', overflow: 'hidden' }}>
-      <div aria-hidden style={{ position: 'absolute', top: '-10%', right: '-5%', width: '50%', height: '70%', background: 'radial-gradient(ellipse, rgba(61,82,230,0.06) 0%, transparent 65%)', pointerEvents: 'none' }} />
-      <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
-        <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'start', marginBottom: '56px',
-          opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(16px)',
-          transition: 'opacity 600ms ease, transform 600ms ease',
-        }} className="accordion-header">
+    <section
+      ref={ref}
+      id="auto-services"
+      data-section-label="What We Build"
+      style={{
+        backgroundColor: 'var(--dark-bg)',
+        padding: '40px 32px',
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        position: 'relative', overflow: 'hidden',
+      }}
+    >
+      {/* Left gutter decoration */}
+      <div aria-hidden style={{
+        position: 'absolute', top: 0, left: 0, bottom: 0, width: '200px',
+        background: [
+          'linear-gradient(to right, rgba(61,82,230,0.22) 0%, transparent 100%)',
+          'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)',
+        ].join(', '),
+        backgroundSize: 'auto, 28px 28px',
+        pointerEvents: 'none',
+      }} />
+      {/* Right gutter decoration */}
+      <div aria-hidden style={{
+        position: 'absolute', top: 0, right: 0, bottom: 0, width: '200px',
+        background: [
+          'linear-gradient(to left, rgba(61,82,230,0.22) 0%, transparent 100%)',
+          'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)',
+        ].join(', '),
+        backgroundSize: 'auto, 28px 28px',
+        pointerEvents: 'none',
+      }} />
+
+      <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1, width: '100%' }}>
+
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.65, ease: EASE }}
+          style={{ marginBottom: '20px' }}
+        >
           <div>
-            <div style={{ fontFamily: 'var(--font-body), sans-serif', fontSize: '9px', fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '5px 12px', display: 'inline-block', marginBottom: '20px' }}>What We Build</div>
-            <h2 className="font-heading" style={{ fontSize: 'clamp(32px, 3.5vw, 48px)', fontWeight: 500, letterSpacing: '-0.025em', color: 'var(--dark-text)', lineHeight: 1.1 }}>
+            <span style={{
+              fontFamily: 'var(--font-mono), monospace', fontSize: '10px', fontWeight: 500,
+              letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--accent)',
+              opacity: 0.7, display: 'block', marginBottom: '20px',
+            }}>
+              What We Build
+            </span>
+            <h2 className="font-heading" style={{
+              fontSize: 'clamp(36px, 4vw, 56px)', fontWeight: 500,
+              letterSpacing: '-0.03em', lineHeight: 1.05,
+              color: 'var(--dark-text)',
+            }}>
               The four workflows<br />businesses automate first.
             </h2>
           </div>
-          <p className="font-body" style={{ fontSize: '16px', lineHeight: 1.75, color: 'rgba(240,239,233,0.45)', paddingTop: '8px', alignSelf: 'end' }}>
-            Every engagement starts with an audit. We find the highest-value automations first and build those — so you see ROI within weeks, not months.
-          </p>
-        </div>
+        </motion.div>
 
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          {AUTO_SERVICES.map((s, i) => (
-            <AccordionItem
-              key={i} item={s} index={i} active={visible}
-              isOpen={openIdx === i}
-              onClick={() => setOpenIdx(openIdx === i ? -1 : i)}
-            />
-          ))}
+        {/* Split layout: rows left, preview right */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 420px', gap: '64px', alignItems: 'stretch' }} className="services-split">
+          {/* Left: service rows */}
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            {AUTO_SERVICES.map((s, i) => (
+              <ServiceRow
+                key={i} item={s} index={i} visible={visible}
+                isActive={activeIdx === i}
+                onEnter={() => setActiveIdx(i)}
+              />
+            ))}
+          </div>
+
+          {/* Right: preview panel */}
+          <div className="services-preview">
+            <ServicePreviewPanel item={AUTO_SERVICES[activeIdx]} />
+          </div>
         </div>
       </div>
+
       <style>{`
-        @media (max-width: 768px) { .accordion-header { grid-template-columns: 1fr !important; gap: 24px !important; } .accordion-content { grid-template-columns: 1fr !important; } }
+        .services-preview { display: flex; flex-direction: column; }
+        @media (max-width: 1024px) {
+          .services-split { grid-template-columns: 1fr !important; }
+          .services-preview { display: none !important; }
+        }
+        .service-row-inner { padding-left: 20px !important; }
+        @media (max-width: 600px) {
+          .service-metric { display: none !important; }
+          .service-row-inner { grid-template-columns: 48px 1fr !important; }
+        }
       `}</style>
     </section>
   );
@@ -540,7 +482,7 @@ const AUTO_PHASES = [
   },
   {
     n: '02', title: 'Design', tag: 'Architecture', time: '~1 wk',
-    detail: 'We architect the full logic — triggers, conditions, transformations, error paths. The complete design is reviewed and signed off before development starts.',
+    detail: 'We architect the full logic: triggers, conditions, transformations, error paths. The complete design is reviewed and signed off before development starts.',
     deliverable: 'Signed-off workflow blueprint',
   },
   {
@@ -591,13 +533,13 @@ function AutoPhaseRow({ phase, index, visible, isLast }: { phase: typeof AUTO_PH
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
           <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '9px', letterSpacing: '0.18em', textTransform: 'uppercase', color: hov ? 'var(--accent)' : '#3A3A38', transition: 'color 200ms ease' }}>{phase.tag}</span>
           <span style={{ width: '1px', height: '8px', backgroundColor: '#1E1E1C', display: 'inline-block' }} />
-          <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '9px', letterSpacing: '0.12em', color: '#2A2A28' }}>{phase.time}</span>
+          <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '9px', letterSpacing: '0.12em', color: 'var(--dark-border)' }}>{phase.time}</span>
         </div>
         <h3 className="font-heading" style={{ fontSize: 'clamp(24px, 2.5vw, 34px)', fontWeight: 500, color: hov ? '#FFFFFF' : '#F0EFE9', lineHeight: 1.1, marginBottom: '14px', letterSpacing: '-0.02em', transition: 'color 200ms ease' }}>{phase.title}</h3>
         <p className="font-body" style={{ fontSize: '14px', lineHeight: 1.75, color: '#4A4A48', marginBottom: '18px', maxWidth: '560px' }}>{phase.detail}</p>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontFamily: 'var(--font-body), sans-serif', fontSize: '9px', fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', color: hov ? 'var(--accent)' : '#2A2A28', transition: 'color 200ms ease' }}>Deliverable —</span>
-          <span style={{ fontFamily: 'var(--font-body), sans-serif', fontSize: '12px', color: '#3A3A38', lineHeight: 1.5 }}>{phase.deliverable}</span>
+          <span style={{ fontFamily: 'var(--font-body), sans-serif', fontSize: '9px', fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', color: hov ? 'var(--accent)' : 'var(--dark-border)', transition: 'color 200ms ease' }}>Deliverable:</span>
+          <span style={{ fontFamily: 'var(--font-body), sans-serif', fontSize: '12px', color: '#6A6A68', lineHeight: 1.5 }}>{phase.deliverable}</span>
         </div>
       </div>
     </div>
@@ -607,7 +549,7 @@ function AutoPhaseRow({ phase, index, visible, isLast }: { phase: typeof AUTO_PH
 function AutoProcessTimeline() {
   const { ref, visible } = useReveal(0.06);
   return (
-    <section ref={ref} style={{ backgroundColor: '#111111', borderTop: '1px solid #1E1E1C' }}>
+    <section ref={ref} id="auto-process" data-section-label="How We Work" style={{ backgroundColor: '#111111', borderTop: '1px solid #1E1E1C' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '80px 32px 64px', borderBottom: '1px solid #1E1E1C' }}>
         <div className="auto-proc-header" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '40px', alignItems: 'flex-end', opacity: visible ? 1 : 0, transform: visible ? 'none' : 'translateY(16px)', transition: 'opacity 600ms ease, transform 600ms ease' }}>
           <div>
@@ -639,10 +581,7 @@ export default function AutomationClient() {
   return (
     <>
       <AutomationHero />
-      <AutomationStatsBand />
-      <AutomationZigZag />
-      <AutomationAccordion />
-      <AutoProcessTimeline />
+      <AutomationServicesSection />
       <TrustBar />
       <CTABand />
     </>

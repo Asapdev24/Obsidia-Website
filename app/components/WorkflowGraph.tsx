@@ -71,10 +71,10 @@ function edgePath(from: WFNode, to: WFNode): string {
 
 /* ── Node colours ─────────────────────────────────────────── */
 const NODE_STYLE: Record<NodeType, { bg: string; border: string; accentBar: string; labelColor: string; subColor: string }> = {
-  trigger: { bg: '#1C1010', border: '#3D52E6',  accentBar: '#3D52E6', labelColor: '#F0EFE9', subColor: '#3D52E6' },
-  active:  { bg: '#1C1010', border: '#3D52E6',  accentBar: '#3D52E6', labelColor: '#F0EFE9', subColor: '#9A3040' },
-  process: { bg: '#171717', border: '#2A2A28',  accentBar: '#3A3A38', labelColor: '#9A9890', subColor: '#5A5A58' },
-  output:  { bg: '#1A1A18', border: '#3D52E6',  accentBar: '#3D52E6', labelColor: '#F0EFE9', subColor: '#3D52E6' },
+  trigger: { bg: '#0D1020', border: '#3D52E6',  accentBar: '#3D52E6', labelColor: '#F0EFE9', subColor: '#3D52E6' },
+  active:  { bg: '#0D1020', border: '#3D52E6',  accentBar: '#3D52E6', labelColor: '#F0EFE9', subColor: '#3D52E6' },
+  process: { bg: '#111318', border: '#2A2A28',  accentBar: '#3A3A38', labelColor: '#9A9890', subColor: '#5A5A58' },
+  output:  { bg: '#0D1020', border: '#3D52E6',  accentBar: '#3D52E6', labelColor: '#F0EFE9', subColor: '#3D52E6' },
 };
 
 export default function WorkflowGraph() {

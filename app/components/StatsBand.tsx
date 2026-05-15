@@ -1,170 +1,132 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
-const STATS = [
-  {
-    value:   72,
-    suffix:  '+',
-    unit:    'hrs',
-    label:   'Saved per employee, per month',
-    context: "That's a full work week, every month, per person.",
-  },
-  {
-    value:   3,
-    suffix:  '×',
-    unit:    '',
-    label:   'Faster approval cycles',
-    context: 'Decisions that took 3 days now take 4 minutes.',
-  },
-  {
-    value:   60,
-    suffix:  '%',
-    unit:    '',
-    label:   'Reduction in manual processing cost',
-    context: 'Less than half the overhead. Same output.',
-  },
-];
+type Finding = { stat: string; unit: string; claim: string; detail: string };
 
-function useCountUp(target: number, active: boolean, duration = 1800) {
-  const [count, setCount] = useState(0);
-  const rafRef = useRef<number>(0);
-
+function useCountUp(target: number, active: boolean, duration = 900) {
+  const [value, setValue] = useState(0);
   useEffect(() => {
     if (!active) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setCount(target);
-      return;
-    }
-    const start = performance.now();
-    const step = (now: number) => {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const ease = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(ease * target));
-      if (progress < 1) rafRef.current = requestAnimationFrame(step);
+    let start: number | null = null;
+    const step = (ts: number) => {
+      if (!start) start = ts;
+      const pct = Math.min((ts - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - pct, 3);
+      setValue(Math.round(eased * target));
+      if (pct < 1) requestAnimationFrame(step);
     };
-    rafRef.current = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(rafRef.current);
+    requestAnimationFrame(step);
   }, [active, target, duration]);
-
-  return count;
+  return value;
 }
 
-function StatItem({ stat, active, index }: { stat: typeof STATS[0]; active: boolean; index: number }) {
-  const count = useCountUp(stat.value, active, 1600 + index * 200);
+function FindingItem({ f, index, active }: { f: Finding; index: number; active: boolean }) {
+  const numericTarget = parseInt(f.stat.replace(/[^0-9]/g, ''), 10);
+  const suffix = f.stat.replace(/[0-9]/g, '');
+  const countedValue = useCountUp(numericTarget, active, 1000 + index * 200);
+
+  const displayStat = isNaN(numericTarget)
+    ? f.stat
+    : `${countedValue}${suffix}`;
 
   return (
     <div
-      className="stat-item"
+      className="finding-item"
       style={{
-        flex:         1,
-        padding:      '72px 0',
-        borderRight:  index < 2 ? '1px solid #E5E5E3' : 'none',
-        paddingRight: index < 2 ? '64px' : '0',
-        paddingLeft:  index > 0 ? '64px' : '0',
-        opacity:      active ? 1 : 0,
-        transform:    active ? 'translateY(0)' : 'translateY(20px)',
-        transition:   `opacity 700ms ease ${index * 140}ms, transform 700ms cubic-bezier(0.22,1,0.36,1) ${index * 140}ms`,
+        flex: 1,
+        padding: '72px 0',
+        paddingRight: index < 2 ? '56px' : '0',
+        paddingLeft: index > 0 ? '56px' : '0',
+        borderRight: index < 2 ? '1px solid rgba(255,255,255,0.1)' : 'none',
+        opacity: active ? 1 : 0,
+        transform: active ? 'translateY(0)' : 'translateY(20px)',
+        transition: `opacity 700ms ease ${index * 140 + 100}ms, transform 700ms cubic-bezier(0.22,1,0.36,1) ${index * 140 + 100}ms`,
       }}
     >
-      {/* Number + suffix + unit */}
+      {/* Large display stat */}
       <div
+        className="font-heading"
         style={{
-          display:     'flex',
-          alignItems:  'baseline',
-          gap:         '1px',
-          marginBottom: '20px',
-          lineHeight:  0.9,
+          fontSize: 'clamp(64px, 7vw, 96px)',
+          fontWeight: 400,
+          letterSpacing: '-0.04em',
+          lineHeight: 0.9,
+          color: '#FFFFFF',
+          marginBottom: '12px',
         }}
       >
-        <span
-          className="font-heading"
-          style={{
-            fontSize:      'clamp(76px, 8.5vw, 112px)',
-            fontWeight:    500,
-            letterSpacing: '-0.04em',
-            color:         '#0D0D0D',
-            lineHeight:    0.9,
-          }}
-        >
-          {count}
-        </span>
-        <span
-          className="font-heading"
-          style={{
-            fontSize:      'clamp(40px, 4.5vw, 56px)',
-            fontWeight:    500,
-            letterSpacing: '-0.02em',
-            color:         'var(--accent)',
-            lineHeight:    1,
-            marginLeft:    '2px',
-          }}
-        >
-          {stat.suffix}
-        </span>
-        {stat.unit && (
-          <span
-            style={{
-              fontFamily:    'var(--font-body), sans-serif',
-              fontSize:      '15px',
-              fontWeight:    400,
-              color:         '#9A9A9A',
-              marginLeft:    '10px',
-              letterSpacing: '0.06em',
-            }}
-          >
-            {stat.unit}
-          </span>
-        )}
+        {displayStat}
       </div>
 
-      {/* Label */}
+      {/* Unit */}
+      <div style={{
+        fontFamily: 'var(--font-mono), monospace',
+        fontSize: '9px',
+        fontWeight: 500,
+        letterSpacing: '0.2em',
+        textTransform: 'uppercase',
+        color: 'rgba(255,255,255,0.4)',
+        marginBottom: '32px',
+      }}>
+        {f.unit}
+      </div>
+
+      {/* Divider */}
+      <div style={{
+        width: '32px',
+        height: '1px',
+        backgroundColor: 'rgba(255,255,255,0.25)',
+        marginBottom: '20px',
+      }} />
+
+      {/* Claim */}
       <p
+        className="font-heading"
         style={{
-          fontFamily:    'var(--font-body), sans-serif',
-          fontSize:      '11px',
-          fontWeight:    600,
-          letterSpacing: '0.13em',
-          textTransform: 'uppercase',
-          color:         '#9A9A9A',
-          marginBottom:  '10px',
-          lineHeight:    1.5,
+          fontSize: 'clamp(18px, 1.8vw, 22px)',
+          fontWeight: 400,
+          letterSpacing: '-0.02em',
+          lineHeight: 1.25,
+          color: 'rgba(255,255,255,0.88)',
+          marginBottom: '16px',
         }}
       >
-        {stat.label}
+        {f.claim}
       </p>
 
-      {/* Context */}
-      <p
-        style={{
-          fontFamily: 'var(--font-body), sans-serif',
-          fontSize:   '14px',
-          lineHeight: 1.65,
-          color:      '#5C5C5C',
-          fontStyle:  'italic',
-        }}
-      >
-        {stat.context}
+      {/* Detail */}
+      <p style={{
+        fontFamily: 'var(--font-body), sans-serif',
+        fontSize: '13px',
+        lineHeight: 1.75,
+        color: 'rgba(255,255,255,0.45)',
+        maxWidth: '300px',
+      }}>
+        {f.detail}
       </p>
     </div>
   );
 }
 
 export default function StatsBand() {
+  const t = useTranslations('stats');
   const ref = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
+
+  const FINDINGS: Finding[] = [
+    { stat: t('stat0'), unit: t('unit0'), claim: t('claim0'), detail: t('detail0') },
+    { stat: t('stat1'), unit: t('unit1'), claim: t('claim1'), detail: t('detail1') },
+    { stat: t('stat2'), unit: t('unit2'), claim: t('claim2'), detail: t('detail2') },
+  ];
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) { setActive(true); observer.disconnect(); }
-        });
-      },
-      { threshold: 0.25 }
+      ([entry]) => { if (entry.isIntersecting) { setActive(true); observer.disconnect(); } },
+      { threshold: 0.15 }
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -173,36 +135,48 @@ export default function StatsBand() {
   return (
     <section
       ref={ref}
+      id="home-results"
+      data-section-label="Results"
       style={{
-        backgroundColor: '#FFFFFF',
-        borderTop:       '1px solid #E5E5E3',
-        borderBottom:    '1px solid #E5E5E3',
+        backgroundColor: 'var(--accent)',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
+      {/* Very subtle texture — diagonal lines at low opacity */}
+      <div aria-hidden style={{
+        position: 'absolute',
+        inset: 0,
+        backgroundImage: 'repeating-linear-gradient(135deg, rgba(255,255,255,0.018) 0px, rgba(255,255,255,0.018) 1px, transparent 1px, transparent 40px)',
+        pointerEvents: 'none',
+      }} />
+
       <div
         style={{
           maxWidth: '1200px',
-          margin:   '0 auto',
-          padding:  '0 32px',
-          display:  'flex',
-          gap:      0,
+          margin: '0 auto',
+          padding: '0 32px',
+          display: 'flex',
+          gap: 0,
+          position: 'relative',
+          zIndex: 1,
         }}
         className="stats-band-inner"
       >
-        {STATS.map((stat, i) => (
-          <StatItem key={i} stat={stat} active={active} index={i} />
+        {FINDINGS.map((f, i) => (
+          <FindingItem key={i} f={f} index={i} active={active} />
         ))}
       </div>
 
       <style>{`
         @media (max-width: 768px) {
           .stats-band-inner { flex-direction: column !important; }
-          .stat-item {
+          .finding-item {
             border-right: none !important;
-            border-bottom: 1px solid #E5E5E3 !important;
-            padding: 48px 0 !important;
+            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+            padding: 52px 0 !important;
           }
-          .stat-item:last-child { border-bottom: none !important; }
+          .finding-item:last-child { border-bottom: none !important; }
         }
       `}</style>
     </section>

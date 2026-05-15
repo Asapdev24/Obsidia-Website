@@ -1,213 +1,246 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
-import { Zap, ShieldCheck, TrendingUp } from 'lucide-react';
-import GlassCard from './ui/GlassCard';
+import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
-const PILLARS = [
-  {
-    Icon:       Zap,
-    title:      'Speed of Deployment',
-    body:       'From first conversation to live automation in weeks, not quarters. We move with the urgency your business demands, without cutting corners on quality.',
-    stat:       '4–6 wks',
-    statLabel:  'Average time to first deployment',
-  },
-  {
-    Icon:       ShieldCheck,
-    title:      'Built to Your Exact Spec',
-    body:       'No off-the-shelf templates. Every workflow is designed around your specific processes, your tools, and your edge cases — not a generic use case.',
-    stat:       '100%',
-    statLabel:  'Custom-built, nothing repurposed',
-  },
-  {
-    Icon:       TrendingUp,
-    title:      'Measurable Return',
-    body:       "We don't charge for effort. We deliver outcomes you can measure — hours reclaimed, costs reduced, error rates dropped. The ROI shows up on your books.",
-    stat:       'Day 1',
-    statLabel:  'When you start seeing returns',
-  },
-];
+type Standard = { n: string; title: string; body: string };
+
+function DotMatrix({ hovered }: { hovered: boolean }) {
+  const pattern = [1,0,1,0,1, 0,1,1,1,0, 1,1,1,1,1, 0,1,1,1,0, 1,0,1,0,1];
+  return (
+    <div aria-hidden style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '6px', width: '74px' }}>
+      {pattern.map((on, i) => (
+        <div key={i} style={{
+          width: '10px', height: '10px',
+          backgroundColor: on
+            ? hovered ? 'var(--accent)' : 'rgba(61,82,230,0.32)'
+            : hovered ? 'rgba(61,82,230,0.1)' : 'rgba(61,82,230,0.07)',
+          transition: `background-color 220ms ease ${i * 14}ms`,
+        }} />
+      ))}
+    </div>
+  );
+}
+
+function BarChart({ hovered }: { hovered: boolean }) {
+  const heights = [0.3, 0.58, 0.42, 0.92, 0.65, 0.78, 0.48];
+  return (
+    <div aria-hidden style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '52px', width: '74px' }}>
+      {heights.map((h, i) => (
+        <div key={i} style={{
+          flex: 1,
+          height: hovered ? `${h * 100}%` : '8%',
+          backgroundColor: i === 3 ? 'var(--accent)' : 'rgba(61,82,230,0.32)',
+          borderRadius: '1px 1px 0 0',
+          transition: `height 520ms cubic-bezier(0.22,1,0.36,1) ${i * 55}ms`,
+        }} />
+      ))}
+    </div>
+  );
+}
+
+function CheckList({ hovered }: { hovered: boolean }) {
+  return (
+    <div aria-hidden style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      {[0, 1, 2].map(i => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+          <div style={{
+            width: '13px', height: '13px', flexShrink: 0,
+            border: `1px solid ${hovered ? 'rgba(61,82,230,0.55)' : 'rgba(61,82,230,0.18)'}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: `border-color 200ms ease ${i * 100}ms`,
+          }}>
+            <svg width="7" height="6" viewBox="0 0 7 6" style={{ opacity: hovered ? 1 : 0, transition: `opacity 200ms ease ${i * 100 + 90}ms` }}>
+              <path d="M1 3L3 5L6 1" stroke="var(--accent)" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <div style={{
+            height: '1px', width: '48px',
+            backgroundColor: hovered ? 'rgba(61,82,230,0.4)' : 'rgba(61,82,230,0.18)',
+            transition: `background-color 200ms ease ${i * 80}ms`,
+          }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PillarVisual({ index, hovered }: { index: number; hovered: boolean }) {
+  if (index === 0) return <DotMatrix hovered={hovered} />;
+  if (index === 1) return <BarChart hovered={hovered} />;
+  return <CheckList hovered={hovered} />;
+}
+
+function StandardCard({ standard, index }: { standard: Standard; index: number }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        padding: '40px 36px',
+        background: hovered ? 'rgba(61,82,230,0.1)' : 'rgba(61,82,230,0.05)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        border: `1px solid ${hovered ? 'rgba(61,82,230,0.55)' : 'rgba(61,82,230,0.22)'}`,
+        boxShadow: hovered ? '0 8px 40px rgba(61,82,230,0.12), inset 0 1px 0 rgba(255,255,255,0.8)' : '0 2px 16px rgba(61,82,230,0.06), inset 0 1px 0 rgba(255,255,255,0.9)',
+        transition: 'background 380ms ease, border-color 380ms ease',
+        position: 'relative',
+        overflow: 'hidden',
+        cursor: 'default',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+
+      {/* Title */}
+      <h3 className="font-heading" style={{
+        fontSize: 'clamp(20px, 2.2vw, 30px)',
+        fontWeight: 500, letterSpacing: '-0.025em',
+        color: hovered ? '#3D52E6' : '#0D1147',
+        lineHeight: 1.1, marginBottom: '14px',
+        transition: 'color 280ms ease',
+        position: 'relative', zIndex: 1,
+      }}>
+        {standard.title}
+      </h3>
+
+      {/* Separator */}
+      <div style={{
+        height: '1px',
+        background: hovered ? 'rgba(61,82,230,0.55)' : 'rgba(61,82,230,0.2)',
+        marginBottom: '16px',
+        transform: `scaleX(${hovered ? 1 : 0.35})`,
+        transformOrigin: 'left',
+        transition: 'transform 480ms cubic-bezier(0.22,1,0.36,1), background 280ms ease',
+        position: 'relative', zIndex: 1,
+      }} />
+
+      {/* Body */}
+      <p className="font-body" style={{
+        fontSize: '13px', lineHeight: 1.8,
+        color: hovered ? 'rgba(13,17,71,0.72)' : 'rgba(13,17,71,0.52)',
+        margin: 0, flex: 1,
+        transition: 'color 280ms ease',
+        position: 'relative', zIndex: 1,
+      }}>
+        {standard.body}
+      </p>
+
+      {/* Visual */}
+      <div style={{ marginTop: '24px', position: 'relative', zIndex: 1 }}>
+        <PillarVisual index={index} hovered={hovered} />
+      </div>
+    </div>
+  );
+}
 
 export default function ValuePillars() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(false);
+  const t = useTranslations('pillars');
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setActive(true); obs.disconnect(); } },
-      { threshold: 0.12 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
+  const STANDARDS: Standard[] = [
+    { n: '01', title: t('p01title'), body: t('p01body') },
+    { n: '02', title: t('p02title'), body: t('p02body') },
+    { n: '03', title: t('p03title'), body: t('p03body') },
+  ];
 
   return (
     <section
-      ref={ref}
+      id="home-why"
+      data-section-label="Why Obsidia"
       style={{
-        backgroundColor: 'var(--dark-bg)',
-        borderTop: '1px solid var(--dark-border)',
-        borderBottom: '1px solid var(--dark-border)',
-        padding: '112px 32px',
+        minHeight: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        padding: '64px 32px',
         position: 'relative',
         overflow: 'hidden',
+        backgroundColor: '#FFFFFF',
+        borderTop: '1px solid var(--border)',
       }}
     >
       {/* Dot grid */}
       <div aria-hidden style={{
         position: 'absolute', inset: 0,
-        backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.035) 1px, transparent 1px)',
-        backgroundSize: '28px 28px',
+        backgroundImage: 'radial-gradient(circle, rgba(61,82,230,0.28) 1px, transparent 1px)',
+        backgroundSize: '36px 36px',
+        opacity: 0.45,
         pointerEvents: 'none',
       }} />
 
-      {/* Cobalt glow — top-left */}
+      {/* Ambient glow — bottom center */}
       <div aria-hidden style={{
-        position: 'absolute', top: '-15%', left: '-5%',
-        width: '600px', height: '600px',
-        background: 'radial-gradient(circle, rgba(61,82,230,0.12) 0%, transparent 60%)',
+        position: 'absolute', bottom: '-25%', left: '50%',
+        transform: 'translateX(-50%)',
+        width: '900px', height: '600px',
+        background: 'radial-gradient(ellipse, rgba(61,82,230,0.18) 0%, transparent 65%)',
         pointerEvents: 'none',
       }} />
 
-      {/* Violet glow — bottom-right */}
+      {/* Ambient glow — top left */}
       <div aria-hidden style={{
-        position: 'absolute', bottom: '-15%', right: '-5%',
-        width: '640px', height: '640px',
-        background: 'radial-gradient(circle, rgba(123,79,212,0.09) 0%, transparent 60%)',
+        position: 'absolute', top: '-10%', left: '-5%',
+        width: '500px', height: '500px',
+        background: 'radial-gradient(circle, rgba(136,96,230,0.08) 0%, transparent 60%)',
         pointerEvents: 'none',
       }} />
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
+      {/* Vertical accent line */}
+      <div aria-hidden style={{
+        position: 'absolute', top: 0, right: '22%', bottom: 0,
+        width: '1px',
+        background: 'linear-gradient(to bottom, transparent, rgba(61,82,230,0.1) 20%, rgba(61,82,230,0.1) 80%, transparent)',
+        pointerEvents: 'none',
+      }} />
 
-        {/* Header */}
-        <div style={{
-          marginBottom: '64px',
-          maxWidth: '540px',
-          opacity: active ? 1 : 0,
-          transform: active ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'opacity 600ms ease 100ms, transform 600ms ease 100ms',
-        }}>
-          <div className="section-label" style={{ marginBottom: '20px', color: 'var(--accent)' }}>
-            Why Obsidia
+      <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', position: 'relative', zIndex: 1 }}>
+
+        {/* Compact header */}
+        <div style={{ marginBottom: '40px' }}>
+          <span style={{
+            fontFamily: 'var(--font-mono), monospace',
+            fontSize: '10px', fontWeight: 500, letterSpacing: '0.22em',
+            textTransform: 'uppercase', color: 'var(--accent)',
+            opacity: 0.6, display: 'block', marginBottom: '18px',
+          }}>
+            {t('label')}
+          </span>
+
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+            <h2 className="font-heading" style={{
+              fontSize: 'clamp(36px, 4.5vw, 62px)',
+              fontWeight: 500, letterSpacing: '-0.03em',
+              lineHeight: 1.08, color: '#0D1147',
+            }}>
+              {t('headline1')}
+              <br />
+              <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>{t('headlineAccent')}</em>
+            </h2>
+
           </div>
-          <h2
-            className="font-heading"
-            style={{
-              fontSize: 'clamp(36px, 4vw, 52px)',
-              fontWeight: 500,
-              letterSpacing: '-0.025em',
-              color: 'var(--dark-text)',
-              lineHeight: 1.1,
-            }}
-          >
-            Three standards.
-            <br />
-            No exceptions.
-          </h2>
         </div>
 
-        {/* Glass pillar cards */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '16px',
-          }}
-          className="pillars-grid"
-        >
-          {PILLARS.map(({ Icon, title, body, stat, statLabel }, i) => (
-            <GlassCard
-              key={i}
-              variant="elevated"
-              topGradientBorder
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                padding: '36px 32px',
-                opacity: active ? 1 : 0,
-                transform: active ? 'translateY(0)' : 'translateY(24px)',
-                transition: `opacity 600ms ease ${i * 120 + 250}ms, transform 600ms cubic-bezier(0.22,1,0.36,1) ${i * 120 + 250}ms`,
-              }}
-            >
-              {/* Icon */}
-              <div style={{
-                width: '44px',
-                height: '44px',
-                border: '1px solid rgba(61,82,230,0.3)',
-                backgroundColor: 'rgba(61,82,230,0.08)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '28px',
-                flexShrink: 0,
-              }}>
-                <Icon size={18} color="var(--accent)" strokeWidth={1.5} />
-              </div>
+        {/* Separator */}
+        <div style={{ height: '1px', background: 'rgba(61,82,230,0.22)', marginBottom: '32px' }} />
 
-              {/* Title */}
-              <h3
-                className="font-heading"
-                style={{
-                  fontSize: 'clamp(20px, 2vw, 26px)',
-                  fontWeight: 500,
-                  letterSpacing: '-0.01em',
-                  color: 'var(--dark-text)',
-                  lineHeight: 1.2,
-                  marginBottom: '16px',
-                }}
-              >
-                {title}
-              </h3>
-
-              {/* Body */}
-              <p
-                className="font-body"
-                style={{
-                  fontSize: '14px',
-                  lineHeight: 1.8,
-                  color: 'rgba(232,234,242,0.55)',
-                  flex: 1,
-                  marginBottom: '32px',
-                }}
-              >
-                {body}
-              </p>
-
-              {/* Stat */}
-              <div style={{
-                borderTop: '1px solid rgba(255,255,255,0.08)',
-                paddingTop: '24px',
-              }}>
-                <div style={{
-                  fontFamily: 'var(--font-mono), monospace',
-                  fontSize: 'clamp(28px, 3vw, 40px)',
-                  fontWeight: 400,
-                  letterSpacing: '-0.02em',
-                  color: 'var(--dark-text)',
-                  lineHeight: 1,
-                  marginBottom: '8px',
-                }}>
-                  {stat}
-                </div>
-                <div style={{
-                  fontFamily: 'var(--font-body), sans-serif',
-                  fontSize: '11px',
-                  letterSpacing: '0.06em',
-                  color: 'rgba(232,234,242,0.4)',
-                }}>
-                  {statLabel}
-                </div>
-              </div>
-            </GlassCard>
+        {/* 3-card grid */}
+        <div className="pillars-grid">
+          {STANDARDS.map((s, i) => (
+            <StandardCard key={s.n} standard={s} index={i} />
           ))}
         </div>
       </div>
 
       <style>{`
+        .pillars-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
+        }
         @media (max-width: 900px) {
-          .pillars-grid { grid-template-columns: 1fr !important; }
+          .pillars-grid { grid-template-columns: 1fr; gap: 12px; }
         }
       `}</style>
     </section>

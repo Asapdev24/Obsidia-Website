@@ -1,31 +1,21 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { Link, usePathname } from '@/i18n/navigation';
 import { ArrowUpRight, ArrowRight, ChevronDown } from 'lucide-react';
+import BorderGlow from './ui/BorderGlow';
+import LanguageSwitcher from './LanguageSwitcher';
 
-/* ── Service sub-pages ─────────────────────────────────────── */
-const SERVICE_ITEMS = [
-  {
-    label: 'Workflow Automation',
-    href: '/services/automation',
-    tag: 'Automation',
-    desc: 'Eliminate manual tasks. Build workflows that run themselves.',
-  },
-  {
-    label: 'Website Development',
-    href: '/services/websites',
-    tag: 'Web',
-    desc: 'Sites that convert visitors, load fast, work on every device.',
-  },
-  {
-    label: 'Application Development',
-    href: '/services/apps',
-    tag: 'Apps',
-    desc: 'Custom tools built for exactly how your team operates.',
-  },
-];
+
+/* ── Service item type ─────────────────────────────────────── */
+const SERVICE_ITEMS_STATIC = [
+  { href: '/services/automation' },
+  { href: '/services/websites'   },
+  { href: '/services/apps'       },
+] as const;
+
+type ServiceItem = { label: string; href: string; tag: string; desc: string };
 
 /* ─────────────────────────────────────────────────────────────
    Logo mark — two stacked cobalt bars (flow symbol)
@@ -131,7 +121,7 @@ function NavLink({
 function ServiceDropdownItem({
   item, isActive, showDivider,
 }: {
-  item: typeof SERVICE_ITEMS[0];
+  item: ServiceItem;
   isActive: boolean;
   showDivider: boolean;
 }) {
@@ -147,10 +137,9 @@ function ServiceDropdownItem({
         flexDirection: 'column',
         padding: '22px 20px 18px',
         textDecoration: 'none',
-        borderRight: showDivider ? '1px solid #1C1C1A' : 'none',
-        borderLeft: isActive ? '2px solid var(--accent)' : '2px solid transparent',
+        borderRight: showDivider ? '1px solid var(--dark-border)' : 'none',
         backgroundColor: isActive
-          ? 'rgba(61,82,230,0.04)'
+          ? 'rgba(61,82,230,0.08)'
           : hovered
             ? 'rgba(255,255,255,0.028)'
             : 'transparent',
@@ -175,7 +164,7 @@ function ServiceDropdownItem({
         fontWeight: 500,
         letterSpacing: '-0.02em',
         lineHeight: 1.15,
-        color: isActive || hovered ? '#F0EFE9' : '#585856',
+        color: isActive || hovered ? 'var(--dark-text)' : 'rgba(220,225,248,0.45)',
         transition: 'color 160ms ease',
       }}>
         {item.label}
@@ -185,7 +174,7 @@ function ServiceDropdownItem({
         fontFamily: 'var(--font-body), sans-serif',
         fontSize: '12px',
         lineHeight: 1.6,
-        color: '#333331',
+        color: 'rgba(220,225,248,0.32)',
         flexGrow: 1,
         marginTop: '2px',
       }}>
@@ -199,7 +188,7 @@ function ServiceDropdownItem({
         fontFamily: 'var(--font-mono), monospace',
         fontSize: '10px',
         letterSpacing: '0.08em',
-        color: hovered || isActive ? 'var(--accent)' : '#2A2A28',
+        color: hovered || isActive ? 'var(--accent)' : 'rgba(220,225,248,0.22)',
         transition: 'color 160ms ease, gap 160ms ease',
         marginTop: '6px',
       }}>
@@ -212,19 +201,29 @@ function ServiceDropdownItem({
 /* ─────────────────────────────────────────────────────────────
    Services dropdown panel (desktop)
 ───────────────────────────────────────────────────────────── */
-function ServicesDropdown({ open, pathname }: { open: boolean; pathname: string }) {
+function ServicesDropdown({ open, pathname, items, viewAll, tagline, onFocusIn, onFocusOut }: {
+  open: boolean;
+  pathname: string;
+  items: ServiceItem[];
+  viewAll: string;
+  tagline: string;
+  onFocusIn?: () => void;
+  onFocusOut?: () => void;
+}) {
   return (
     <div
       role="menu"
       aria-hidden={!open}
+      onFocus={() => { if (onFocusIn) onFocusIn(); }}
+      onBlur={(e) => { if (onFocusOut && !e.currentTarget.contains(e.relatedTarget as Node)) onFocusOut(); }}
       style={{
         position: 'absolute',
         top: 'calc(100% + 10px)',
         left: '50%',
         transform: `translateX(-50%) translateY(${open ? '0px' : '-6px'})`,
         width: '648px',
-        backgroundColor: '#0C0C0A',
-        border: '1px solid #1C1C1A',
+        backgroundColor: 'var(--dark-bg)',
+        border: '1px solid var(--dark-border)',
         borderTop: '2px solid var(--accent)',
         boxShadow: '0 28px 72px rgba(0,0,0,0.7), 0 1px 0 rgba(255,255,255,0.025) inset',
         opacity: open ? 1 : 0,
@@ -235,18 +234,18 @@ function ServicesDropdown({ open, pathname }: { open: boolean; pathname: string 
       }}
     >
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
-        {SERVICE_ITEMS.map((item, i) => (
+        {items.map((item, i) => (
           <ServiceDropdownItem
             key={item.href}
             item={item}
             isActive={pathname.startsWith(item.href)}
-            showDivider={i < SERVICE_ITEMS.length - 1}
+            showDivider={i < items.length - 1}
           />
         ))}
       </div>
 
       <div style={{
-        borderTop: '1px solid #1C1C1A',
+        borderTop: '1px solid var(--dark-border)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -263,23 +262,23 @@ function ServicesDropdown({ open, pathname }: { open: boolean; pathname: string 
             fontSize: '11px',
             fontWeight: 500,
             letterSpacing: '0.06em',
-            color: '#6A6A68',
+            color: 'var(--muted)',
             textDecoration: 'none',
             transition: 'color 160ms ease',
           }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#F0EFE9'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#6A6A68'; }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--dark-text)'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--muted)'; }}
         >
-          View all services <ArrowRight size={11} />
+          {viewAll} <ArrowRight size={11} />
         </Link>
         <span style={{
           fontFamily: 'var(--font-mono), monospace',
           fontSize: '9px',
           letterSpacing: '0.14em',
-          color: '#282826',
+          color: 'rgba(220,225,248,0.18)',
           textTransform: 'uppercase',
         }}>
-          Three disciplines. One partner.
+          {tagline}
         </span>
       </div>
     </div>
@@ -290,10 +289,14 @@ function ServicesDropdown({ open, pathname }: { open: boolean; pathname: string 
    Services nav trigger — wraps the button + dropdown
 ───────────────────────────────────────────────────────────── */
 function ServicesNavItem({
-  pathname, textColor,
+  pathname, textColor, label, items, viewAll, tagline,
 }: {
   pathname: string;
   textColor: string;
+  label: string;
+  items: ServiceItem[];
+  viewAll: string;
+  tagline: string;
 }) {
   const [open, setOpen] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -319,6 +322,12 @@ function ServicesNavItem({
       <button
         aria-haspopup="true"
         aria-expanded={open}
+        onFocus={() => openMenu()}
+        onBlur={() => closeMenu()}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open ? closeMenu() : openMenu(); }
+          else if (e.key === 'Escape') { closeMenu(); }
+        }}
         style={{
           position: 'relative',
           display: 'inline-flex',
@@ -344,7 +353,7 @@ function ServicesNavItem({
             backgroundColor: 'var(--accent)', flexShrink: 0,
           }} />
         )}
-        Services
+        {label}
         <ChevronDown
           size={11}
           style={{
@@ -369,7 +378,15 @@ function ServicesNavItem({
         />
       </button>
 
-      <ServicesDropdown open={open} pathname={pathname} />
+      <ServicesDropdown
+        open={open}
+        pathname={pathname}
+        items={items}
+        viewAll={viewAll}
+        tagline={tagline}
+        onFocusIn={() => { if (closeTimer.current) clearTimeout(closeTimer.current); }}
+        onFocusOut={closeMenu}
+      />
     </div>
   );
 }
@@ -381,10 +398,20 @@ function MobileMenu({
   open,
   pathname,
   links,
+  serviceItems,
+  allServicesLabel,
+  startProjectLabel,
+  companyLabel,
+  youAreHereLabel,
 }: {
   open: boolean;
   pathname: string;
   links: { label: string; href: string }[];
+  serviceItems: ServiceItem[];
+  allServicesLabel: string;
+  startProjectLabel: string;
+  companyLabel: string;
+  youAreHereLabel: string;
 }) {
   const [servicesOpen, setServicesOpen] = useState(false);
 
@@ -460,7 +487,7 @@ function MobileMenu({
                       fontSize: 'clamp(34px, 7.5vw, 52px)',
                       fontWeight: 500,
                       letterSpacing: '-0.025em',
-                      color: anyServiceActive ? 'var(--accent)' : '#C8C6C0',
+                      color: anyServiceActive ? 'var(--accent)' : 'rgba(220,225,248,0.55)',
                       textDecoration: 'none',
                       borderBottom: servicesOpen ? '1px solid transparent' : '1px solid #1A1A18',
                       padding: '18px 0',
@@ -497,11 +524,12 @@ function MobileMenu({
                   </button>
 
                   <div style={{
-                    overflow: 'hidden',
-                    maxHeight: servicesOpen ? '360px' : '0px',
-                    transition: 'max-height 380ms cubic-bezier(0.22,1,0.36,1)',
+                    display: 'grid',
+                    gridTemplateRows: servicesOpen ? '1fr' : '0fr',
+                    transition: 'grid-template-rows 380ms cubic-bezier(0.22,1,0.36,1)',
                     borderBottom: servicesOpen ? '1px solid #1A1A18' : 'none',
                   }}>
+                  <div style={{ overflow: 'hidden', minHeight: 0 }}>
                     <Link
                       href="/services"
                       style={{
@@ -514,23 +542,23 @@ function MobileMenu({
                         fontWeight: 500,
                         letterSpacing: '0.06em',
                         textTransform: 'uppercase',
-                        color: pathname === '/services' ? 'var(--accent)' : '#5A5A58',
+                        color: pathname === '/services' ? 'var(--accent)' : 'rgba(220,225,248,0.45)',
                         textDecoration: 'none',
-                        borderBottom: '1px solid #141412',
+                        borderBottom: '1px solid var(--dark-border)',
                         transition: 'color 160ms ease',
                       }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#F0EFE9'; }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--dark-text)'; }}
                       onMouseLeave={(e) => {
                         (e.currentTarget as HTMLElement).style.color =
-                          pathname === '/services' ? 'var(--accent)' : '#5A5A58';
+                          pathname === '/services' ? 'var(--accent)' : 'rgba(220,225,248,0.45)';
                       }}
                     >
                       <span style={{ width: '1px', height: '14px', backgroundColor: '#2A2A28', flexShrink: 0 }} />
-                      All Services
+                      {allServicesLabel}
                       <ArrowRight size={11} style={{ marginLeft: 'auto', opacity: 0.5 }} />
                     </Link>
 
-                    {SERVICE_ITEMS.map((item, j) => {
+                    {serviceItems.map((item, j) => {
                       const subActive = pathname.startsWith(item.href);
                       return (
                         <Link
@@ -545,16 +573,16 @@ function MobileMenu({
                             fontSize: 'clamp(20px, 4vw, 28px)',
                             fontWeight: 500,
                             letterSpacing: '-0.02em',
-                            color: subActive ? '#F0EFE9' : '#585856',
+                            color: subActive ? 'var(--dark-text)' : 'rgba(220,225,248,0.45)',
                             textDecoration: 'none',
-                            borderBottom: j < SERVICE_ITEMS.length - 1 ? '1px solid #141412' : 'none',
+                            borderBottom: j < serviceItems.length - 1 ? '1px solid var(--dark-border)' : 'none',
                             transition: 'color 160ms ease',
                           }}
                           onMouseEnter={(e) => {
-                            if (!subActive) (e.currentTarget as HTMLElement).style.color = '#C8C6C0';
+                            if (!subActive) (e.currentTarget as HTMLElement).style.color = 'rgba(220,225,248,0.55)';
                           }}
                           onMouseLeave={(e) => {
-                            if (!subActive) (e.currentTarget as HTMLElement).style.color = '#585856';
+                            if (!subActive) (e.currentTarget as HTMLElement).style.color = 'rgba(220,225,248,0.45)';
                           }}
                         >
                           <span style={{
@@ -588,6 +616,7 @@ function MobileMenu({
                       );
                     })}
                   </div>
+                  </div>
                 </div>
               );
             }
@@ -604,7 +633,7 @@ function MobileMenu({
                   fontSize: 'clamp(34px, 7.5vw, 52px)',
                   fontWeight: 500,
                   letterSpacing: '-0.025em',
-                  color: isActive ? 'var(--accent)' : '#C8C6C0',
+                  color: isActive ? 'var(--accent)' : 'rgba(220,225,248,0.55)',
                   textDecoration: 'none',
                   borderBottom: '1px solid #1A1A18',
                   padding: '18px 0',
@@ -617,10 +646,10 @@ function MobileMenu({
                   ].join(', '),
                 }}
                 onMouseEnter={(e) => {
-                  if (!isActive) (e.currentTarget as HTMLElement).style.color = '#F0EFE9';
+                  if (!isActive) (e.currentTarget as HTMLElement).style.color = 'var(--dark-text)';
                 }}
                 onMouseLeave={(e) => {
-                  if (!isActive) (e.currentTarget as HTMLElement).style.color = '#C8C6C0';
+                  if (!isActive) (e.currentTarget as HTMLElement).style.color = 'rgba(220,225,248,0.55)';
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '16px' }}>
@@ -677,14 +706,14 @@ function MobileMenu({
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--accent-hover)'; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--accent)'; }}
             >
-              Start a Project <ArrowUpRight size={11} />
+              {startProjectLabel} <ArrowUpRight size={11} />
             </Link>
             <div style={{
               fontFamily: 'var(--font-body), sans-serif',
               fontSize: '9px', letterSpacing: '0.18em', textTransform: 'uppercase',
               color: '#2A2A28',
             }}>
-              An Obsidia Company
+              {companyLabel}
             </div>
           </div>
 
@@ -694,7 +723,7 @@ function MobileMenu({
               fontSize: '8px', letterSpacing: '0.14em', textTransform: 'uppercase',
               color: '#2A2A28', marginBottom: '4px',
             }}>
-              You are here
+              {youAreHereLabel}
             </div>
             <div style={{
               fontFamily: 'var(--font-mono), monospace',
@@ -710,15 +739,6 @@ function MobileMenu({
   );
 }
 
-/* ─────────────────────────────────────────────────────────────
-   Nav links
-───────────────────────────────────────────────────────────── */
-const NAV_LINKS = [
-  { label: 'Home',     href: '/'         },
-  { label: 'Services', href: '/services' },
-  { label: 'Approach', href: '/approach' },
-  { label: 'Contact',  href: '/contact'  },
-];
 
 /* ─────────────────────────────────────────────────────────────
    Main navigation component
@@ -727,29 +747,28 @@ export default function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [progress, setProgress] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [navTheme, setNavTheme] = useState<'dark' | 'light'>('light');
   const pathname = usePathname();
+  const t = useTranslations('nav');
+
+  const serviceItems: ServiceItem[] = [
+    { label: t('automationLabel'), href: '/services/automation', tag: t('automationTag'), desc: t('automationDesc') },
+    { label: t('websitesLabel'),   href: '/services/websites',   tag: t('websitesTag'),   desc: t('websitesDesc')   },
+    { label: t('appsLabel'),       href: '/services/apps',       tag: t('appsTag'),       desc: t('appsDesc')       },
+  ];
+
+  const NAV_LINKS = [
+    { label: t('home'),     href: '/'         },
+    { label: t('services'), href: '/services' },
+    { label: t('approach'), href: '/approach' },
+    { label: t('contact'),  href: '/contact'  },
+  ];
 
   useEffect(() => {
-    const detectTheme = () => {
-      const navH = 80;
-      const sections = document.querySelectorAll<HTMLElement>('[data-nav-theme]');
-      let theme: 'dark' | 'light' = 'light';
-      sections.forEach((el) => {
-        const rect = el.getBoundingClientRect();
-        if (rect.top <= navH && rect.bottom > navH) {
-          theme = (el.dataset.navTheme as 'dark' | 'light') ?? 'light';
-        }
-      });
-      setNavTheme(theme);
-    };
-
     const handle = () => {
       const y = window.scrollY;
       setScrolled(y > 48);
       const docH = document.documentElement.scrollHeight - window.innerHeight;
       setProgress(docH > 0 ? (y / docH) * 100 : 0);
-      detectTheme();
     };
     window.addEventListener('scroll', handle, { passive: true });
     handle();
@@ -763,14 +782,7 @@ export default function Navigation() {
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
 
-  const isNavDark = navTheme === 'dark' && !scrolled;
-  const linkColor     = isNavDark ? 'rgba(240,239,233,0.65)' : 'var(--text-secondary)';
-  const logoTextColor = scrolled ? 'var(--text)' : isNavDark ? '#F0EFE9' : 'var(--text)';
-  const iconColor     = scrolled ? 'var(--text)' : isNavDark ? '#F0EFE9' : 'var(--text)';
-
-  const navBg     = scrolled ? 'rgba(255,255,255,0.93)' : 'transparent';
-  const navBorder = scrolled ? '1px solid var(--border)' : '1px solid transparent';
-  const navHeight = scrolled ? '62px' : '76px';
+  const linkColor = 'rgba(220,225,248,0.6)';
 
   return (
     <>
@@ -779,54 +791,63 @@ export default function Navigation() {
         aria-hidden
         style={{
           position: 'fixed', top: 0, left: 0,
-          height: '2px',
-          width: `${progress}%`,
+          height: '2px', width: '100%',
           backgroundColor: 'var(--accent)',
           zIndex: 200,
           opacity: scrolled ? 1 : 0,
-          transition: 'width 80ms linear, opacity 300ms ease',
+          transform: `scaleX(${progress / 100})`,
+          transformOrigin: 'left center',
+          transition: 'transform 80ms linear, opacity 300ms ease',
           pointerEvents: 'none',
         }}
       />
 
-      {/* ── Header ── */}
+      {/* ── Header shell — transparent, only for positioning ── */}
       <header
+        data-main-nav
         style={{
           position: 'fixed', top: 0, left: 0, right: 0,
           zIndex: 100,
-          backgroundColor: navBg,
-          backdropFilter: scrolled ? 'blur(20px) saturate(1.6)' : 'none',
-          WebkitBackdropFilter: scrolled ? 'blur(20px) saturate(1.6)' : 'none',
-          borderBottom: navBorder,
-          transition: 'background-color 400ms ease, border-color 400ms ease',
+          padding: scrolled ? '10px 20px' : '16px 20px',
+          pointerEvents: 'none',
+          transition: 'none',
         }}
       >
+        {/* ── Floating dark pill ── */}
         <div
           style={{
-            maxWidth: '1200px',
+            maxWidth: '960px',
             margin: '0 auto',
-            padding: '0 32px',
-            height: navHeight,
+            pointerEvents: 'auto',
             position: 'relative',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            transition: 'height 400ms ease',
+            height: scrolled ? '58px' : '66px',
+            backgroundColor: scrolled ? 'rgba(6,8,15,0.72)' : 'rgba(6,8,15,0.42)',
+            backdropFilter: 'blur(32px) saturate(2.2)',
+            WebkitBackdropFilter: 'blur(32px) saturate(2.2)',
+            border: `1px solid ${scrolled ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.06)'}`,
+            borderRadius: '16px',
+            padding: '0 28px',
+            boxShadow: scrolled
+              ? '0 8px 48px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.05) inset'
+              : '0 4px 24px rgba(0,0,0,0.3)',
+            transition: 'background-color 400ms ease, border-color 400ms ease, box-shadow 400ms ease',
           }}
         >
           {/* ── Wordmark ── */}
           <Link
             href="/"
-            aria-label="Obsidia — home"
+            aria-label="Obsidia home"
             style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', flexShrink: 0 }}
           >
-            <LogoMark light={!scrolled && isNavDark} />
+            <LogoMark light={true} />
             <span style={{
               fontFamily: 'var(--font-heading), Georgia, serif',
               fontSize: '20px', fontWeight: 600,
               letterSpacing: '-0.02em', lineHeight: 1,
-              color: logoTextColor,
-              transition: 'color 400ms ease',
+              color: 'var(--dark-text)',
             }}>
               Obsidia
             </span>
@@ -846,68 +867,69 @@ export default function Navigation() {
             className="nav-desktop"
           >
             {NAV_LINKS.map(({ label, href }) => {
-              if (label === 'Services') {
+              if (href === '/services') {
                 return (
                   <ServicesNavItem
                     key={href}
                     pathname={pathname}
-                    textColor={scrolled ? 'var(--text-secondary)' : linkColor}
+                    textColor={linkColor}
+                    label={label}
+                    items={serviceItems}
+                    viewAll={t('viewAllServices')}
+                    tagline={t('tagline')}
                   />
                 );
               }
               const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href);
-              return (
-                <NavLink
-                  key={href}
-                  href={href}
-                  label={label}
-                  active={isActive}
-                  textColor={scrolled ? 'var(--text-secondary)' : linkColor}
-                />
-              );
+              return <NavLink key={href} href={href} label={label} active={isActive} textColor={linkColor} />;
             })}
           </nav>
 
-          {/* ── Right side: CTA + mobile toggle ── */}
+          {/* ── Right side: lang switcher + CTA + mobile toggle ── */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-            {/* Primary CTA */}
-            <Link
-              href="/contact"
-              className="nav-desktop"
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: '7px',
-                fontFamily: 'var(--font-body), sans-serif',
-                fontSize: '11px', fontWeight: 500,
-                letterSpacing: '0.16em', textTransform: 'uppercase',
-                color: '#FFFFFF', textDecoration: 'none',
-                backgroundColor: 'var(--accent)',
-                padding: '12px 24px',
-                transition: 'background-color 200ms ease, gap 200ms ease',
-              }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.backgroundColor = 'var(--accent-hover)';
-                el.style.gap = '10px';
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.backgroundColor = 'var(--accent)';
-                el.style.gap = '7px';
-              }}
-            >
-              Start a Project <ArrowUpRight size={11} />
-            </Link>
+            <div className="nav-desktop" style={{ flexShrink: 0 }}>
+              <LanguageSwitcher />
+            </div>
+            <div className="nav-desktop" style={{ flexShrink: 0 }}>
+              <BorderGlow
+                backgroundColor="#3D52E6"
+                borderRadius={8}
+                glowColor="220 100 80"
+                glowRadius={14}
+                glowIntensity={2.4}
+                colors={['#3D52E6', '#8860E6', '#60A5FA']}
+                edgeSensitivity={65}
+                coneSpread={28}
+                fillOpacity={0}
+              >
+                <Link
+                  href="/contact"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '7px',
+                    fontFamily: 'var(--font-body), sans-serif',
+                    fontSize: '11px', fontWeight: 500,
+                    letterSpacing: '0.16em', textTransform: 'uppercase',
+                    color: '#FFFFFF', textDecoration: 'none',
+                    padding: '10px 22px',
+                    transition: 'gap 200ms ease',
+                    whiteSpace: 'nowrap',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.gap = '10px'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.gap = '7px'; }}
+                >
+                  {t('startProject')} <ArrowUpRight size={11} />
+                </Link>
+              </BorderGlow>
+            </div>
 
-            {/* Mobile toggle */}
             <button
-              aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
+              aria-label={menuOpen ? t('closeNav') : t('openNav')}
               onClick={() => setMenuOpen((v) => !v)}
               className="nav-mobile-toggle"
               style={{
                 background: 'none', border: 'none', padding: '8px',
                 cursor: 'pointer', display: 'none',
-                color: iconColor,
-                transition: 'color 400ms ease',
+                color: 'var(--dark-text)',
               }}
             >
               <HamburgerIcon open={menuOpen} />
@@ -917,7 +939,16 @@ export default function Navigation() {
       </header>
 
       {/* ── Mobile menu ── */}
-      <MobileMenu open={menuOpen} pathname={pathname} links={NAV_LINKS} />
+      <MobileMenu
+        open={menuOpen}
+        pathname={pathname}
+        links={NAV_LINKS}
+        serviceItems={serviceItems}
+        allServicesLabel={t('viewAllServices')}
+        startProjectLabel={t('startProject')}
+        companyLabel={t('company')}
+        youAreHereLabel={t('youAreHere')}
+      />
 
       {/* ── Responsive rules ── */}
       <style>{`

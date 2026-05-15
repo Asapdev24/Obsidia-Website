@@ -1,9 +1,10 @@
-﻿'use client';
+'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { ArrowRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import ServiceTriptych from './ServiceTriptych';
 import MagneticButton from './MagneticButton';
 
@@ -28,27 +29,30 @@ const FADE_UP = {
   }),
 };
 
-/* ── Headline words ───────────────────────────────────────── */
-const LINE1_PRE  = ['We', 'build', 'what'];
-const LINE2      = ['your', 'business', 'needs.'];
-const CYCLE_WORDS = ['Faster.', 'Smarter.', 'Cleaner.', 'Automated.'];
+const CYCLE_COUNT = 4;
 
 export default function Hero() {
+  const t = useTranslations('hero');
   const [wordIdx, setWordIdx] = useState(0);
 
+  const line1Words = t('headline1').split(' ');
+  const line2Words = t('headline2').split(' ');
+  const cycleWords = [t('cycle0'), t('cycle1'), t('cycle2'), t('cycle3')];
+
   useEffect(() => {
-    const t = setInterval(() => setWordIdx(i => (i + 1) % CYCLE_WORDS.length), 2200);
-    return () => clearInterval(t);
+    const id = setInterval(() => setWordIdx(i => (i + 1) % CYCLE_COUNT), 2200);
+    return () => clearInterval(id);
   }, []);
 
   return (
     <section
+      id="home-hero"
+      data-section-label="Home"
       style={{
         position: 'relative',
-        height: '100vh',
-        minHeight: '680px',
+        minHeight: '100dvh',
         display: 'grid',
-        gridTemplateColumns: '55% 45%',
+        gridTemplateColumns: '44% 56%',
         gridTemplateRows: '1fr',
         alignItems: 'stretch',
         overflow: 'hidden',
@@ -63,9 +67,9 @@ export default function Hero() {
           position: 'absolute',
           inset: 0,
           width: '55%',
-          backgroundImage: 'radial-gradient(circle, var(--border) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, rgba(128,128,128,0.3) 1.5px, transparent 1.5px)',
           backgroundSize: '28px 28px',
-          opacity: 0.65,
+          opacity: 0.85,
           pointerEvents: 'none',
         }}
       />
@@ -93,7 +97,7 @@ export default function Hero() {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
-          padding: '120px 48px 80px 32px',
+          padding: '120px 16px 80px 32px',
           maxWidth: '680px',
         }}
       >
@@ -117,7 +121,7 @@ export default function Hero() {
           >
             {/* Line 1 */}
             <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '0.22em', marginBottom: '0.04em' }}>
-              {LINE1_PRE.map((word, i) => (
+              {line1Words.map((word, i) => (
                 <motion.span key={i} variants={WORD} style={{ display: 'inline-block' }}>
                   {word}
                 </motion.span>
@@ -126,15 +130,15 @@ export default function Hero() {
 
             {/* Line 2 */}
             <span style={{ display: 'flex', alignItems: 'baseline', gap: '0.22em', marginBottom: '0.08em' }}>
-              {LINE2.map((word, i) => (
+              {line2Words.map((word, i) => (
                 <motion.span key={i} variants={WORD} style={{ display: 'inline-block' }}>
                   {word}
                 </motion.span>
               ))}
             </span>
 
-            {/* Line 3 — cycling italic crimson word */}
-            <motion.span variants={WORD} style={{ display: 'block', minWidth: '2ch' }}>
+            {/* Line 3 — cycling italic accent word */}
+            <motion.span variants={WORD} style={{ display: 'block', minWidth: '2ch' }} aria-live="polite" aria-atomic="true">
               <AnimatePresence mode="wait">
                 <motion.span
                   key={wordIdx}
@@ -148,7 +152,7 @@ export default function Hero() {
                     fontStyle: 'italic',
                   }}
                 >
-                  {CYCLE_WORDS[wordIdx]}
+                  {cycleWords[wordIdx]}
                 </motion.span>
               </AnimatePresence>
             </motion.span>
@@ -170,7 +174,7 @@ export default function Hero() {
             marginBottom: '44px',
           }}
         >
-          Obsidia builds custom automations, websites, and applications for businesses that are serious about how they operate.
+          {t('subheadline')}
         </motion.p>
 
         {/* CTAs */}
@@ -182,126 +186,16 @@ export default function Hero() {
           style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap', marginBottom: '32px' }}
         >
           <MagneticButton strength={0.22}>
-            <Link
-              href="/contact"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '10px',
-                fontFamily: 'var(--font-body), sans-serif',
-                fontSize: '12px',
-                fontWeight: 500,
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                color: '#fff',
-                textDecoration: 'none',
-                backgroundColor: 'var(--accent)',
-                padding: '14px 28px',
-                transition: 'background-color 200ms ease',
-              }}
-              onMouseEnter={(e) => { (e.currentTarget).style.backgroundColor = 'var(--accent-hover)'; }}
-              onMouseLeave={(e) => { (e.currentTarget).style.backgroundColor = 'var(--accent)'; }}
-            >
-              Start a Project <ArrowRight size={13} />
+            <Link href="/contact" className="hero-btn-primary">
+              {t('ctaPrimary')} <ArrowRight size={13} />
             </Link>
           </MagneticButton>
 
-          <Link
-            href="/services"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontFamily: 'var(--font-body), sans-serif',
-              fontSize: '12px',
-              fontWeight: 500,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              color: 'var(--text-secondary)',
-              textDecoration: 'none',
-              transition: 'color 200ms ease',
-              borderBottom: '1px solid var(--border)',
-              paddingBottom: '3px',
-            }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget;
-              el.style.color = 'var(--text)';
-              el.style.borderColor = 'var(--text)';
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget;
-              el.style.color = 'var(--text-secondary)';
-              el.style.borderColor = 'var(--border)';
-            }}
-          >
-            Our Services <ArrowRight size={12} />
+          <Link href="/services" className="hero-btn-secondary">
+            {t('ctaSecondary')} <ArrowRight size={12} />
           </Link>
         </motion.div>
 
-        {/* ── Activity badge ────────────────────────────── */}
-        <motion.div
-          variants={FADE_UP}
-          custom={1.35}
-          initial="hidden"
-          animate="visible"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '12px',
-            border: '1px solid var(--border)',
-            backgroundColor: 'var(--surface)',
-            padding: '10px 18px',
-            width: 'fit-content',
-          }}
-        >
-          {/* Pulsing ring + green dot */}
-          <div style={{ position: 'relative', width: '8px', height: '8px', flexShrink: 0 }}>
-            <div
-              style={{
-                position: 'absolute', inset: 0, borderRadius: '50%',
-                backgroundColor: '#22C55E', zIndex: 1,
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute', inset: '-5px', borderRadius: '50%',
-                border: '1px solid #22C55E',
-                animation: 'pulseRing 2.2s ease-out infinite',
-              }}
-            />
-          </div>
-          <span
-            style={{
-              fontFamily: 'var(--font-body), sans-serif',
-              fontSize: '11px', fontWeight: 500,
-              letterSpacing: '0.06em', color: 'var(--text-muted)',
-            }}
-          >
-            <span style={{ fontFamily: 'var(--font-mono), monospace', color: 'var(--text)', fontWeight: 600 }}>
-              3
-            </span>{' '}
-            active projects · Live since 2024
-          </span>
-        </motion.div>
-
-        {/* Scroll indicator */}
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute', bottom: '32px', left: '32px',
-            display: 'flex', alignItems: 'center', gap: '10px',
-            animation: 'scrollBounce 2.6s ease-in-out infinite',
-          }}
-        >
-          <div style={{ width: '1px', height: '28px', backgroundColor: 'var(--border-strong)' }} />
-          <span style={{
-            fontFamily: 'var(--font-body), sans-serif',
-            fontSize: '9px', letterSpacing: '0.2em', textTransform: 'uppercase',
-            color: 'var(--text-muted)',
-          }}>
-            Scroll
-          </span>
-        </div>
       </div>
 
       {/* ── Right column — ServiceTriptych ───────────────── */}
@@ -316,11 +210,46 @@ export default function Hero() {
 
       {/* ── Responsive styles ──────────────────────────── */}
       <style>{`
+        .hero-btn-primary {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          font-family: var(--font-body), sans-serif;
+          font-size: 12px;
+          font-weight: 500;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: #fff;
+          text-decoration: none;
+          background-color: var(--accent);
+          padding: 14px 28px;
+          border-radius: 50px;
+          transition: background-color 200ms ease;
+        }
+        .hero-btn-primary:hover { background-color: var(--accent-hover); }
+        .hero-btn-secondary {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-family: var(--font-body), sans-serif;
+          font-size: 12px;
+          font-weight: 500;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--text-secondary);
+          text-decoration: none;
+          border-bottom: 1px solid var(--border);
+          padding-bottom: 3px;
+          transition: color 200ms ease, border-color 200ms ease;
+        }
+        .hero-btn-secondary:hover {
+          color: var(--text);
+          border-color: var(--text);
+        }
         @media (max-width: 1024px) {
           .hero-grid {
             grid-template-columns: 1fr !important;
-            height: auto !important;
-            min-height: 100vh !important;
+            min-height: 100dvh !important;
           }
           .hero-grid > div:last-child {
             display: none !important;

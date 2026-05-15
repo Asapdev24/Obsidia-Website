@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { ArrowUpRight } from 'lucide-react';
 import GlareHover from './GlareHover';
 
@@ -204,18 +204,18 @@ function ServiceCard({ service, index, active }: { service: ServiceData; index: 
               </Link>
             </div>
 
-            {/* Left accent bar — scaleY from top */}
+            {/* Top accent bar — scaleX from left */}
             <div
               aria-hidden
               style={{
                 position:        'absolute',
                 top:             0,
-                bottom:          0,
                 left:            0,
-                width:           '3px',
+                right:           0,
+                height:          '2px',
                 backgroundColor: ACCENT,
-                transform:       hovered ? 'scaleY(1)' : 'scaleY(0)',
-                transformOrigin: 'top',
+                transform:       hovered ? 'scaleX(1)' : 'scaleX(0)',
+                transformOrigin: 'left',
                 transition:      'transform 320ms cubic-bezier(0.76,0,0.24,1)',
               }}
             />

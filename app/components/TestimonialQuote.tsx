@@ -101,11 +101,13 @@ export default function TestimonialQuote() {
         {/* Divider */}
         <div
           style={{
-            width: active ? '48px' : '0px',
+            width: '48px',
             height: '1px',
             backgroundColor: 'var(--accent)',
             margin: '0 auto 32px',
-            transition: 'width 600ms cubic-bezier(0.22, 1, 0.36, 1) 400ms',
+            transform: active ? 'scaleX(1)' : 'scaleX(0)',
+            transformOrigin: 'center center',
+            transition: 'transform 600ms cubic-bezier(0.22, 1, 0.36, 1) 400ms',
           }}
         />
 

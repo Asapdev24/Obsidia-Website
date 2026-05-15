@@ -1,35 +1,10 @@
 'use client';
 
-import Link from 'next/link';
-
-const NAV_COLS = [
-  {
-    label: 'Company',
-    links: [
-      { label: 'Services',  href: '/services'  },
-      { label: 'Approach',  href: '/approach'  },
-      { label: 'About',     href: '/about'     },
-      { label: 'Contact',   href: '/contact'   },
-    ],
-  },
-  {
-    label: 'Services',
-    links: [
-      { label: 'Workflow Automation',      href: '/services/automation' },
-      { label: 'Website Development',      href: '/services/websites'   },
-      { label: 'Application Development',  href: '/services/apps'       },
-    ],
-  },
-  {
-    label: 'Connect',
-    links: [
-      { label: 'Start a Project',  href: '/contact'             },
-      { label: 'LinkedIn',         href: 'https://linkedin.com' },
-    ],
-  },
-];
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 
 export default function Footer() {
+  const t = useTranslations('footer');
   const year = new Date().getFullYear();
 
   return (
@@ -41,90 +16,110 @@ export default function Footer() {
     >
       {/* Main footer body */}
       <div
+        className="footer-body"
         style={{
           maxWidth: '1200px',
           margin: '0 auto',
           padding: '80px 32px 60px',
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr 1fr',
-          gap: '48px',
+          gridTemplateColumns: '2fr 1fr 1fr 1fr',
+          gap: '64px',
         }}
-        className="footer-grid"
       >
         {/* Brand column */}
         <div>
           <Link
             href="/"
+            className="footer-brand"
             style={{
               fontFamily: 'var(--font-heading), Georgia, serif',
-              fontSize: '26px',
+              fontSize: '28px',
               fontWeight: 600,
               letterSpacing: '-0.02em',
               color: 'var(--dark-text)',
               textDecoration: 'none',
               display: 'block',
-              marginBottom: '20px',
               lineHeight: 1,
+              marginBottom: '16px',
             }}
           >
             Obsidia
           </Link>
-
           <p
             style={{
               fontFamily: 'var(--font-body), sans-serif',
-              fontSize: '13px',
+              fontSize: '14px',
               lineHeight: 1.75,
-              color: 'var(--dark-muted)',
-              marginBottom: '28px',
+              color: 'var(--muted)',
+              maxWidth: '260px',
             }}
           >
-            Automations, websites, and applications — built for businesses serious about how they operate.
+            {t('tagline')}
           </p>
         </div>
 
-        {/* Nav columns */}
-        {NAV_COLS.map(({ label, links }) => (
-          <div key={label}>
-            <p
-              style={{
-                fontFamily: 'var(--font-body), sans-serif',
-                fontSize: '10px',
-                fontWeight: 500,
-                letterSpacing: '0.16em',
-                textTransform: 'uppercase',
-                color: 'var(--accent)',
-                marginBottom: '20px',
-              }}
-            >
-              {label}
-            </p>
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {links.map(({ label: linkLabel, href }) => (
-                <li key={href}>
-                  <Link
-                    href={href}
-                    style={{
-                      fontFamily: 'var(--font-body), sans-serif',
-                      fontSize: '13px',
-                      color: 'var(--dark-muted)',
-                      textDecoration: 'none',
-                      transition: 'color 200ms ease',
-                    }}
-                    onMouseEnter={(e) => { (e.target as HTMLAnchorElement).style.color = 'var(--dark-text)'; }}
-                    onMouseLeave={(e) => { (e.target as HTMLAnchorElement).style.color = 'var(--dark-muted)'; }}
-                  >
-                    {linkLabel}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        {/* Navigation */}
+        <div>
+          <p className="footer-col-label">{t('colCompany')}</p>
+          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {[
+              { label: t('linkServices'),  href: '/services'  },
+              { label: t('linkApproach'),  href: '/approach'  },
+              { label: t('linkContact'),   href: '/contact'   },
+            ].map(({ label, href }) => (
+              <li key={href}>
+                <Link href={href} className="footer-link">
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Services */}
+        <div>
+          <p className="footer-col-label">{t('colServices')}</p>
+          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {[
+              { label: t('linkAutomation'), href: '/services/automation' },
+              { label: t('linkWebsites'),   href: '/services/websites'   },
+              { label: t('linkApps'),       href: '/services/apps'       },
+            ].map(({ label, href }) => (
+              <li key={href}>
+                <Link href={href} className="footer-link">
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Contact Us */}
+        <div>
+          <p className="footer-col-label">{t('colContact')}</p>
+          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <li>
+              <a
+                href="https://linkedin.com"
+                className="footer-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {t('linkLinkedIn')}
+              </a>
+            </li>
+            <li>
+              <a href="mailto:sales@obsidia.space" className="footer-link">
+                sales@obsidia.space
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
 
-      {/* Footer bottom bar */}
+      {/* Bottom bar */}
       <div
+        className="footer-bar"
         style={{
           borderTop: '1px solid var(--dark-border)',
           maxWidth: '1200px',
@@ -137,34 +132,64 @@ export default function Footer() {
           gap: '12px',
         }}
       >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          {[
+            { label: t('privacy'), href: '/privacy' },
+            { label: t('terms'),   href: '/terms'   },
+          ].map(({ label, href }) => (
+            <Link key={href} href={href} className="footer-legal-link">
+              {label}
+            </Link>
+          ))}
+        </div>
+
         <p
           style={{
             fontFamily: 'var(--font-body), sans-serif',
             fontSize: '11px',
-            color: 'var(--dark-muted)',
+            color: 'var(--muted)',
             letterSpacing: '0.04em',
           }}
         >
-          © {year} Obsidia. All rights reserved.
-        </p>
-        <p
-          style={{
-            fontFamily: 'var(--font-body), sans-serif',
-            fontSize: '11px',
-            color: 'var(--dark-muted)',
-            letterSpacing: '0.04em',
-          }}
-        >
-          Three services. One partner.
+          {t('rights', { year })}
         </p>
       </div>
 
       <style>{`
-        @media (max-width: 1024px) {
-          .footer-grid { grid-template-columns: 1fr 1fr !important; }
+        .footer-col-label {
+          font-family: var(--font-body), sans-serif;
+          font-size: 10px;
+          font-weight: 500;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: var(--accent);
+          margin-bottom: 20px;
         }
-        @media (max-width: 640px) {
-          .footer-grid { grid-template-columns: 1fr !important; }
+        .footer-link {
+          font-family: var(--font-body), sans-serif;
+          font-size: 13px;
+          color: var(--muted);
+          text-decoration: none;
+          transition: color 200ms ease;
+        }
+        .footer-link:hover { color: var(--dark-text); }
+        .footer-legal-link {
+          font-family: var(--font-body), sans-serif;
+          font-size: 11px;
+          color: var(--muted);
+          text-decoration: none;
+          letter-spacing: 0.04em;
+          transition: color 200ms ease;
+        }
+        .footer-legal-link:hover { color: var(--dark-text); }
+        @media (max-width: 1024px) {
+          .footer-body { grid-template-columns: 2fr 1fr 1fr !important; }
+        }
+        @media (max-width: 768px) {
+          .footer-body { grid-template-columns: 1fr 1fr !important; }
+        }
+        @media (max-width: 600px) {
+          .footer-body { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </footer>
