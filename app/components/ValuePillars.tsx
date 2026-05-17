@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
+
+const EASE = [0.22, 1, 0.36, 1] as const;
 
 type Standard = { n: string; title: string; body: string };
 
@@ -75,7 +78,11 @@ function StandardCard({ standard, index }: { standard: Standard; index: number }
   const [hovered, setHovered] = useState(false);
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, scale: 0.91 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: false, amount: 0.28 }}
+      transition={{ duration: 0.68, ease: EASE, delay: 0.28 + index * 0.12 }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -132,7 +139,7 @@ function StandardCard({ standard, index }: { standard: Standard; index: number }
       <div style={{ marginTop: '24px', position: 'relative', zIndex: 1 }}>
         <PillarVisual index={index} hovered={hovered} />
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -198,7 +205,13 @@ export default function ValuePillars() {
       <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', position: 'relative', zIndex: 1 }}>
 
         {/* Header — big heading first, section label below */}
-        <div style={{ marginBottom: '40px' }}>
+        <motion.div
+          initial={{ opacity: 0, x: -36 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: false, amount: 0.5 }}
+          transition={{ duration: 0.7, ease: EASE, delay: 0.28 }}
+          style={{ marginBottom: '40px' }}
+        >
           <h2 className="font-heading" style={{
             fontSize: 'clamp(52px, 7vw, 96px)',
             fontWeight: 500, letterSpacing: '-0.045em',
@@ -220,10 +233,16 @@ export default function ValuePillars() {
             {' '}
             <span style={{ color: 'var(--accent)' }}>Standards</span>
           </p>
-        </div>
+        </motion.div>
 
         {/* Separator */}
-        <div style={{ height: '1px', background: 'rgba(61,82,230,0.22)', marginBottom: '32px' }} />
+        <motion.div
+          initial={{ scaleX: 0 }}
+          whileInView={{ scaleX: 1 }}
+          viewport={{ once: false, amount: 0.5 }}
+          transition={{ duration: 0.9, ease: EASE, delay: 0.44 }}
+          style={{ height: '1px', background: 'rgba(61,82,230,0.22)', marginBottom: '32px', transformOrigin: 'left center' }}
+        />
 
         {/* 3-card grid */}
         <div className="pillars-grid">

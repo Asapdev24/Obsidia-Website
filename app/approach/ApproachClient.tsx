@@ -512,6 +512,7 @@ export default function ApproachClient() {
                 maxWidth: '1200px', margin: '0 auto',
                 padding: '0 32px',
                 display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+                width: '100%',
               }}
             >
               {PHASES.map((phase, i) => (
@@ -520,45 +521,21 @@ export default function ApproachClient() {
                   href={`#${phase.id}`}
                   className="phase-tracker-item"
                   style={{
-                    display: 'flex', alignItems: 'flex-start', gap: 16,
-                    padding: '28px 0',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '20px 0',
                     borderLeft: i > 0 ? '1px solid var(--dark-border)' : 'none',
-                    paddingLeft: i > 0 ? 28 : 0,
                     textDecoration: 'none',
                   }}
                 >
-                  <span className="phase-num" style={{
-                    fontFamily: 'var(--font-mono), monospace',
-                    fontSize: 10, fontWeight: 500, letterSpacing: '0.18em',
-                    color: 'rgba(61,82,230,0.5)',
-                    paddingTop: 3,
+                  <span className="phase-name" style={{
+                    fontFamily: 'var(--font-body), sans-serif',
+                    fontSize: 11, fontWeight: 500, letterSpacing: '0.14em',
+                    textTransform: 'uppercase',
+                    color: 'rgba(220,225,245,0.3)',
                     transition: 'color 200ms ease',
-                    flexShrink: 0,
                   }}>
-                    {phase.number}
+                    {phase.name}
                   </span>
-                  <div>
-                    <span className="phase-name" style={{
-                      fontFamily: 'var(--font-body), sans-serif',
-                      fontSize: 12, fontWeight: 500, letterSpacing: '0.1em',
-                      textTransform: 'uppercase',
-                      color: 'rgba(220,225,245,0.3)',
-                      display: 'block',
-                      transition: 'color 200ms ease',
-                    }}>
-                      {phase.name}
-                    </span>
-                    <span className="phase-desc" style={{
-                      fontFamily: 'var(--font-body), sans-serif',
-                      fontSize: 11,
-                      color: 'rgba(220,225,245,0.16)',
-                      display: 'block', marginTop: 5,
-                      lineHeight: 1.55,
-                      transition: 'color 200ms ease',
-                    }}>
-                      {phase.descriptor}
-                    </span>
-                  </div>
                 </a>
               ))}
             </div>

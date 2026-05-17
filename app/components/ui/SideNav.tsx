@@ -163,10 +163,8 @@ export default function SideNav() {
   if (sections.length < 2) return null;
 
   const scrollToSection = (element: HTMLElement) => {
-    // Dynamically measure the sticky nav so offset is always exact
-    const navEl = document.querySelector<HTMLElement>('[data-main-nav]');
-    const navH = navEl ? navEl.offsetHeight : 68;
-    window.scrollTo({ top: element.offsetTop - navH, behavior: 'smooth' });
+    const absoluteTop = element.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: absoluteTop, behavior: 'smooth' });
   };
 
   return (

@@ -211,8 +211,8 @@ function FindingCard({
     <motion.div
       initial={{ opacity: 0, y: 44 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.72, ease: EASE, delay: index * 0.13 }}
+      viewport={{ once: false, amount: 0.25 }}
+      transition={{ duration: 0.72, ease: EASE, delay: 0.22 + index * 0.13 }}
       className={`finding-card card-${meta.cssClass}`}
       onMouseEnter={() => setBarsOn(true)}
       onMouseLeave={() => setBarsOn(false)}
@@ -312,8 +312,8 @@ export default function ProblemStatement() {
         <motion.div
           initial={{ opacity: 0, y: 22 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.62, ease: EASE }}
+          viewport={{ once: false, amount: 0.5 }}
+          transition={{ duration: 0.62, ease: EASE, delay: 0.3 }}
           style={{ marginBottom: '64px' }}
         >
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '32px' }}>
@@ -365,8 +365,8 @@ export default function ProblemStatement() {
           <motion.div
             initial={{ scaleX: 0 }}
             whileInView={{ scaleX: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.1, ease: EASE, delay: 0.2 }}
+            viewport={{ once: false, amount: 0.5 }}
+            transition={{ duration: 1.1, ease: EASE, delay: 0.45 }}
             style={{
               height: '1px',
               background: 'linear-gradient(to right, rgba(61,82,230,0.35), rgba(136,96,230,0.18) 55%, transparent)',

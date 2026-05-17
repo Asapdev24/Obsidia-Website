@@ -88,8 +88,8 @@ function ServiceCard({ s, idx }: { s: Svc; idx: number }) {
       ref={outerRef}
       initial={{ opacity: 0, y: 56 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.18 }}
-      transition={{ duration: 0.78, ease: EASE, delay: 0.06 + idx * 0.16 }}
+      viewport={{ once: false, amount: 0.28 }}
+      transition={{ duration: 0.78, ease: EASE, delay: 0.22 + idx * 0.16 }}
     >
       {/* Inner: spring hover lift */}
       <motion.div
@@ -142,29 +142,14 @@ function ServiceCard({ s, idx }: { s: Svc; idx: number }) {
 
 export default function HomeServicesSignpost() {
   const t = useTranslations('homeServices');
-  const sectionRef = useRef<HTMLElement>(null);
-  const [active, setActive] = useState(false);
-
   const SERVICES: Svc[] = [
     { n: '01', title: t('automationTitle'), desc: t('automationDesc'), href: '/services/automation', time: t('automationTime') },
     { n: '02', title: t('websitesTitle'),   desc: t('websitesDesc'),   href: '/services/websites',   time: t('websitesTime')   },
     { n: '03', title: t('appsTitle'),       desc: t('appsDesc'),       href: '/services/apps',       time: t('appsTime')       },
   ];
 
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setActive(true); obs.disconnect(); } },
-      { threshold: 0.06 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
   return (
     <section
-      ref={sectionRef}
       id="home-services"
       data-section-label="What We Build"
       className="svc3-section"
@@ -387,8 +372,9 @@ export default function HomeServicesSignpost() {
         <motion.div
           className="svc3-hdr"
           initial={{ opacity: 0, y: 22 }}
-          animate={active ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.62, ease: EASE }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.5 }}
+          transition={{ duration: 0.62, ease: EASE, delay: 0.28 }}
         >
           <div>
             <h2 className="font-heading svc3-h2">{t('sectionLabel')}</h2>

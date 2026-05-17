@@ -38,7 +38,7 @@ export default function Footer() {
             }}
           >
             <img
-              src="/logos/obsidia_web_black_logo.jpeg"
+              src="/logos/obsidia_web_black_logo.png"
               alt="Obsidia"
               style={{ height: '64px', width: 'auto', display: 'block' }}
             />

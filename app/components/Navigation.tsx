@@ -146,15 +146,6 @@ function DefaultPreviewPanel() {
         Three disciplines.<br />One studio.
       </h3>
 
-      <p style={{
-        fontFamily: 'var(--font-body), sans-serif',
-        fontSize: '13px', lineHeight: 1.7,
-        color: 'rgba(220,225,248,0.66)',
-        flex: 1, marginBottom: '22px',
-      }}>
-        Workflow automation, custom websites, and bespoke applications — built around how your business actually works.
-      </p>
-
       <Link
         href="/services"
         onMouseEnter={() => setExploreHov(true)}
@@ -167,6 +158,7 @@ function DefaultPreviewPanel() {
           textDecoration: 'none',
           transition: `color 200ms ${EASE_NAV}`,
           alignSelf: 'flex-start',
+          marginTop: 'auto',
         }}
       >
         Explore all services
@@ -264,6 +256,8 @@ function ServicesDropdown({ pathname, items, viewAll, onMouseEnter, onMouseLeave
   onFocusOut?: () => void;
 }) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [viewAllHov, setViewAllHov] = useState(false);
+  const isExactServices = pathname === '/services';
 
   return (
     <div style={{ position: 'absolute', top: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
@@ -274,10 +268,10 @@ function ServicesDropdown({ pathname, items, viewAll, onMouseEnter, onMouseLeave
       onMouseLeave={onMouseLeave}
       onFocus={() => onFocusIn?.()}
       onBlur={(e) => { if (onFocusOut && !e.currentTarget.contains(e.relatedTarget as Node)) onFocusOut(); }}
-      initial={{ opacity: 0, y: -10, scaleY: 0.96 }}
+      initial={{ opacity: 0, y: -14, scaleY: 0.94 }}
       animate={{ opacity: 1, y: 0, scaleY: 1 }}
-      exit={{ opacity: 0, y: -8, scaleY: 0.97 }}
-      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+      exit={{ opacity: 0, y: -10, scaleY: 0.96 }}
+      transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
       style={{
         transformOrigin: 'top center',
         width: '700px',
@@ -302,18 +296,24 @@ function ServicesDropdown({ pathname, items, viewAll, onMouseEnter, onMouseLeave
             borderBottom: '1px solid rgba(255,255,255,0.06)',
             fontFamily: 'var(--font-body), sans-serif',
             fontSize: '10px', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase',
-            color: 'rgba(220,225,248,0.62)',
+            color: viewAllHov ? 'var(--dark-text)' : isExactServices ? 'rgba(220,225,248,0.90)' : 'rgba(220,225,248,0.62)',
             textDecoration: 'none',
-            transition: `color 200ms ${EASE_NAV}`,
+            boxShadow: isExactServices ? 'inset 2px 0 0 rgba(61,82,230,0.52)' : 'none',
+            transition: `color 200ms ${EASE_NAV}, box-shadow 200ms ease`,
           }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--dark-text)'; setHoveredIdx(null); }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'rgba(220,225,248,0.62)'; }}
+          onMouseEnter={() => { setViewAllHov(true); setHoveredIdx(null); }}
+          onMouseLeave={() => setViewAllHov(false)}
         >
-          {viewAll} <ArrowRight size={9} />
+          {viewAll}
+          {isExactServices && !viewAllHov && (
+            <span style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: 'var(--accent)', flexShrink: 0, marginLeft: '2px' }} />
+          )}
+          {!isExactServices && <ArrowRight size={9} />}
+          {isExactServices && viewAllHov && <ArrowRight size={9} />}
         </Link>
 
         {items.map((item, i) => {
-          const isHov = hoveredIdx === i;
+          const isHov    = hoveredIdx === i;
           const isActive = pathname.startsWith(item.href);
           return (
             <Link
@@ -323,19 +323,22 @@ function ServicesDropdown({ pathname, items, viewAll, onMouseEnter, onMouseLeave
               style={{
                 display: 'block',
                 padding: '10px 20px',
-                backgroundColor: isHov ? 'rgba(136,96,230,0.10)' : 'transparent',
+                backgroundColor: isHov
+                  ? 'rgba(136,96,230,0.10)'
+                  : isActive ? 'rgba(61,82,230,0.07)' : 'transparent',
+                boxShadow: isActive ? 'inset 2px 0 0 rgba(61,82,230,0.52)' : 'none',
                 textDecoration: 'none',
                 whiteSpace: 'nowrap',
-                transition: `background-color 200ms ${EASE_NAV}`,
+                transition: `background-color 380ms ${EASE_NAV}, box-shadow 240ms ease`,
               }}
             >
               <span style={{
                 display: 'block',
                 fontFamily: 'var(--font-mono), monospace',
                 fontSize: '9px', letterSpacing: '0.2em', textTransform: 'uppercase',
-                color: isHov ? 'var(--accent)' : 'rgba(61,82,230,0.38)',
+                color: isHov ? 'var(--accent)' : isActive ? 'rgba(61,82,230,0.70)' : 'rgba(61,82,230,0.38)',
                 marginBottom: '5px',
-                transition: `color 200ms ${EASE_NAV}`,
+                transition: `color 360ms ${EASE_NAV}`,
               }}>
                 {item.tag}
               </span>
@@ -344,8 +347,8 @@ function ServicesDropdown({ pathname, items, viewAll, onMouseEnter, onMouseLeave
                 fontFamily: 'var(--font-cormorant), Georgia, serif',
                 fontSize: '20px', fontWeight: 500,
                 letterSpacing: '-0.01em', lineHeight: 1.1,
-                color: isHov ? '#FFFFFF' : 'rgba(220,225,248,0.42)',
-                transition: `color 200ms ${EASE_NAV}`,
+                color: isHov ? '#FFFFFF' : isActive ? 'rgba(220,225,248,0.80)' : 'rgba(220,225,248,0.42)',
+                transition: `color 360ms ${EASE_NAV}`,
               }}>
                 {item.label}
               </span>
@@ -362,7 +365,7 @@ function ServicesDropdown({ pathname, items, viewAll, onMouseEnter, onMouseLeave
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.14, ease: 'easeInOut' }}
+            transition={{ duration: 0.28, ease: 'easeInOut' }}
             style={{ position: 'absolute', inset: 0 }}
           >
             {hoveredIdx === null
@@ -946,26 +949,12 @@ export default function Navigation() {
           >
             <div style={{ position: 'relative', height: '64px', width: '280px' }}>
               <img
-                src="/logos/obsidia_web_white_logo.jpeg"
+                src="/logos/obsidia_web_black_logo.png"
                 alt="Obsidia"
                 style={{
                   position: 'absolute', inset: 0,
                   height: '100%', width: '100%',
                   objectFit: 'contain', objectPosition: 'left center',
-                  opacity: isDarkSection ? 1 : 0,
-                  transition: 'opacity 300ms ease',
-                }}
-              />
-              <img
-                src="/logos/obsidia_web_black_logo.jpeg"
-                alt=""
-                aria-hidden
-                style={{
-                  position: 'absolute', inset: 0,
-                  height: '100%', width: '100%',
-                  objectFit: 'contain', objectPosition: 'left center',
-                  opacity: isDarkSection ? 0 : 1,
-                  transition: 'opacity 300ms ease',
                 }}
               />
             </div>

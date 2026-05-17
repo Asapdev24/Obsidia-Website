@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from '@/i18n/navigation';
 import { ArrowRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -9,8 +9,6 @@ import MagneticButton from './MagneticButton';
 
 export default function CTABand() {
   const t = useTranslations('cta');
-  const ref = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(false);
   const [btnHov, setBtnHov] = useState(false);
 
   const STEPS = [
@@ -19,20 +17,8 @@ export default function CTABand() {
     { n: '03', label: t('step03label'), desc: t('step03desc') },
   ];
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setActive(true); observer.disconnect(); } },
-      { threshold: 0.15 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <section
-      ref={ref}
       id="home-cta"
       data-section-label="Start a Project"
       style={{
@@ -54,14 +40,15 @@ export default function CTABand() {
       >
 
         {/* Left: headline */}
-        <div
+        <motion.div
+          initial={{ opacity: 0, x: -24 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: 0.08 }}
           style={{
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            opacity: active ? 1 : 0,
-            transform: active ? 'translateX(0)' : 'translateX(-24px)',
-            transition: 'opacity 650ms ease 80ms, transform 650ms cubic-bezier(0.22,1,0.36,1) 80ms',
           }}
         >
           <span
@@ -105,28 +92,31 @@ export default function CTABand() {
           >
             {t('subtext')}
           </p>
-        </div>
+        </motion.div>
 
         {/* Vertical separator */}
-        <div
+        <motion.div
           className="cta-separator"
+          initial={{ scaleY: 0 }}
+          whileInView={{ scaleY: 1 }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.18 }}
           style={{
             backgroundColor: 'var(--dark-border)',
             transformOrigin: 'top center',
-            transform: active ? 'scaleY(1)' : 'scaleY(0)',
-            transition: 'transform 700ms cubic-bezier(0.22,1,0.36,1) 180ms',
           }}
         />
 
         {/* Right: steps + CTA */}
-        <div
+        <motion.div
+          initial={{ opacity: 0, x: 24 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: 0.08 }}
           style={{
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            opacity: active ? 1 : 0,
-            transform: active ? 'translateX(0)' : 'translateX(24px)',
-            transition: 'opacity 650ms ease 80ms, transform 650ms cubic-bezier(0.22,1,0.36,1) 80ms',
           }}
         >
           {/* Steps */}
@@ -250,7 +240,7 @@ export default function CTABand() {
               </motion.div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
       </div>
 

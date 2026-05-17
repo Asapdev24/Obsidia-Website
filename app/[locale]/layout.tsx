@@ -15,6 +15,8 @@ import Footer from '../components/Footer';
 import SideNav from '../components/ui/SideNav';
 import BackToTop from '../components/ui/BackToTop';
 import CustomCursor from '../components/CustomCursor';
+import StyledComponentsRegistry from '../lib/StyledComponentsRegistry';
+import PageLoader from '../components/ui/PageLoader';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -94,7 +96,9 @@ export default async function LocaleLayout({
       className={`${cormorant.variable} ${dmSans.variable} ${jetbrainsMono.variable} ${tajawal.variable}`}
     >
       <body>
+        <StyledComponentsRegistry>
         <NextIntlClientProvider messages={messages}>
+          <PageLoader />
           <CustomCursor />
           <a href="#main-content" className="skip-to-content">
             Skip to content
@@ -106,6 +110,7 @@ export default async function LocaleLayout({
           <main id="main-content">{children}</main>
           <Footer />
         </NextIntlClientProvider>
+        </StyledComponentsRegistry>
       </body>
     </html>
   );

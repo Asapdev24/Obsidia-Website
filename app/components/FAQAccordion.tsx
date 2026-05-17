@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { motion } from 'framer-motion';
 
 interface ItemProps {
   faq: { q: string; a: string };
@@ -146,7 +147,11 @@ export default function FAQAccordion({
     <div>
       {/* Section header */}
       <div style={{ marginBottom: '56px' }}>
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.5 }}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
           className="section-label"
           style={{
             marginBottom: '20px',
@@ -156,9 +161,13 @@ export default function FAQAccordion({
           <span style={dark ? { '--label-line-color': 'var(--accent)' } as React.CSSProperties : {}}>
             {resolvedLabel}
           </span>
-        </div>
-        <h2
+        </motion.div>
+        <motion.h2
           className="font-heading"
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.45 }}
+          transition={{ duration: 0.78, ease: [0.22, 1, 0.36, 1], delay: 0.08 }}
           style={{
             fontSize: 'clamp(32px, 3.8vw, 52px)',
             fontWeight: 500,
@@ -168,20 +177,27 @@ export default function FAQAccordion({
           }}
         >
           {resolvedHeading}
-        </h2>
+        </motion.h2>
       </div>
 
       {/* Items */}
       <div style={{ borderTop: `1px solid ${dark ? '#2A2A28' : 'var(--border)'}` }}>
         {FAQS.map((faq, i) => (
-          <FAQItem
+          <motion.div
             key={i}
-            faq={faq}
-            index={i}
-            isOpen={openIndex === i}
-            onToggle={() => setOpenIndex(openIndex === i ? null : i)}
-            dark={dark}
-          />
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: false, amount: 0.5 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: i * 0.07 }}
+          >
+            <FAQItem
+              faq={faq}
+              index={i}
+              isOpen={openIndex === i}
+              onToggle={() => setOpenIndex(openIndex === i ? null : i)}
+              dark={dark}
+            />
+          </motion.div>
         ))}
       </div>
     </div>

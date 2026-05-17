@@ -5,12 +5,13 @@ import { Link } from '@/i18n/navigation';
 import { ArrowRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import CTABand from '../components/CTABand';
-import { useReveal } from '@/app/hooks/useScroll';
+import { motion } from 'framer-motion';
 
 /* ── Types ────────────────────────────────────────────────── */
 interface ServiceItem {
   number: string; title: string; tagline: string; summary: string;
   href: string; image: string; panel1: string; panel2: string;
+  bgImage?: string; imgPosition?: string;
 }
 
 
@@ -53,9 +54,11 @@ function TriptychPanel({
       {/* Background image — service-specific */}
       <div style={{
         position: 'absolute', inset: 0,
-        backgroundImage: `url(${service.image})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center center',
+        backgroundImage: `url(${service.bgImage ?? service.image})`,
+        backgroundSize: service.bgImage ? '300% 100%' : 'cover',
+        backgroundPosition: service.bgImage
+          ? (['0% center', '50% center', '100% center'] as const)[index]
+          : 'center center',
         filter: isDimmed
           ? 'grayscale(85%) brightness(0.18) contrast(1.1)'
           : isActive
@@ -260,26 +263,23 @@ function ServicesHero({ services }: { services: ServiceItem[] }) {
 /* ── Service image with hover treatment ───────────────────── */
 function ServiceImage({
   service,
-  visible,
-  delay,
   fromRight,
 }: {
   service: ServiceItem;
-  visible: boolean;
-  delay: number;
   fromRight: boolean;
 }) {
   const [hov, setHov] = useState(false);
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, x: fromRight ? 40 : -40 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: false, amount: 0.3 }}
+      transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.18 }}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
         position: 'relative', aspectRatio: '4 / 3', overflow: 'hidden',
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateX(0)' : `translateX(${fromRight ? 40 : -40}px)`,
-        transition: `opacity 900ms ease ${delay}ms, transform 900ms cubic-bezier(0.22,1,0.36,1) ${delay}ms`,
       }}
     >
       <img
@@ -288,7 +288,7 @@ function ServiceImage({
         loading="lazy"
         decoding="async"
         style={{
-          width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+          width: '100%', height: '100%', objectFit: 'cover', objectPosition: service.imgPosition ?? 'center center', display: 'block',
           filter: hov
             ? 'grayscale(0%) brightness(0.78) contrast(1.06)'
             : 'grayscale(75%) brightness(0.5)',
@@ -350,7 +350,7 @@ function ServiceImage({
           }}
         />
       ))}
-    </div>
+    </motion.div>
   );
 }
 
@@ -363,12 +363,10 @@ function ServiceSection({
   index: number;
 }) {
   const t = useTranslations('services');
-  const { ref, visible } = useReveal(0.08);
   const isReversed = index % 2 === 1;
 
   return (
     <section
-      ref={ref as React.RefObject<HTMLElement>}
       id={`service-${service.number}`}
       data-nav-theme="dark"
       data-section-label={service.title}
@@ -409,12 +407,13 @@ function ServiceSection({
         }}
       >
         {/* Content column */}
-        <div style={{
-          order: isReversed ? 1 : 0,
-          opacity: visible ? 1 : 0,
-          transform: visible ? 'translateX(0)' : `translateX(${isReversed ? 32 : -32}px)`,
-          transition: 'opacity 800ms ease, transform 800ms cubic-bezier(0.22,1,0.36,1)',
-        }}>
+        <motion.div
+          initial={{ opacity: 0, x: isReversed ? 32 : -32 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          style={{ order: isReversed ? 1 : 0 }}
+        >
           {/* Service label */}
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: '12px',
@@ -473,14 +472,12 @@ function ServiceSection({
           >
             {t('exploreLabel')} {service.title} <ArrowRight size={12} />
           </Link>
-        </div>
+        </motion.div>
 
         {/* Image column */}
         <div style={{ order: isReversed ? 0 : 1 }}>
           <ServiceImage
             service={service}
-            visible={visible}
-            delay={180}
             fromRight={!isReversed}
           />
         </div>
@@ -508,21 +505,25 @@ export default function ServicesClient() {
       number: t('automationNumber'), title: t('automationTitle'), tagline: t('automationTagline'),
       summary: t('automationSummary'),
       href: '/services/automation',
-      image: 'https://picsum.photos/seed/factory-machinery-pipeline/1200/900',
+      image: '/auto_service_photo.png',
+      imgPosition: 'left center',
+      bgImage: '/main_services_page_hero.jpg',
       panel1: t('automationPanel1'), panel2: t('automationPanel2'),
     },
     {
       number: t('websitesNumber'), title: t('websitesTitle'), tagline: t('websitesTagline'),
       summary: t('websitesSummary'),
       href: '/services/websites',
-      image: 'https://picsum.photos/seed/modern-office-desk-laptop/1200/900',
+      image: '/web_dev_service_photo.png',
+      bgImage: '/main_services_page_hero.jpg',
       panel1: t('websitesPanel1'), panel2: t('websitesPanel2'),
     },
     {
       number: t('appsNumber'), title: t('appsTitle'), tagline: t('appsTagline'),
       summary: t('appsSummary'),
       href: '/services/apps',
-      image: 'https://picsum.photos/seed/smartphone-app-screen/1200/900',
+      image: '/app_dev_service_photo.png',
+      bgImage: '/main_services_page_hero.jpg',
       panel1: t('appsPanel1'), panel2: t('appsPanel2'),
     },
   ];

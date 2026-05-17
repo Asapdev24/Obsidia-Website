@@ -6,7 +6,6 @@ import { Link } from '@/i18n/navigation';
 import { ArrowRight } from 'lucide-react';
 import CTABand from '../../components/CTABand';
 import MagneticButton from '../../components/MagneticButton';
-import { useReveal } from '@/app/hooks/useScroll';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
@@ -159,7 +158,7 @@ function AppsHero() {
           </motion.div>
         </h1>
         <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, ease: EASE, delay: 0.85 }} className="font-body" style={{ fontSize: 'clamp(15px, 1.4vw, 17px)', lineHeight: 1.8, color: 'var(--dark-muted)', maxWidth: '460px', marginBottom: '44px' }}>
-          Off-the-shelf software costs more than it solves: subscription fees, workarounds, and hours spent fitting your business around a tool designed for someone else. We build the tool that fits you.
+          Most software fits a template. You're expected to work around the gaps. Obsidia builds what you actually need.
         </motion.p>
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, ease: EASE, delay: 1.05 }} style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap', marginBottom: '32px' }}>
           <MagneticButton strength={0.22}>
@@ -191,7 +190,7 @@ const PROBLEMS = [
   {
     n: '01',
     title: 'Manual work\nthat should be\nsoftware.',
-    body: 'If it lives in a spreadsheet, it belongs in a purpose-built tool.',
+    body: 'When a core part of your business runs on spreadsheets and memory, it’s a liability, not a system.',
     indicator: 'Process gap',
   },
   {
@@ -215,15 +214,13 @@ const PROBLEMS = [
 ];
 
 function AppsProblemStatement() {
-  const { ref, visible } = useReveal(0.06);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   return (
     <section
-      ref={ref}
       id="apps-problem"
       data-nav-theme="dark"
-      data-section-label="The Problem"
+      data-section-label="Built Wrong."
       style={{
         backgroundColor: 'var(--dark-surface)',
         borderTop: '1px solid var(--dark-border)',
@@ -245,21 +242,22 @@ function AppsProblemStatement() {
       <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
 
         {/* Header — compact */}
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.4 }}
+          transition={{ duration: 0.75, ease: EASE }}
           style={{
             display: 'flex',
             alignItems: 'flex-end',
             justifyContent: 'space-between',
             gap: '48px',
             marginBottom: '16px',
-            opacity: visible ? 1 : 0,
-            transform: visible ? 'none' : 'translateY(16px)',
-            transition: 'opacity 600ms ease, transform 600ms ease',
           }}
           className="apps-prob-hdr"
         >
           <div>
-            <div className="section-label" style={{ color: 'var(--accent)', marginBottom: '14px' }}>The Problem</div>
+            <div className="section-label" style={{ color: 'var(--accent)', marginBottom: '14px' }}>Built Wrong.</div>
             <h2
               className="font-heading"
               style={{ fontSize: 'clamp(24px, 3.2vw, 40px)', fontWeight: 500, lineHeight: 1.05, letterSpacing: '-0.03em', color: 'var(--dark-text)' }}
@@ -268,7 +266,7 @@ function AppsProblemStatement() {
               <br /><em style={{ color: 'var(--accent)' }}>is missing software.</em>
             </h2>
           </div>
-        </div>
+        </motion.div>
 
         {/* 2×2 diagnostic grid */}
         <div
@@ -291,9 +289,10 @@ function AppsProblemStatement() {
                 key={i}
                 onMouseEnter={() => setHoveredIdx(i)}
                 onMouseLeave={() => setHoveredIdx(null)}
-                initial={{ opacity: 0, y: 24 }}
-                animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
-                transition={{ duration: 0.65, ease: EASE, delay: i * 0.09 }}
+                initial={{ opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.25 }}
+                transition={{ duration: 0.68, ease: EASE, delay: i * 0.10 }}
                 style={{
                   position: 'relative',
                   padding: '22px 28px',
@@ -663,21 +662,21 @@ const APP_SERVICES = [
     n: '01',
     tag: 'Mobile',
     title: 'Mobile Applications',
-    body: 'iOS and Android apps built as native-quality progressive web apps: the look, feel, and performance of a native app, without two separate codebases.',
+    body: 'Native-quality iOS and Android, fast and polished, from a single codebase.',
     screen: 0,
   },
   {
     n: '02',
     tag: 'Internal',
     title: 'Internal Tools',
-    body: 'Operations dashboards, admin panels, and workflow tools built around how your team actually works — your processes, your data, your people.',
+    body: 'Custom dashboards that pull your data together and cut out the repetitive manual work.',
     screen: 1,
   },
   {
     n: '03',
     tag: 'Portals',
     title: 'Client & Partner Portals',
-    body: 'Branded portals where clients view status, approve deliverables, access documents, and communicate — cutting the back-and-forth that eats up your team.',
+    body: 'A dedicated login space that replaces the email chains and keeps everyone aligned.',
     screen: 2,
   },
   {
@@ -690,7 +689,6 @@ const APP_SERVICES = [
 ];
 
 function AppServicesGrid() {
-  const { ref, visible } = useReveal(0.08);
   const [activeIdx, setActiveIdx] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const mouseX = useMotionValue(0);
@@ -721,7 +719,6 @@ function AppServicesGrid() {
 
   return (
     <section
-      ref={ref}
       id="apps-services"
       data-nav-theme="dark"
       data-section-label="What We Build"
@@ -739,13 +736,12 @@ function AppServicesGrid() {
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
         {/* Section header */}
-        <div
-          style={{
-            marginBottom: '24px',
-            opacity: visible ? 1 : 0,
-            transform: visible ? 'translateY(0)' : 'translateY(16px)',
-            transition: 'opacity 600ms ease, transform 600ms ease',
-          }}
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.35 }}
+          transition={{ duration: 0.72, ease: EASE }}
+          style={{ marginBottom: '24px' }}
         >
           <div className="section-label" style={{ color: 'var(--accent)', marginBottom: '16px' }}>What We Build</div>
           <h2
@@ -755,35 +751,37 @@ function AppServicesGrid() {
             Four types of application,
             <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}> one team.</em>
           </h2>
-        </div>
+        </motion.div>
 
         {/* Main grid: phone + service list */}
         <div className="apps-svc-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'center' }}>
 
           {/* Phone mockup */}
-          <motion.div
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              perspective: 1000,
-              opacity: visible ? 1 : 0,
-              transition: 'opacity 800ms ease 200ms',
-            }}
-          >
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', perspective: '900px' }}>
             <motion.div
-              style={{
-                rotateX,
-                rotateY,
-                transformStyle: 'preserve-3d',
-                willChange: 'transform',
+              initial={{ rotateX: 85, opacity: 0 }}
+              whileInView={{ rotateX: 0, opacity: 1 }}
+              viewport={{ once: false, amount: 0.35 }}
+              transition={{
+                rotateX: { duration: 1.1, ease: [0.22, 1, 0.36, 1] },
+                opacity: { duration: 0.38, ease: 'easeOut' },
               }}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+              style={{ transformStyle: 'preserve-3d' }}
             >
-              <PhoneDisplay activeScreen={APP_SERVICES[activeIdx].screen} />
+              <motion.div
+                style={{
+                  rotateX,
+                  rotateY,
+                  transformStyle: 'preserve-3d',
+                  willChange: 'transform',
+                }}
+              >
+                <PhoneDisplay activeScreen={APP_SERVICES[activeIdx].screen} />
+              </motion.div>
             </motion.div>
-          </motion.div>
+          </div>
 
           {/* Service list */}
           <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -795,12 +793,14 @@ function AppServicesGrid() {
                   onMouseEnter={() => { setActiveIdx(i); setIsHovered(true); }}
                   onMouseLeave={() => setIsHovered(false)}
                   onClick={() => setActiveIdx(i)}
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: false, amount: 0.3 }}
+                  transition={{ duration: 0.58, ease: EASE, delay: i * 0.10 + 0.15 }}
                   style={{
                     padding: '18px 0',
                     borderBottom: i < APP_SERVICES.length - 1 ? '1px solid rgba(255,255,255,0.07)' : 'none',
                     cursor: 'pointer',
-                    opacity: visible ? 1 : 0,
-                    transition: `opacity 600ms ease ${i * 80 + 300}ms`,
                   }}
                 >
                   {/* Row header */}
@@ -897,8 +897,6 @@ function AppServicesGrid() {
             <div
               style={{
                 marginTop: '36px',
-                opacity: visible ? 1 : 0,
-                transition: 'opacity 600ms ease 700ms',
               }}
             >
               <MagneticButton strength={0.18}>
@@ -952,9 +950,8 @@ const APP_PHASES = [
     title: 'Discovery',
     subtitle: 'Understand before you build',
     bullets: [
-      'Map every process and workflow',
-      'Lock requirements with zero ambiguity',
-      'Scope confirmed — no hidden assumptions',
+      'We map your workflows and catch edge cases before they become expensive.',
+      'Everyone aligns on exactly what\'s being built before scoping begins.',
     ],
     deliverable: 'Technical specification',
     previewTitle: 'requirements.md',
@@ -976,9 +973,8 @@ const APP_PHASES = [
     title: 'Architecture',
     subtitle: 'Design the system, then build it',
     bullets: [
-      'Define database schema and API contracts',
-      'Build a working prototype for review',
-      'Team sign-off before any production code ships',
+      'We design the database structure and underlying system logic first.',
+      'You get a working prototype to review before any production code is written.',
     ],
     deliverable: 'Approved prototype',
     previewTitle: 'schema.ts',
@@ -1001,9 +997,8 @@ const APP_PHASES = [
     title: 'Build',
     subtitle: 'Weekly demos, no surprises',
     bullets: [
-      'Sprint-by-sprint development cycle',
-      'Every feature tested before the next sprint',
-      'You see working software every 7 days',
+      'Development runs in structured cycles with regular working demos.',
+      'Every feature is tested and signed off before the next one starts.',
     ],
     deliverable: 'Tested application',
     previewTitle: 'git log --oneline',
@@ -1023,9 +1018,8 @@ const APP_PHASES = [
     title: 'Deploy',
     subtitle: 'Live, documented, supported',
     bullets: [
-      'Production deployment and monitoring setup',
-      'Full documentation and team training',
-      '30 days of post-launch support included',
+      'We handle the launch, monitoring setup, and full team handover.',
+      'A post-launch support window ensures nothing slips through after go-live.',
     ],
     deliverable: 'Live application',
     previewTitle: 'deploy.log',
@@ -1042,12 +1036,10 @@ const APP_PHASES = [
 ];
 
 function AppProcessSection() {
-  const { ref, visible } = useReveal(0.06);
   const [activePhase, setActivePhase] = useState<number | null>(null);
 
   return (
     <section
-      ref={ref}
       id="apps-process"
       data-section-label="How We Build"
       style={{
@@ -1065,21 +1057,22 @@ function AppProcessSection() {
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
         {/* Header */}
-        <div
+        <motion.div
           className="apps-proc-hdr"
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{ duration: 0.75, ease: EASE }}
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
             gap: '80px',
             alignItems: 'end',
             marginBottom: '64px',
-            opacity: visible ? 1 : 0,
-            transform: visible ? 'none' : 'translateY(16px)',
-            transition: 'opacity 600ms ease, transform 600ms ease',
           }}
         >
           <div>
-            <div className="section-label" style={{ color: 'var(--accent)', marginBottom: '24px' }}>Development Process</div>
+            <div className="section-label" style={{ color: 'var(--accent)', marginBottom: '24px' }}>How We Build</div>
             <h2
               className="font-heading"
               style={{ fontSize: 'clamp(32px, 4vw, 52px)', fontWeight: 500, letterSpacing: '-0.025em', color: 'var(--dark-text)', lineHeight: 1.08 }}
@@ -1093,7 +1086,7 @@ function AppProcessSection() {
               Four precise phases. Constant visibility. Zero surprises.
             </p>
           </div>
-        </div>
+        </motion.div>
 
         {/* Phase cards grid */}
         <div
@@ -1103,10 +1096,14 @@ function AppProcessSection() {
           {APP_PHASES.map((phase, i) => {
             const isActive = activePhase === i;
             return (
-              <div
+              <motion.div
                 key={i}
                 onMouseEnter={() => setActivePhase(i)}
                 onMouseLeave={() => setActivePhase(null)}
+                initial={{ opacity: 0, y: 32 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.2 }}
+                transition={{ duration: 0.68, ease: EASE, delay: i * 0.11 + 0.08 }}
                 style={{
                   position: 'relative',
                   backgroundColor: isActive ? 'rgba(61,82,230,0.09)' : '#070B18',
@@ -1115,9 +1112,7 @@ function AppProcessSection() {
                   minHeight: '360px',
                   display: 'flex',
                   flexDirection: 'column',
-                  opacity: visible ? 1 : 0,
-                  transform: visible ? 'translateY(0)' : 'translateY(32px)',
-                  transition: `opacity 700ms ease ${i * 110 + 300}ms, transform 700ms cubic-bezier(0.22,1,0.36,1) ${i * 110 + 300}ms, background-color 320ms ease`,
+                  transition: 'background-color 320ms ease',
                   cursor: 'default',
                 }}
               >
@@ -1252,7 +1247,7 @@ function AppProcessSection() {
                     ))}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>

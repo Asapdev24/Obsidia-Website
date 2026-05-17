@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, type ReactElement } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, useInView } from 'framer-motion';
 import { Link } from '@/i18n/navigation';
 import { ArrowRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -9,7 +9,6 @@ import WorkflowGraph from '../../components/WorkflowGraph';
 import TrustBar from '../../components/TrustBar';
 import CTABand from '../../components/CTABand';
 import MagneticButton from '../../components/MagneticButton';
-import { useReveal } from '@/app/hooks/useScroll';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 const CYCLE_COUNT = 4;
@@ -156,13 +155,12 @@ const SERVICE_VIDEOS = [
 ];
 
 function ServiceRow({
-  item, isActive, onEnter, index, visible,
+  item, isActive, onEnter, index,
 }: {
   item: typeof AUTO_SERVICES[0];
   isActive: boolean;
   onEnter: () => void;
   index: number;
-  visible: boolean;
 }) {
   const rowRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -193,17 +191,18 @@ function ServiceRow({
   }, [mouseX]);
 
   return (
-    <div
-      ref={rowRef}
+    <motion.div
+      ref={rowRef as React.RefObject<HTMLDivElement>}
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      variants={{
+        hidden: { opacity: 0, x: -28 },
+        visible: { opacity: 1, x: 0, transition: { duration: 0.65, ease: EASE } },
+      }}
       style={{
         position: 'relative', overflow: 'hidden',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateX(0)' : 'translateX(-24px)',
-        transition: `opacity 600ms ease ${index * 110 + 200}ms, transform 600ms cubic-bezier(0.22,1,0.36,1) ${index * 110 + 200}ms`,
         cursor: 'default',
       }}
     >
@@ -289,7 +288,7 @@ function ServiceRow({
           />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -368,14 +367,12 @@ function ServicePreviewPanel({ items, activeIdx }: { items: typeof AUTO_SERVICES
 }
 
 function AutomationServicesSection() {
-  const { ref, visible } = useReveal(0.06);
   const [activeIdx, setActiveIdx] = useState(0);
 
   return (
     <section
-      ref={ref}
       id="auto-services"
-      data-section-label="What We Build"
+      data-section-label="What We Automate"
       style={{
         backgroundColor: 'var(--dark-bg)',
         padding: '40px 32px',
@@ -413,7 +410,7 @@ function AutomationServicesSection() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
+          viewport={{ once: false, amount: 0.3 }}
           transition={{ duration: 0.65, ease: EASE }}
           style={{ marginBottom: '20px' }}
         >
@@ -423,7 +420,7 @@ function AutomationServicesSection() {
               letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--accent)',
               opacity: 0.7, display: 'block', marginBottom: '20px',
             }}>
-              What We Build
+              What We Automate
             </span>
             <h2 className="font-heading" style={{
               fontSize: 'clamp(36px, 4vw, 56px)', fontWeight: 500,
@@ -438,15 +435,21 @@ function AutomationServicesSection() {
         {/* Split layout: rows left, preview right */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 420px', gap: '64px', alignItems: 'stretch' }} className="services-split">
           {/* Left: service rows */}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, amount: 0.25 }}
+            variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.13, delayChildren: 0.08 } } }}
+            style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+          >
             {AUTO_SERVICES.map((s, i) => (
               <ServiceRow
-                key={i} item={s} index={i} visible={visible}
+                key={i} item={s} index={i}
                 isActive={activeIdx === i}
                 onEnter={() => setActiveIdx(i)}
               />
             ))}
-          </div>
+          </motion.div>
 
           {/* Right: preview panel — fixed-height container, opacity-only crossfade */}
           <div className="services-preview" style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
@@ -545,9 +548,10 @@ function AutoPhaseRow({ phase, index, visible, isLast }: { phase: typeof AUTO_PH
 }
 
 function AutoProcessTimeline() {
-  const { ref, visible } = useReveal(0.06);
+  const ref = useRef<HTMLElement>(null);
+  const visible = useInView(ref, { once: false, amount: 0.06 });
   return (
-    <section ref={ref} id="auto-process" data-section-label="How We Work" style={{ backgroundColor: '#111111', borderTop: '1px solid #1E1E1C' }}>
+    <section ref={ref as React.RefObject<HTMLElement>} id="auto-process" data-section-label="How We Work" style={{ backgroundColor: '#111111', borderTop: '1px solid #1E1E1C' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '80px 32px 64px', borderBottom: '1px solid #1E1E1C' }}>
         <div className="auto-proc-header" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '40px', alignItems: 'flex-end', opacity: visible ? 1 : 0, transform: visible ? 'none' : 'translateY(16px)', transition: 'opacity 600ms ease, transform 600ms ease' }}>
           <div>
@@ -735,7 +739,7 @@ function PainCards() {
   return (
     <section
       id="auto-pain"
-      data-section-label="The Problem"
+      data-section-label="The Cost of Manual Work"
       data-nav-theme="dark"
       style={{
         backgroundColor: 'var(--dark-bg)',
@@ -759,7 +763,13 @@ function PainCards() {
       <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
 
         {/* ── Headline ── */}
-        <div style={{ textAlign: 'center', marginBottom: '52px' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.5 }}
+          transition={{ duration: 0.7, ease: EASE }}
+          style={{ textAlign: 'center', marginBottom: '52px' }}
+        >
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '32px' }}>
             <div style={{ width: '22px', height: '1px', backgroundColor: 'var(--accent)', opacity: 0.55 }} />
             <span style={{
@@ -767,7 +777,7 @@ function PainCards() {
               fontSize: '9px', fontWeight: 500, letterSpacing: '0.24em', textTransform: 'uppercase',
               color: 'var(--accent)',
             }}>
-              The Problem
+              The Cost of Manual Work
             </span>
             <div style={{ width: '22px', height: '1px', backgroundColor: 'var(--accent)', opacity: 0.55 }} />
           </div>
@@ -783,11 +793,15 @@ function PainCards() {
             Your team is capable.<br />
             <em style={{ fontStyle: 'italic', color: 'var(--accent)' }}>Your processes are not.</em>
           </h2>
-        </div>
+        </motion.div>
 
         {/* ── Fan cards ── */}
-        <div
+        <motion.div
           className="pain-fan"
+          initial={{ opacity: 0, scale: 0.96 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: false, amount: 0.2 }}
+          transition={{ duration: 0.75, ease: EASE, delay: 0.12 }}
           style={{
             position: 'relative',
             height: '400px',
@@ -999,7 +1013,7 @@ function PainCards() {
               </motion.div>
             );
           })}
-        </div>
+        </motion.div>
 
         {/* ── Mobile fallback: stacked cards ── */}
         <div
@@ -1068,7 +1082,7 @@ const DELIVERABLES = [
   {
     number: '01',
     title: 'Process Map.',
-    body: 'A full diagram of every workflow we built or touched. What triggers it, what it does, where it goes. Not a summary — the actual map.',
+    body: 'A full technical layout of your operations — every trigger, every handoff, every destination. Not a summary. The exact blueprint of how your business runs.',
     image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1600&q=80',
   },
   {
@@ -1118,7 +1132,7 @@ function DeliverableCard({ item, index }: { item: typeof DELIVERABLES[0]; index:
       initial="hidden"
       whileInView="visible"
       whileHover="hovered"
-      viewport={{ once: true, amount: 0.2 }}
+      viewport={{ once: false, amount: 0.2 }}
       variants={{
         hidden: { opacity: 0, y: 18 },
         visible: {
