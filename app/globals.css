@@ -2,7 +2,7 @@
 
 /* ─── Design Tokens ─────────────────────────────────────────── */
 :root {
-  --bg:             #FFFFFF;   /* pure white */
+  --bg:             #FBFBFE;   /* cool-tinted off-white (cobalt undertone) */
   --surface:        #ECEDFD;   /* card/chip surfaces */
   --text:           #08090E;   /* near-black with a cool undertone */
   --dark-text:      #DCE1F5;   /* cool blue-white — text on dark sections */
@@ -61,6 +61,13 @@
   --color-dark-border:    var(--dark-border);
 }
 
+/* ─── Custom Cursor ─────────────────────────────────────────── */
+@media (pointer: fine) {
+  html, body, *, *::before, *::after {
+    cursor: none !important;
+  }
+}
+
 /* ─── Base Reset & Typography ───────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -103,13 +110,6 @@ body {
 /* Pause grain when tab is hidden — JS toggles this class */
 .grain-overlay.paused {
   animation-play-state: paused;
-}
-
-/* ─── Custom cursor ─────────────────────────────────────────── */
-@media (pointer: fine) {
-  *, *::before, *::after {
-    cursor: none !important;
-  }
 }
 
 /* ─── Skip-to-content ───────────────────────────────────────── */
@@ -375,4 +375,50 @@ p {
 [dir="rtl"] .skip-to-content {
   left: auto;
   right: 16px;
+}
+
+/* ─── TrustBar logo marquee ─────────────────────────────────── */
+.tb-track {
+  display: flex;
+  align-items: center;
+  gap: 120px;
+  width: max-content;
+  animation: marqueeScroll 38s linear infinite;
+}
+.tb-track:hover {
+  animation-play-state: paused;
+}
+.tb-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  text-decoration: none;
+  transform: translateY(0) scale(1);
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tb-logo:hover {
+  transform: translateY(-4px) scale(1.08);
+}
+.tb-media {
+  width: 80px;
+  height: 80px;
+  opacity: 0.55;
+  filter: grayscale(20%);
+  transition: opacity 280ms ease, filter 280ms ease;
+  flex-shrink: 0;
+  color: #08090E;
+}
+.tb-logo:hover .tb-media {
+  opacity: 1;
+  filter: none;
+}
+.tb-media-svg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tb-media-img {
+  display: block;
+  object-fit: contain;
 }

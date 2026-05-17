@@ -99,7 +99,7 @@ export default function CTABand() {
             style={{
               fontSize: '15px',
               lineHeight: 1.75,
-              color: 'rgba(220,225,248,0.38)',
+              color: 'rgba(220,225,248,0.62)',
               maxWidth: '380px',
             }}
           >
@@ -158,7 +158,7 @@ export default function CTABand() {
                   style={{
                     fontSize: '17px',
                     lineHeight: 1.7,
-                    color: 'rgba(220,225,248,0.52)',
+                    color: 'rgba(220,225,248,0.68)',
                     margin: 0,
                   }}
                 >

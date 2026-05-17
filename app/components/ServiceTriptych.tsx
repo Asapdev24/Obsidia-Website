@@ -29,13 +29,7 @@ function AutomationPanel({ visible }: { visible: boolean }) {
   ];
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '24px 20px 20px' }}>
-      {/* Label */}
-      <div style={{ fontFamily: 'var(--font-body), sans-serif', fontSize: '8px', fontWeight: 600, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#3A3A38' }}>
-        Automation
-      </div>
-
-      {/* SVG graph */}
+    <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', padding: '20px' }}>
       <svg viewBox="0 0 280 160" style={{ width: '100%', flex: 1 }} aria-hidden>
         <defs>
           <marker id="arr-a" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
@@ -110,20 +104,17 @@ function WebsitePanel({ visible }: { visible: boolean }) {
     return () => { clearInterval(blink); clearInterval(lines); };
   }, [visible]);
 
+  // Widths as px — browser inner right edge is x=260, lines start at x=28, max=232px
   const skeletonLines = [
-    { y: 72,  w: '75%' },
-    { y: 86,  w: '55%' },
-    { y: 104, w: '90%' },
-    { y: 118, w: '70%' },
-    { y: 132, w: '45%' },
+    { y: 72,  w: 182 },
+    { y: 86,  w: 134 },
+    { y: 104, w: 220 },
+    { y: 118, w: 170 },
+    { y: 132, w: 110 },
   ];
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '24px 20px 20px' }}>
-      <div style={{ fontFamily: 'var(--font-body), sans-serif', fontSize: '8px', fontWeight: 600, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#3A3A38' }}>
-        Websites
-      </div>
-
+    <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', padding: '20px' }}>
       <svg viewBox="0 0 280 160" style={{ width: '100%', flex: 1 }} aria-hidden>
         {/* Browser chrome */}
         <rect x="20" y="8" width="240" height="148" rx="3" fill="#0D0D0D" stroke="#2A2A28" strokeWidth="0.8" />
@@ -151,7 +142,7 @@ function WebsitePanel({ visible }: { visible: boolean }) {
         {/* Hero image placeholder */}
         <rect x="28" y="53" width="224" height="14" rx="1" fill="#161616" stroke="#1E1E1C" strokeWidth="0.5" />
 
-        {/* Skeleton text lines */}
+        {/* Skeleton text lines — px widths stay within browser frame boundary */}
         {skeletonLines.map((l, i) => (
           <rect key={i} x="28" y={l.y} width={l.w} height="6" rx="1"
             fill={i <= lineIdx ? '#1E1E1C' : '#141414'}
@@ -191,12 +182,9 @@ function AppPanel({ visible }: { visible: boolean }) {
   ];
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '24px 20px 20px' }}>
-      <div style={{ fontFamily: 'var(--font-body), sans-serif', fontSize: '8px', fontWeight: 600, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#3A3A38' }}>
-        Applications
-      </div>
-
-      <svg viewBox="0 0 280 160" style={{ width: '100%', flex: 1 }} aria-hidden>
+    <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', padding: '20px' }}>
+      {/* viewBox zoomed in on the phone: same animation, larger apparent size */}
+      <svg viewBox="70 0 140 160" style={{ width: '100%', flex: 1 }} aria-hidden>
         {/* Phone outline */}
         <rect x="80" y="4" width="120" height="152" rx="10" fill="#0D0D0D" stroke="#2A2A28" strokeWidth="0.8" />
         {/* Notch */}
@@ -282,7 +270,7 @@ export default function ServiceTriptych() {
         gridTemplateColumns: 'repeat(3, 1fr)',
       }}
     >
-      {/* Dot grid */}
+      {/* Dot grid — shared, covers all three panels uniformly */}
       <div aria-hidden style={{
         position: 'absolute', inset: 0,
         backgroundImage: 'radial-gradient(circle, #1A1A18 1px, transparent 1px)',
@@ -301,18 +289,14 @@ export default function ServiceTriptych() {
         What We Build
       </div>
 
-
-      {/* Three panels */}
+      {/* Three panels — transparent so the shared dot grid shows through */}
       {panels.map(({ key, Panel }, i) => (
         <div
           key={key}
           style={{
             position: 'relative',
             zIndex: 1,
-            borderRight: i < 2 ? '1px solid transparent' : 'none',
-            backgroundImage: i < 2 ? 'linear-gradient(var(--dark-bg), var(--dark-bg)), linear-gradient(180deg, var(--accent), var(--violet))' : 'none',
-            backgroundOrigin: i < 2 ? 'border-box' : 'initial',
-            backgroundClip: i < 2 ? 'padding-box, border-box' : 'initial',
+            borderRight: i < 2 ? '1px solid #1E1E1C' : 'none',
             opacity: visible ? 1 : 0,
             transform: visible ? 'translateY(0)' : 'translateY(12px)',
             transition: `opacity 800ms ease ${i * 140 + 300}ms, transform 800ms cubic-bezier(0.22,1,0.36,1) ${i * 140 + 300}ms`,

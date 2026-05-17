@@ -1,12 +1,5 @@
-import type { Metadata } from 'next';
-import AppsClient from './AppsClient';
-
-export const metadata: Metadata = {
-  title: 'Application Development',
-  description:
-    'Obsidia builds custom mobile apps, internal tools, client portals, and dashboards designed around how your business actually works, not around off-the-shelf templates.',
-};
+import { redirect } from 'next/navigation';
 
 export default function AppsPage() {
-  return <AppsClient />;
+  redirect('/en/services/apps');
 }

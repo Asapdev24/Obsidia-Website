@@ -19,6 +19,7 @@ function FAQItem({ faq, index, isOpen, onToggle, dark = false }: ItemProps) {
       }}
     >
       <button
+        id={`faq-trigger-${index}`}
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-controls={`faq-panel-${index}`}
@@ -96,6 +97,7 @@ function FAQItem({ faq, index, isOpen, onToggle, dark = false }: ItemProps) {
       <div
         id={`faq-panel-${index}`}
         role="region"
+        aria-labelledby={`faq-trigger-${index}`}
         style={{
           display: 'grid',
           gridTemplateRows: isOpen ? '1fr' : '0fr',

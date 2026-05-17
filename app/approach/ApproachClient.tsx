@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
-/* ── Scroll direction ─────────────────────────────────────── */
+/* scroll direction — used for stagger reversal in Principles */
 function useScrollDirection() {
   const [dir, setDir] = useState<'down' | 'up'>('down');
   const lastY = useRef(0);
@@ -85,6 +85,7 @@ function PrincipleRow({ principle, index, scrollDir, total }: {
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0,
         height: 1, backgroundColor: 'var(--dark-border)', zIndex: 1,
+        pointerEvents: 'none',
       }} />
 
       {/* Accent line — grows on hover */}
@@ -98,6 +99,7 @@ function PrincipleRow({ principle, index, scrollDir, total }: {
         style={{
           position: 'absolute', top: 0, left: 0, right: 0, height: 1,
           backgroundColor: 'var(--accent)', transformOrigin: 'center', zIndex: 2,
+          pointerEvents: 'none',
         }}
       />
 
@@ -114,6 +116,7 @@ function PrincipleRow({ principle, index, scrollDir, total }: {
           backgroundImage: `url(${principle.image})`,
           backgroundSize: 'cover', backgroundPosition: 'center',
           filter: 'grayscale(55%) brightness(0.28)',
+          pointerEvents: 'none',
           zIndex: 0,
         }}
       />
@@ -136,7 +139,7 @@ function PrincipleRow({ principle, index, scrollDir, total }: {
           display: 'grid',
           gridTemplateColumns: '88px 2fr 1.5fr',
           gap: '48px',
-          padding: '36px 0',
+          padding: '22px 0',
           alignItems: 'center',
         }}
       >
@@ -205,16 +208,16 @@ function PrincipleRow({ principle, index, scrollDir, total }: {
   );
 }
 
-/* ── Phase image — cinematic wipe entry + grayscale-to-color hover ── */
+/* ── Phase image — Framer Motion entry + grayscale-to-color hover ── */
 function PhaseImage({ phase, from }: { phase: Phase; from: 'left' | 'right' }) {
   const [hov, setHov] = useState(false);
-  const xInit = from === 'right' ? 36 : -36;
+  const initX = from === 'right' ? 40 : -40;
   return (
     <motion.div
-      initial={{ opacity: 0, x: xInit }}
+      initial={{ opacity: 0, x: initX }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: false, amount: 0.15 }}
-      transition={{ duration: 0.88, ease: EASE }}
+      transition={{ duration: 0.9, ease: EASE }}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{ position: 'relative', aspectRatio: '4 / 3', overflow: 'hidden' }}
@@ -222,6 +225,8 @@ function PhaseImage({ phase, from }: { phase: Phase; from: 'left' | 'right' }) {
       <img
         src={phase.image}
         alt={`${phase.name} phase — ${phase.descriptor}`}
+        loading="lazy"
+        decoding="async"
         style={{
           width: '100%', height: '100%',
           objectFit: 'cover', objectPosition: 'center',
@@ -260,38 +265,46 @@ function PhaseImage({ phase, from }: { phase: Phase; from: 'left' | 'right' }) {
   );
 }
 
-/* ── Phase text — staggered slide-in from its side of the timeline ── */
+/* ── Phase text — Framer Motion entry, staggered children ── */
 function PhaseText({ phase, from }: { phase: Phase; from: 'left' | 'right' }) {
-  const x = from === 'left' ? -52 : 52;
-  const vp = { once: false, amount: 0.2 };
+  const initX = from === 'left' ? -52 : 52;
+  const itemV = {
+    hidden: { opacity: 0, x: initX },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.78, ease: EASE } },
+  };
   return (
-    <div>
+    <motion.div
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: false, amount: 0.15 }}
+      variants={{
+        hidden: {},
+        visible: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } },
+      }}
+    >
       <motion.h2
+        variants={itemV}
         className="font-heading"
-        initial={{ opacity: 0, x }} whileInView={{ opacity: 1, x: 0 }} viewport={vp}
-        transition={{ duration: 0.78, ease: EASE, delay: 0.05 }}
         style={{ fontSize: 'clamp(34px, 4.2vw, 58px)', fontWeight: 500, letterSpacing: '-0.032em', color: 'var(--text)', lineHeight: 1.0, marginBottom: 20 }}
       >
         {phase.name}
       </motion.h2>
       <motion.p
+        variants={itemV}
         className="font-body"
-        initial={{ opacity: 0, x }} whileInView={{ opacity: 1, x: 0 }} viewport={vp}
-        transition={{ duration: 0.72, ease: EASE, delay: 0.15 }}
         style={{ fontSize: 'clamp(14px, 1.2vw, 16px)', lineHeight: 1.85, color: 'var(--text-secondary)', marginBottom: 36, maxWidth: '420px' }}
       >
         {phase.body}
       </motion.p>
       <motion.div
-        initial={{ opacity: 0, x }} whileInView={{ opacity: 1, x: 0 }} viewport={vp}
-        transition={{ duration: 0.65, ease: EASE, delay: 0.25 }}
+        variants={itemV}
         style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}
       >
         {phase.deliverables.map(d => (
           <span key={d} style={{ fontFamily: 'var(--font-mono), monospace', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent)', border: '1px solid rgba(61,82,230,0.22)', padding: '6px 14px', background: 'rgba(61,82,230,0.035)' }}>{d}</span>
         ))}
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -382,6 +395,8 @@ export default function ApproachClient() {
           <img
             src="https://picsum.photos/seed/obsidia-datacenter-rack/1920/1080"
             alt=""
+            loading="lazy"
+            decoding="async"
             style={{
               width: '100%', height: '100%',
               objectFit: 'cover', objectPosition: 'center',
@@ -555,6 +570,8 @@ export default function ApproachClient() {
           PHASES HEADER
       ════════════════════════════════════════════════ */}
       <section
+        id="approach-process"
+        data-section-label="The Process"
         style={{
           backgroundColor: 'var(--bg)',
           borderTop: '1px solid var(--border)',
@@ -592,7 +609,6 @@ export default function ApproachClient() {
           <section
             key={phase.id}
             id={phase.id}
-            data-section-label={phase.name}
             style={{
               backgroundColor: 'var(--bg)',
               borderTop: '1px solid var(--border)',
@@ -649,7 +665,7 @@ export default function ApproachClient() {
         style={{
           backgroundColor: 'var(--dark-bg)',
           borderTop: '1px solid var(--dark-border)',
-          padding: '64px 32px 72px',
+          padding: '96px 32px 48px',
         }}
       >
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
@@ -658,9 +674,9 @@ export default function ApproachClient() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: false, amount: 0.4 }}
             transition={{ duration: 0.65, ease: EASE }}
-            style={{ marginBottom: 44 }}
+            style={{ marginBottom: 28 }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
               <div style={{ width: 28, height: 1, backgroundColor: 'var(--accent)', opacity: 0.7 }} />
               <span style={{
                 fontFamily: 'var(--font-mono), monospace',
@@ -671,9 +687,9 @@ export default function ApproachClient() {
               </span>
             </div>
             <h2 className="font-heading" style={{
-              fontSize: 'clamp(36px, 4.8vw, 64px)',
+              fontSize: 'clamp(28px, 3.5vw, 48px)',
               fontWeight: 500, letterSpacing: '-0.032em',
-              color: 'var(--dark-text)', lineHeight: 1.02, marginBottom: 18,
+              color: 'var(--dark-text)', lineHeight: 1.02, marginBottom: 14,
             }}>
               {t('principlesHeadline')}
             </h2>
@@ -705,6 +721,9 @@ export default function ApproachClient() {
           backgroundColor: 'var(--dark-surface)',
           borderTop: '1px solid var(--dark-border)',
           overflow: 'hidden',
+          height: '100dvh',
+          paddingTop: '76px',
+          boxSizing: 'border-box',
         }}
       >
         <div
@@ -713,7 +732,7 @@ export default function ApproachClient() {
             maxWidth: '1200px', margin: '0 auto',
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            minHeight: '85dvh',
+            height: '100%',
           }}
         >
           {/* Left — Philosophy */}
@@ -723,9 +742,10 @@ export default function ApproachClient() {
             viewport={{ once: false, amount: 0.18 }}
             transition={{ duration: 0.85, ease: EASE }}
             style={{
-              padding: '88px 64px 88px 32px',
+              padding: '40px 64px 40px 32px',
               borderRight: '1px solid var(--dark-border)',
               display: 'flex', flexDirection: 'column', justifyContent: 'center',
+              overflow: 'hidden',
             }}
           >
             <div aria-hidden className="font-heading" style={{
@@ -812,59 +832,68 @@ export default function ApproachClient() {
             viewport={{ once: false, amount: 0.18 }}
             transition={{ duration: 0.85, ease: EASE, delay: 0.1 }}
             style={{
-              padding: '88px 32px 88px 64px',
-              display: 'flex', flexDirection: 'column', justifyContent: 'center',
-              position: 'relative', overflow: 'hidden',
+              display: 'flex', flexDirection: 'column',
+              position: 'relative',
             }}
           >
-            {/* Ambient glow */}
-            <div aria-hidden style={{
-              position: 'absolute', bottom: '-15%', right: '-15%',
-              width: '500px', height: '500px',
-              background: 'radial-gradient(circle, rgba(61,82,230,0.12) 0%, transparent 65%)',
-              pointerEvents: 'none',
-            }} />
+            {/* Card — spans full column height, glow clipped inside */}
+            <div style={{
+              position: 'relative',
+              flex: 1,
+              display: 'flex', flexDirection: 'column', justifyContent: 'center',
+              margin: '48px 32px 80px 64px',
+              borderRadius: '20px',
+              border: '1px solid rgba(61,82,230,0.16)',
+              backgroundColor: 'rgba(61,82,230,0.04)',
+              padding: '40px 44px',
+              overflow: 'hidden',
+            }}>
+              {/* Ambient glow — clipped strictly to card boundary */}
+              <div aria-hidden style={{
+                position: 'absolute', inset: 0,
+                background: 'radial-gradient(ellipse at 75% 85%, rgba(61,82,230,0.32) 0%, rgba(61,82,230,0.12) 38%, transparent 68%)',
+                pointerEvents: 'none',
+                zIndex: 0,
+              }} />
+              {/* Content sits above the glow */}
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginBottom: 36 }}>
+                  <div style={{ width: 28, height: 1, backgroundColor: 'var(--accent)', opacity: 0.5 }} />
+                  <span style={{
+                    fontFamily: 'var(--font-mono), monospace',
+                    fontSize: 10, fontWeight: 500, letterSpacing: '0.22em',
+                    textTransform: 'uppercase', color: 'var(--accent)', opacity: 0.7,
+                  }}>
+                    {t('ctaLabel')}
+                  </span>
+                </div>
 
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginBottom: 44 }}>
-                <div style={{ width: 28, height: 1, backgroundColor: 'var(--accent)', opacity: 0.5 }} />
-                <span style={{
-                  fontFamily: 'var(--font-mono), monospace',
-                  fontSize: 10, fontWeight: 500, letterSpacing: '0.22em',
-                  textTransform: 'uppercase', color: 'var(--accent)', opacity: 0.7,
+                <h2 className="font-heading" style={{
+                  fontSize: 'clamp(32px, 4vw, 64px)',
+                  fontWeight: 500, letterSpacing: '-0.04em',
+                  color: 'var(--dark-text)', lineHeight: 0.96, marginBottom: 28,
                 }}>
-                  {t('ctaLabel')}
-                </span>
-              </div>
+                  Describe the problem.
+                  <br />
+                  <em style={{ color: 'var(--accent)' }}>We handle</em>
+                  <br />
+                  everything from there.
+                </h2>
 
-              <h2 className="font-heading" style={{
-                fontSize: 'clamp(38px, 5vw, 74px)',
-                fontWeight: 500, letterSpacing: '-0.04em',
-                color: 'var(--dark-text)', lineHeight: 0.96, marginBottom: 32,
-              }}>
-                Describe the problem.
-                <br />
-                <em style={{ color: 'var(--accent)' }}>We handle</em>
-                <br />
-                everything from there.
-              </h2>
+                <p style={{
+                  fontFamily: 'var(--font-body), sans-serif',
+                  fontSize: 15, lineHeight: 1.82,
+                  color: 'rgba(220,225,245,0.42)',
+                  maxWidth: '380px', marginBottom: 44,
+                }}>
+                  You know something is broken. We find exactly what, and fix it.
+                </p>
 
-              <p style={{
-                fontFamily: 'var(--font-body), sans-serif',
-                fontSize: 15, lineHeight: 1.82,
-                color: 'rgba(220,225,245,0.42)',
-                maxWidth: '380px', marginBottom: 52,
-              }}>
-                Book a free call. We map your highest-value opportunities and hand you a prioritised plan — no commitment required.
-              </p>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'flex-start' }}>
-                <Link href="/contact" className="approach-cta-btn">
-                  {t('ctaButton')} <ArrowRight size={14} />
-                </Link>
-                <Link href="/services" className="approach-link-secondary">
-                  {t('ctaBody')}
-                </Link>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'flex-start' }}>
+                  <Link href="/contact" className="approach-cta-btn">
+                    {t('ctaButton')} <ArrowRight size={14} />
+                  </Link>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -890,6 +919,7 @@ export default function ApproachClient() {
           color: #fff; text-decoration: none;
           background-color: var(--accent);
           padding: 18px 44px;
+          border-radius: 9999px;
           border: 1px solid rgba(255,255,255,0.1);
           box-shadow: 0 4px 24px rgba(61,82,230,0.28);
           transition: background-color 200ms ease, box-shadow 280ms ease,
@@ -933,10 +963,13 @@ export default function ApproachClient() {
             border-right: none !important;
             border-bottom: 1px solid var(--dark-border) !important;
           }
-          .philo-cta-grid > div:first-child,
-          .philo-cta-grid > div:last-child {
+          .philo-cta-grid > div:first-child {
             padding-left: 32px !important;
             padding-right: 32px !important;
+          }
+          .philo-cta-grid > div:last-child > div:last-child {
+            margin-left: 32px !important;
+            margin-right: 32px !important;
           }
           .principle-row-inner {
             grid-template-columns: 56px 1fr !important;

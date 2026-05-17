@@ -1,29 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from '@/i18n/navigation';
 import { ArrowRight, Check } from 'lucide-react';
 import CTABand from '../../components/CTABand';
 import MagneticButton from '../../components/MagneticButton';
+import { useReveal } from '@/app/hooks/useScroll';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
-
-function useReveal(threshold = 0.1) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [threshold]);
-  return { ref, visible };
-}
 
 
 
@@ -97,7 +82,7 @@ function BrowserBuildVisual() {
 
 /* ── Hero ─────────────────────────────────────────────────── */
 function WebsitesHero() {
-  const CYCLE = ['converts.', 'performs.', 'builds trust.', 'earns its keep.'];
+  const CYCLE = ['win clients.', 'drive inquiries.', 'close deals.', 'build trust.', 'earns its keep.'];
   const [wordIdx, setWordIdx] = useState(0);
   useEffect(() => {
     const t = setInterval(() => setWordIdx(i => (i + 1) % CYCLE.length), 2400);
@@ -105,7 +90,7 @@ function WebsitesHero() {
   }, []);
 
   return (
-    <section data-nav-theme="dark" id="web-hero" data-section-label="Overview" style={{ position: 'relative', minHeight: '100vh', display: 'grid', gridTemplateColumns: '55% 45%', alignItems: 'stretch', overflow: 'hidden', backgroundColor: 'var(--dark-bg)', paddingTop: '76px' }} className="web-hero-grid">
+    <section data-nav-theme="dark" id="web-hero" data-section-label="Overview" style={{ position: 'relative', minHeight: '100dvh', display: 'grid', gridTemplateColumns: '55% 45%', alignItems: 'stretch', overflow: 'hidden', backgroundColor: 'var(--dark-bg)', paddingTop: '76px' }} className="web-hero-grid">
       <div aria-hidden style={{ position: 'absolute', inset: 0, width: '55%', backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '28px 28px', pointerEvents: 'none' }} />
       <div aria-hidden style={{ position: 'absolute', bottom: '-80px', left: '-60px', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(61,82,230,0.09) 0%, transparent 60%)', pointerEvents: 'none', zIndex: 0 }} />
 
@@ -156,164 +141,221 @@ function WebsitesHero() {
 
 
 
-/* ── Sticky-scroll problem section ────────────────────────── */
+/* ── Problem section — two-column layout ─────────────────── */
 const WEB_PROBLEMS = [
   {
-    n: '01', title: 'Visitors leave before they convert',
-    body: 'If your page takes more than 3 seconds to load, half your mobile visitors are already gone. Every second of delay costs you more than you think.',
+    n: '01',
+    title: 'Slow sites do not lose visitors. They send them to competitors.',
+    body: 'Every second of delay is a decision made without you. Most sites lose that argument before they finish loading.',
   },
   {
-    n: '02', title: 'Your site doesn\'t establish credibility',
-    body: 'Buyers judge your business in under 50 milliseconds. An outdated design, stock photography, or broken mobile experience sends them to a competitor before they read a word.',
+    n: '02',
+    title: 'First impressions close deals before you do.',
+    body: 'Buyers have already judged your business before they read a word. An outdated site is a closed door.',
   },
   {
-    n: '03', title: 'It was built for yesterday\'s goals',
-    body: 'Your business has changed, but the site hasn\'t. The messaging, the flow, the CTAs: all pointing at what you used to sell, not what you sell now.',
-  },
-  {
-    n: '04', title: 'No one can update it without breaking it',
-    body: 'A site your team can\'t edit is a liability. Content goes stale, errors go unfixed, and every small change becomes a developer request.',
+    n: '03',
+    title: 'Built for a business you no longer run.',
+    body: 'The messaging, the structure, the calls to action. All written for a version of the company that has moved on.',
   },
 ];
 
-/* ── Rich per-problem illustrations ─────────────────────────── */
-function SpeedIllustration() {
+/* ── Micro-animation widgets ──────────────────────────────── */
+
+/* 01 — Session countdown timer: 10→0, loops */
+function TimerWidget({ active }: { active: boolean }) {
+  const [count, setCount] = useState(10);
+  useEffect(() => {
+    if (!active) return;
+    const id = setInterval(() => setCount(c => (c <= 0 ? 10 : c - 1)), 900);
+    return () => clearInterval(id);
+  }, [active]);
   return (
-    <svg viewBox="0 0 180 140" fill="none" aria-hidden width="100%">
-      <rect x="8" y="8" width="164" height="108" rx="4" stroke="var(--border)" strokeWidth="1.5"/>
-      <rect x="8" y="8" width="164" height="22" fill="var(--surface)" rx="4"/>
-      <rect x="8" y="26" width="164" height="4" fill="var(--surface)"/>
-      {[0,1,2].map(i => <circle key={i} cx={20+i*10} cy={19} r="3.5" fill="var(--border)"/>)}
-      {/* URL bar */}
-      <rect x="52" y="13" width="100" height="12" rx="2" fill="var(--border)" opacity="0.5"/>
-      {/* Progress track */}
-      <rect x="20" y="54" width="140" height="3" rx="1.5" fill="var(--border)"/>
-      <rect x="20" y="54" width="82" height="3" rx="1.5" fill="rgba(61,82,230,0.55)"/>
-      {/* 3s drop marker */}
-      <line x1="102" y1="46" x2="102" y2="62" stroke="rgba(61,82,230,0.6)" strokeWidth="1" strokeDasharray="2,2"/>
-      <text x="102" y="43" textAnchor="middle" fontFamily="monospace" fontSize="8" fill="rgba(61,82,230,0.7)" letterSpacing="0.5">3s</text>
-      {/* Abandon label */}
-      <text x="90" y="78" textAnchor="middle" fontFamily="monospace" fontSize="9" fill="rgba(61,82,230,0.5)">62% left</text>
-      {/* Silhouettes leaving */}
-      {[0,1,2].map(i => (
-        <g key={i} opacity={0.13 + i * 0.1}>
-          <circle cx={40 + i * 40} cy={102} r={5} fill="var(--text-secondary)"/>
-          <path d={`M${35+i*40} 110 Q${40+i*40} 116 ${45+i*40} 110`} stroke="var(--text-secondary)" strokeWidth="1" fill="none"/>
-        </g>
-      ))}
-    </svg>
+    <div aria-hidden style={{
+      width: '54px', height: '42px',
+      backgroundColor: '#080A14',
+      border: '1px solid rgba(61,82,230,0.2)',
+      borderRadius: '3px',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0,
+    }}>
+      <span style={{
+        fontFamily: 'var(--font-mono), monospace',
+        fontSize: '22px', fontWeight: 500,
+        color: 'var(--accent)',
+        letterSpacing: '-0.04em', lineHeight: 1,
+      }}>
+        {String(count).padStart(2, '0')}
+      </span>
+    </div>
   );
 }
 
-function CredibilityIllustration() {
+/* 02 — Site/Competitor crossfade toggle, 2s cadence */
+function SiteToggleWidget({ active }: { active: boolean }) {
+  const [phase, setPhase] = useState(0);
+  const LABELS = ['YOUR SITE', 'COMPETITOR'];
+  useEffect(() => {
+    if (!active) return;
+    const id = setInterval(() => setPhase(p => (p + 1) % 2), 2000);
+    return () => clearInterval(id);
+  }, [active]);
   return (
-    <svg viewBox="0 0 180 140" fill="none" aria-hidden width="100%">
-      {/* Your site — dated */}
-      <rect x="8" y="24" width="76" height="92" rx="3" stroke="var(--border)" strokeWidth="1.5" strokeDasharray="4,3"/>
-      <rect x="8" y="24" width="76" height="16" fill="var(--surface)"/>
-      <text x="46" y="36" textAnchor="middle" fontFamily="sans-serif" fontSize="7" fill="var(--text-muted)" letterSpacing="0.5">YOUR SITE</text>
-      {[0,1,2].map(i => <rect key={i} x="18" y={50+i*22} width={i===0?50:i===1?36:44} height="8" rx="1" fill="var(--border)" opacity={0.5+i*0.1}/>)}
-      <text x="46" y="128" textAnchor="middle" fontFamily="monospace" fontSize="7" fill="rgba(61,82,230,0.55)">outdated</text>
-      {/* Competitor — clean */}
-      <rect x="96" y="8" width="76" height="108" rx="3" stroke="var(--text-secondary)" strokeWidth="1.5"/>
-      <rect x="96" y="8" width="76" height="16" fill="var(--text-secondary)" opacity="0.08"/>
-      <text x="134" y="20" textAnchor="middle" fontFamily="sans-serif" fontSize="7" fill="var(--text-secondary)" letterSpacing="0.5">COMPETITOR</text>
-      {[0,1,2,3].map(i => <rect key={i} x="106" y={32+i*18} width={i===0?56:i===1?40:i===2?48:34} height="7" rx="1" fill="var(--text-secondary)" opacity="0.12"/>)}
-      <rect x="106" y="104" width="32" height="8" rx="1" fill="rgba(61,82,230,0.5)"/>
-      <text x="122" y="112" textAnchor="middle" fontFamily="sans-serif" fontSize="5" fill="white" letterSpacing="0.5">CTA</text>
-      {/* Arrow */}
-      <path d="M 62 80 Q 79 75 87 80" stroke="rgba(61,82,230,0.35)" strokeWidth="1.5" strokeDasharray="3,2" fill="none"/>
-      <polygon points="84,76 90,81 83,84" fill="rgba(61,82,230,0.35)"/>
-    </svg>
+    <div aria-hidden style={{
+      width: '88px', height: '42px',
+      backgroundColor: '#080A14',
+      border: '1px solid rgba(61,82,230,0.2)',
+      borderRadius: '3px',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0, overflow: 'hidden', position: 'relative',
+    }}>
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={phase}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.55, ease: 'easeInOut' }}
+          style={{
+            position: 'absolute',
+            fontFamily: 'var(--font-mono), monospace',
+            fontSize: '7.5px', fontWeight: 500,
+            letterSpacing: '0.12em', textTransform: 'uppercase',
+            color: phase === 0 ? 'var(--accent)' : 'rgba(220,225,248,0.55)',
+          }}
+        >
+          {LABELS[phase]}
+        </motion.span>
+      </AnimatePresence>
+    </div>
   );
 }
 
-function GoalsIllustration() {
+/* 03 — Year counter: 2021 → 2022 → 2023 → TODAY (pauses 2.5s), resets */
+function YearWidget({ active }: { active: boolean }) {
+  const YEARS = ['2021', '2022', '2023', 'TODAY'];
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    let current = 0;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      current = (current + 1) % YEARS.length;
+      setIdx(current);
+      timer = setTimeout(tick, current === YEARS.length - 1 ? 2500 : 1000);
+    };
+    timer = setTimeout(tick, 1000);
+    return () => clearTimeout(timer);
+  }, [active]);
+  const isToday = idx === YEARS.length - 1;
   return (
-    <svg viewBox="0 0 180 140" fill="none" aria-hidden width="100%">
-      {/* Target rings */}
-      {[52,38,24,10].map((r,i) => <circle key={i} cx="90" cy="72" r={r} stroke={i===0?'var(--border)':i===1?'rgba(61,82,230,0.15)':i===2?'rgba(61,82,230,0.3)':'rgba(61,82,230,0.5)'} strokeWidth="1.5" fill="none"/>)}
-      {/* Centre dot — empty (missed) */}
-      <circle cx="90" cy="72" r="5" stroke="rgba(61,82,230,0.6)" strokeWidth="1.5" fill="none" strokeDasharray="3,2"/>
-      {/* Arrows missing the mark */}
-      <line x1="22" y1="30" x2="58" y2="55" stroke="var(--border)" strokeWidth="1.5"/>
-      <polygon points="54,52 62,54 57,61" fill="var(--border)"/>
-      <line x1="158" y1="22" x2="126" y2="50" stroke="var(--border)" strokeWidth="1.5"/>
-      <polygon points="128,47 121,52 123,44" fill="var(--border)"/>
-      {/* Year labels */}
-      <text x="18" y="26" fontFamily="monospace" fontSize="7" fill="var(--text-muted)">2021</text>
-      <text x="146" y="20" fontFamily="monospace" fontSize="7" fill="var(--text-muted)">2022</text>
-      {/* "Today" label at bottom */}
-      <text x="90" y="138" textAnchor="middle" fontFamily="monospace" fontSize="7" fill="rgba(61,82,230,0.6)" letterSpacing="0.5">TODAY</text>
-    </svg>
+    <div aria-hidden style={{
+      width: '72px', height: '42px',
+      backgroundColor: '#080A14',
+      border: `1px solid ${isToday ? 'rgba(61,82,230,0.45)' : 'rgba(61,82,230,0.2)'}`,
+      borderRadius: '3px',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0, position: 'relative', overflow: 'hidden',
+      transition: 'border-color 400ms ease',
+    }}>
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={idx}
+          initial={{ opacity: 0, y: 7 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -7 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            position: 'absolute',
+            fontFamily: 'var(--font-mono), monospace',
+            fontSize: isToday ? '8.5px' : '12px',
+            letterSpacing: isToday ? '0.16em' : '0.06em',
+            fontWeight: isToday ? 600 : 400,
+            color: isToday ? 'var(--accent)' : 'rgba(220,225,248,0.6)',
+            textTransform: 'uppercase',
+          }}
+        >
+          {YEARS[idx]}
+        </motion.span>
+      </AnimatePresence>
+      {isToday && (
+        <motion.div
+          animate={{ opacity: [0, 0.45, 0] }}
+          transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+          style={{
+            position: 'absolute', inset: 0,
+            border: '1px solid var(--accent)',
+            borderRadius: '3px',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+    </div>
   );
 }
 
-function UpdateIllustration() {
-  return (
-    <svg viewBox="0 0 180 140" fill="none" aria-hidden width="100%">
-      {/* CMS panel */}
-      <rect x="8" y="8" width="164" height="108" rx="4" stroke="var(--border)" strokeWidth="1.5"/>
-      <rect x="8" y="8" width="164" height="22" fill="var(--surface)" rx="4"/>
-      <rect x="8" y="26" width="164" height="4" fill="var(--surface)"/>
-      <text x="22" y="22" fontFamily="sans-serif" fontSize="8" fill="var(--text-muted)" letterSpacing="0.5">Content Editor</text>
-      {/* Locked edit toolbar */}
-      {[0,1,2,3].map(i => (
-        <rect key={i} x={22+i*28} y="36" width="22" height="12" rx="2" fill="var(--border)" opacity="0.4"/>
-      ))}
-      {/* Lock overlays on buttons */}
-      {[1,2].map(i => (
-        <g key={i} opacity="0.6">
-          <rect x={28+i*28} y="38" width="10" height="8" rx="1" fill="rgba(61,82,230,0.2)" stroke="rgba(61,82,230,0.4)" strokeWidth="0.8"/>
-          <path d={`M${30+i*28} 38 Q${33+i*28} 34 ${36+i*28} 38`} stroke="rgba(61,82,230,0.5)" strokeWidth="1" fill="none"/>
-        </g>
-      ))}
-      {/* Stale content lines */}
-      {[0,1,2,3].map(i => <rect key={i} x="22" y={58+i*14} width={[140,100,120,80][i]} height="8" rx="1" fill="var(--border)" opacity="0.35"/>)}
-      {/* Ticket queue */}
-      <text x="90" y="130" textAnchor="middle" fontFamily="monospace" fontSize="8" fill="rgba(61,82,230,0.5)">6 changes waiting on dev</text>
-    </svg>
-  );
-}
+const PROB_WIDGETS = [TimerWidget, SiteToggleWidget, YearWidget];
 
-const WEB_VISUALS = [SpeedIllustration, CredibilityIllustration, GoalsIllustration, UpdateIllustration];
-
-function ProblemScrollItem({ item, index, visible }: { item: typeof WEB_PROBLEMS[0]; index: number; visible: boolean }) {
-  const [hovered, setHovered] = useState(false);
-  const Visual = WEB_VISUALS[index];
+/* ── Problem item row ─────────────────────────────────────── */
+function ProblemItem({
+  item, index, visible,
+}: {
+  item: typeof WEB_PROBLEMS[0]; index: number; visible: boolean;
+}) {
+  const Widget = PROB_WIDGETS[index];
+  const isLast = index === WEB_PROBLEMS.length - 1;
   return (
     <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       style={{
-        padding: '44px 0',
-        borderBottom: '1px solid var(--border)',
         display: 'grid',
-        gridTemplateColumns: '1fr 200px',
-        gap: '32px',
-        alignItems: 'center',
-        opacity:    visible ? 1 : 0,
-        transform:  visible ? 'translateY(0)' : 'translateY(24px)',
-        transition: `opacity 600ms ease ${index * 130 + 200}ms, transform 600ms ease ${index * 130 + 200}ms`,
-        cursor: 'default',
+        gridTemplateColumns: 'auto 1fr',
+        gap: '28px',
+        alignItems: 'start',
+        paddingBottom: isLast ? 0 : '36px',
+        marginBottom: isLast ? 0 : '36px',
+        borderBottom: isLast ? 'none' : '1px solid var(--border)',
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateX(0)' : 'translateX(-22px)',
+        transition: `opacity 600ms cubic-bezier(0.22,1,0.36,1) ${index * 150 + 300}ms, transform 600ms cubic-bezier(0.22,1,0.36,1) ${index * 150 + 300}ms`,
       }}
-      className="web-prob-row"
     >
-      <div>
-        <div style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '11px', letterSpacing: '0.12em', color: hovered ? 'var(--accent)' : 'var(--text-muted)', marginBottom: '14px', transition: 'color 200ms ease' }}>{item.n}</div>
-        <h3 className="font-heading" style={{ fontSize: 'clamp(20px, 2vw, 28px)', fontWeight: 500, letterSpacing: '-0.02em', color: hovered ? 'var(--accent)' : 'var(--text)', lineHeight: 1.2, marginBottom: '14px', transition: 'color 200ms ease' }}>{item.title}</h3>
-        <p className="font-body" style={{ fontSize: '15px', lineHeight: 1.75, color: 'var(--text-secondary)' }}>{item.body}</p>
+      {/* Number + widget column */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px', paddingTop: '2px' }}>
+        <span style={{
+          fontFamily: 'var(--font-mono), monospace',
+          fontSize: '10px', fontWeight: 500,
+          letterSpacing: '0.16em', color: 'var(--accent)',
+        }}>
+          {item.n}
+        </span>
+        <Widget active={visible} />
       </div>
-      <div style={{ opacity: hovered ? 1 : 0.75, transition: 'opacity 300ms ease' }}>
-        <Visual />
+
+      {/* Text column */}
+      <div>
+        <h3 className="font-heading" style={{
+          fontSize: 'clamp(20px, 1.9vw, 28px)',
+          fontWeight: 500, letterSpacing: '-0.025em',
+          color: 'var(--text)', lineHeight: 1.14,
+          marginBottom: '10px',
+        }}>
+          {item.title}
+        </h3>
+        <p className="font-body" style={{
+          fontSize: '15px', lineHeight: 1.78,
+          color: 'var(--text-secondary)', margin: 0,
+        }}>
+          {item.body}
+        </p>
       </div>
     </div>
   );
 }
 
-function WebLeftDecoration({ visible }: { visible: boolean }) {
+/* ── Live Diagnostic card — enlarged for right column ────── */
+function LiveDiagnosticCard({ visible }: { visible: boolean }) {
   const [revenueLost, setRevenueLost] = useState(12840);
-  
+
   useEffect(() => {
     if (!visible) return;
     const t = setInterval(() => {
@@ -324,162 +366,241 @@ function WebLeftDecoration({ visible }: { visible: boolean }) {
 
   const pathVariants = {
     hidden: { pathLength: 0, opacity: 0 },
-    visible: { 
-      pathLength: 1, 
-      opacity: 1,
-      transition: { duration: 2, ease: "easeInOut" }
-    }
+    visible: {
+      pathLength: 1, opacity: 1,
+      transition: { duration: 2, ease: 'easeInOut' as const },
+    },
   };
 
   return (
     <div style={{
       width: '100%',
-      maxWidth: '300px',
       background: 'var(--surface)',
       border: '1px solid var(--border)',
-      borderRadius: '12px',
-      padding: '24px',
-      position: 'relative',
-      overflow: 'hidden',
-      boxShadow: '0 12px 32px rgba(0,0,0,0.06)',
+      borderRadius: '14px',
+      padding: '40px 36px',
+      position: 'relative', overflow: 'hidden',
+      boxShadow: '0 24px 64px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9)',
       opacity: visible ? 1 : 0,
-      transform: visible ? 'translateY(0)' : 'translateY(16px)',
-      transition: 'opacity 700ms ease 200ms, transform 700ms ease 200ms',
+      transform: visible ? 'translateY(0)' : 'translateY(24px)',
+      transition: 'opacity 700ms ease 150ms, transform 700ms cubic-bezier(0.22,1,0.36,1) 150ms',
     }}>
-      {/* Background ambient red glow */}
-      <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '120px', height: '120px', background: 'radial-gradient(circle, rgba(239,68,68,0.08) 0%, transparent 70%)', filter: 'blur(20px)', pointerEvents: 'none' }} />
+      <div aria-hidden style={{
+        position: 'absolute', top: '-40px', right: '-40px',
+        width: '240px', height: '240px',
+        background: 'radial-gradient(circle, rgba(239,68,68,0.07) 0%, transparent 65%)',
+        filter: 'blur(32px)', pointerEvents: 'none',
+      }} />
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
-        <motion.div 
-          animate={{ opacity: [1, 0.4, 1] }} 
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }} 
-          style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#EF4444' }} 
+      {/* Card header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '36px' }}>
+        <motion.div
+          animate={{ opacity: [1, 0.3, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#EF4444', flexShrink: 0 }}
         />
-        <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-secondary)' }}>Live Diagnostic</span>
+        <span style={{
+          fontFamily: 'var(--font-mono), monospace',
+          fontSize: '11px', fontWeight: 500,
+          textTransform: 'uppercase', letterSpacing: '0.18em',
+          color: 'var(--text-secondary)',
+        }}>
+          Live Diagnostic
+        </span>
       </div>
 
-      {/* Metric 1: Revenue Leak */}
-      <div style={{ marginBottom: '28px' }}>
-        <div style={{ fontFamily: 'var(--font-body), sans-serif', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>Estimated Monthly Loss</div>
-        <div style={{ fontSize: '32px', color: '#EF4444', fontFamily: 'var(--font-heading), sans-serif', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '10px', letterSpacing: '-0.02em' }}>
-          ${revenueLost.toLocaleString()}
-          <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '11px', padding: '3px 8px', background: 'rgba(239,68,68,0.1)', color: '#EF4444', borderRadius: '4px', letterSpacing: '0.02em' }}>+12%</span>
+      {/* Revenue number */}
+      <div style={{ marginBottom: '40px' }}>
+        <div style={{
+          fontFamily: 'var(--font-body), sans-serif',
+          fontSize: '13px', color: 'var(--text-muted)',
+          marginBottom: '10px', letterSpacing: '0.01em',
+        }}>
+          Estimated Monthly Loss
+        </div>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap',
+        }}>
+          <span style={{
+            fontSize: 'clamp(38px, 3.8vw, 52px)',
+            color: '#EF4444',
+            fontFamily: 'var(--font-heading), serif',
+            fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 1,
+          }}>
+            ${revenueLost.toLocaleString()}
+          </span>
+          <span style={{
+            fontFamily: 'var(--font-mono), monospace',
+            fontSize: '11px', padding: '5px 12px',
+            background: 'rgba(239,68,68,0.07)',
+            color: '#EF4444', borderRadius: '4px',
+            letterSpacing: '0.06em', fontWeight: 600,
+          }}>
+            LIVE
+          </span>
         </div>
       </div>
 
-      {/* Downward trend line chart */}
-      <div style={{ height: '70px', width: '100%', marginBottom: '28px', position: 'relative' }}>
-        <svg viewBox="0 0 200 70" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-          {/* Grid lines */}
-          <line x1="0" y1="15" x2="200" y2="15" stroke="var(--border)" strokeWidth="1" strokeDasharray="4 4" />
-          <line x1="0" y1="35" x2="200" y2="35" stroke="var(--border)" strokeWidth="1" strokeDasharray="4 4" />
-          <line x1="0" y1="55" x2="200" y2="55" stroke="var(--border)" strokeWidth="1" strokeDasharray="4 4" />
-          
+      {/* Downward trend chart */}
+      <div style={{ height: '100px', width: '100%', marginBottom: '36px' }}>
+        <svg viewBox="0 0 260 100" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+          {[22, 50, 78].map(y => (
+            <line key={y} x1="0" y1={y} x2="260" y2={y}
+              stroke="var(--border)" strokeWidth="1" strokeDasharray="4 4" />
+          ))}
           <motion.path
-            d="M 0 5 Q 40 5, 80 20 T 140 45 T 200 65"
-            fill="none"
-            stroke="#EF4444"
-            strokeWidth="2.5"
-            strokeLinecap="round"
+            d="M 0 8 Q 55 8, 100 28 T 175 60 T 260 90"
+            fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round"
             variants={pathVariants}
             initial="hidden"
-            animate={visible ? "visible" : "hidden"}
+            animate={visible ? 'visible' : 'hidden'}
           />
-          {/* Pulsing dot at the end */}
           <motion.circle
-            cx="200" cy="65" r="3.5" fill="#EF4444"
+            cx="260" cy="90" r="4.5" fill="#EF4444"
             initial={{ scale: 0, opacity: 0 }}
-            animate={visible ? { scale: [1, 1.4, 1], opacity: [1, 0.6, 1] } : { scale: 0, opacity: 0 }}
-            transition={{ delay: 2, duration: 1.5, repeat: Infinity }}
+            animate={visible
+              ? { scale: [1, 1.6, 1], opacity: [1, 0.4, 1] }
+              : { scale: 0, opacity: 0 }}
+            transition={{ delay: 2.1, duration: 1.5, repeat: Infinity }}
           />
         </svg>
       </div>
 
-      {/* Vitals */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-         <VitalRow label="Bounce Rate" value="78%" status="critical" visible={visible} delay={0.2} />
-         <VitalRow label="Load Time" value="4.2s" status="warning" visible={visible} delay={0.4} />
-         <VitalRow label="Conversion" value="0.8%" status="critical" visible={visible} delay={0.6} />
+      {/* Vital rows */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {[
+          { label: 'Bounce Rate', value: '78%',  status: 'critical' as const, delay: 0.3 },
+          { label: 'Load Time',   value: '4.2s', status: 'warning'  as const, delay: 0.5 },
+          { label: 'Conversion',  value: '0.8%', status: 'critical' as const, delay: 0.7 },
+        ].map(v => (
+          <motion.div
+            key={v.label}
+            initial={{ opacity: 0, x: -12 }}
+            animate={visible ? { opacity: 1, x: 0 } : { opacity: 0, x: -12 }}
+            transition={{ duration: 0.5, delay: v.delay, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '13px 18px',
+              background: v.status === 'critical' ? 'rgba(239,68,68,0.05)' : 'rgba(245,158,11,0.05)',
+              borderRadius: '6px',
+              border: `1px solid ${v.status === 'critical' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)'}`,
+            }}
+          >
+            <span style={{
+              fontFamily: 'var(--font-mono), monospace',
+              fontSize: '12px', letterSpacing: '0.04em', color: 'var(--text-secondary)',
+            }}>
+              {v.label}
+            </span>
+            <span style={{
+              fontFamily: 'var(--font-mono), monospace',
+              fontSize: '13px', fontWeight: 700,
+              color: v.status === 'critical' ? '#EF4444' : '#F59E0B',
+            }}>
+              {v.value}
+            </span>
+          </motion.div>
+        ))}
       </div>
     </div>
-  )
-}
-
-function VitalRow({ label, value, status, visible, delay }: { label: string, value: string, status: 'critical'|'warning', visible: boolean, delay: number }) {
-  const color = status === 'critical' ? '#EF4444' : '#F59E0B';
-  const bgColor = status === 'critical' ? 'rgba(239,68,68,0.06)' : 'rgba(245,158,11,0.06)';
-  return (
-    <motion.div 
-      initial={{ opacity: 0, x: -10 }}
-      animate={visible ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }}
-      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
-      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: bgColor, borderRadius: '4px', borderLeft: `2px solid ${color}` }}
-    >
-      <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '11px', letterSpacing: '0.04em', color: 'var(--text-secondary)' }}>{label}</span>
-      <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '12px', color, fontWeight: 600 }}>{value}</span>
-    </motion.div>
   );
 }
 
+/* ── Two-column problem section ───────────────────────────── */
 function WebStickyProblem() {
   const { ref, visible } = useReveal(0.05);
 
   return (
-    <section ref={ref} id="web-problem" data-section-label="The Problem" style={{ backgroundColor: 'var(--bg)', borderBottom: '1px solid var(--border)' }}>
-      <div className="web-sticky-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 400px) minmax(280px, 420px) 1fr', alignItems: 'start' }}>
+    <section
+      ref={ref}
+      id="web-problem"
+      data-section-label="The Problem"
+      data-nav-theme="light"
+      style={{
+        backgroundColor: 'var(--bg)',
+        borderBottom: '1px solid var(--border)',
+        minHeight: '100dvh',
+        display: 'flex',
+        alignItems: 'center',
+      }}
+    >
+      <div
+        className="web-prob-outer"
+        style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '80px 32px',
+          width: '100%',
+          display: 'grid',
+          gridTemplateColumns: '55fr 45fr',
+          gap: '72px',
+          alignItems: 'stretch',
+        }}
+      >
+        {/* ── Left 55% ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
 
-        {/* Left decoration column */}
-        <div className="web-deco-col" style={{
-          position: 'sticky', top: 0,
-          height: '100dvh',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          alignSelf: 'start',
-          borderRight: '1px solid var(--border)',
-        }}>
-          <WebLeftDecoration visible={visible} />
+          {/* Section label */}
+          <div style={{
+            opacity: visible ? 1 : 0,
+            transform: visible ? 'translateY(0)' : 'translateY(12px)',
+            transition: 'opacity 500ms ease 100ms, transform 500ms ease 100ms',
+            marginBottom: '36px',
+          }}>
+            <span style={{
+              fontFamily: 'var(--font-mono), monospace',
+              fontSize: '10px', fontWeight: 500,
+              letterSpacing: '0.24em', textTransform: 'uppercase',
+              color: 'var(--accent)',
+            }}>
+              The Problem
+            </span>
+          </div>
+
+          {/* Headline */}
+          <div style={{
+            opacity: visible ? 1 : 0,
+            transform: visible ? 'translateY(0)' : 'translateY(18px)',
+            transition: 'opacity 600ms ease 160ms, transform 600ms cubic-bezier(0.22,1,0.36,1) 160ms',
+            marginBottom: '60px',
+          }}>
+            <h2 className="font-heading" style={{
+              fontSize: 'clamp(38px, 4.5vw, 64px)',
+              fontWeight: 500, letterSpacing: '-0.042em',
+              color: 'var(--text)', lineHeight: 0.96,
+            }}>
+              The site is live.
+              <br />
+              <em style={{ fontStyle: 'italic', color: 'var(--accent)' }}>
+                The leads are not.
+              </em>
+            </h2>
+          </div>
+
+          {/* Problem items */}
+          <div>
+            {WEB_PROBLEMS.map((p, i) => (
+              <ProblemItem key={i} item={p} index={i} visible={visible} />
+            ))}
+          </div>
         </div>
 
-        {/* Sticky text panel */}
-        <div className="web-sticky-left" style={{
-          position: 'sticky', top: 0,
-          height: '100dvh',
-          display: 'flex', flexDirection: 'column', justifyContent: 'center',
-          padding: '80px 48px 80px 40px',
-          alignSelf: 'start',
-          opacity:    visible ? 1 : 0,
-          transform:  visible ? 'translateY(0)' : 'translateY(24px)',
-          transition: 'opacity 600ms ease, transform 600ms ease',
-        }}>
-          <div className="section-label" style={{ marginBottom: '28px' }}>The Problem</div>
-          <h2 className="font-heading" style={{ fontSize: 'clamp(28px, 3.2vw, 44px)', fontWeight: 500, lineHeight: 1.06, letterSpacing: '-0.03em', color: 'var(--text)', marginBottom: '28px' }}>
-            Your website is costing you business right now.
-          </h2>
-          <p className="font-body" style={{ fontSize: '15px', lineHeight: 1.75, color: 'var(--text-secondary)', marginBottom: '20px' }}>
-            Most business websites are built once and then ignored. They fall behind on performance, credibility, and conversion, quietly costing the company leads every month.
-          </p>
-          <p className="font-body" style={{ fontSize: '15px', lineHeight: 1.75, color: 'var(--text)', fontWeight: 500 }}>
-            Obsidia diagnoses what&rsquo;s costing you, then builds what fixes it.
-          </p>
+        {/* ── Right 45% — Live Diagnostic card only ── */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <LiveDiagnosticCard visible={visible} />
         </div>
-
-        {/* Scrolling problems */}
-        <div>
-          {WEB_PROBLEMS.map((p, i) => (
-            <ProblemScrollItem key={i} item={p} index={i} visible={visible} />
-          ))}
-        </div>
-
-        {/* Right spacer column — mirrors left decoration column */}
-        <div className="web-deco-col" style={{
-          position: 'sticky', top: 0,
-          height: '100dvh',
-          alignSelf: 'start',
-          borderLeft: '1px solid var(--border)',
-        }} />
       </div>
+
       <style>{`
-        @media (max-width: 900px)  { .web-sticky-grid { grid-template-columns: 1fr !important; } .web-sticky-left { position: static !important; height: auto !important; padding: 48px 24px !important; } .web-deco-col { display: none !important; } }
-        @media (max-width: 640px)  { .web-prob-row { grid-template-columns: 1fr !important; } .web-prob-row > div:last-child { display: none !important; } }
+        @media (max-width: 960px) {
+          .web-prob-outer {
+            grid-template-columns: 1fr !important;
+            gap: 56px !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .web-prob-outer { padding: 56px 24px !important; }
+        }
       `}</style>
     </section>
   );
@@ -562,7 +683,7 @@ function WebServiceCard({ s, index, active }: { s: typeof WEB_SERVICES[0]; index
       }}
     >
       {/* Top gradient border highlight */}
-      <div aria-hidden style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, rgba(61,82,230,0.7) 0%, rgba(123,79,212,0.5) 100%)', opacity: hov ? 1 : 0.5, transition: 'opacity 250ms ease' }} />
+      <div aria-hidden style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, rgba(61,82,230,0.7) 0%, rgba(123,79,212,0.5) 100%)', opacity: hov ? 1 : 0.5, transition: 'opacity 250ms ease', pointerEvents: 'none' }} />
       <WireframeBg index={index} />
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', position: 'relative', zIndex: 1 }}>
         <span style={{ fontFamily: 'var(--font-body), sans-serif', fontSize: '11px', fontWeight: 600, letterSpacing: '0.18em', color: 'var(--accent)' }}>{s.n}</span>

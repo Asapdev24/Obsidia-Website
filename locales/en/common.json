@@ -36,16 +36,17 @@
     "ctaSecondary": "Our Services"
   },
   "problem": {
-    "label": "Findings",
+    "label": "The Diagnosis",
+    "subheading": "This is what costs you time, money, and momentum.",
     "d01code": "D-01",
-    "d01statement": "The operation has capacity gaps, not insight gaps.",
-    "d01note": "You know what is broken. You need someone to build the fix.",
+    "d01statement": "Your website exists. It does not work for you.",
+    "d01note": "A site that does not convert visitors into leads is a cost with a logo on it.",
     "d02code": "D-02",
-    "d02statement": "Most proposals describe a goal, not a schedule.",
-    "d02note": "Phases and milestones are not a plan. A build calendar is.",
+    "d02statement": "Your team is doing work that should not require a human.",
+    "d02note": "Every hour spent on approvals and data entry is an hour your business is not growing.",
     "d03code": "D-03",
-    "d03statement": "The tool outlasting the engagement is not optional.",
-    "d03note": "Obsidia builds for hand-off. Not for tenure."
+    "d03statement": "You are managing your operation through workarounds.",
+    "d03note": "Spreadsheets, WhatsApp threads, manual handoffs. Built to cope, not to scale."
   },
   "homeServices": {
     "sectionLabel": "What We Build",
@@ -53,13 +54,13 @@
     "allServices": "All Services",
     "automationTitle": "Workflow\nAutomation",
     "automationDesc": "Replace manual processes with digital workflows that run themselves. Approvals, data sync, reporting.",
-    "automationTime": "4–6 wks to live",
+    "automationTime": "Built to operate without us.",
     "websitesTitle": "Website\nDevelopment",
-    "websitesDesc": "Sites built to convert visitors and load fast. Engineered for performance.",
-    "websitesTime": "6–8 wks to launch",
+    "websitesDesc": "Sites built to convert visitors into leads. Engineered for performance.",
+    "websitesTime": "Yours to run from day one.",
     "appsTitle": "Application\nDevelopment",
     "appsDesc": "Custom tools for exactly how your team operates. Internal portals, dashboards, integrations.",
-    "appsTime": "8–12 wks to launch"
+    "appsTime": "Fully documented at handoff."
   },
   "stats": {
     "stat0": "72+",
@@ -81,11 +82,11 @@
     "headlineAccent": "No exceptions.",
     "subtext": "Applied to every engagement,\nwithout exception.",
     "p01title": "We audit before we build.",
-    "p01body": "Every engagement starts with a structured process map, not a proposal. We do not design automation for a workflow we have not observed. The brief is never complete until we have seen the work firsthand.",
+    "p01body": "We map before we build. No assumptions, no proposals built on guesswork.",
     "p02title": "Weeks, not quarters.",
-    "p02body": "First conversation to live workflow in 4 to 8 weeks on most engagements. Urgency is a design constraint, not a risk. We scope for it from day one.",
+    "p02body": "Urgency is a design constraint, not a risk. Delivery is planned before build begins.",
     "p03title": "Built to hand off.",
-    "p03body": "Full documentation and a team walkthrough are required deliverables on every project. When the engagement ends, your team runs it — not us."
+    "p03body": "When the engagement ends, your team runs it. Full documentation and a walkthrough on every project, without exception."
   },
   "cta": {
     "label": "Start a Project",
@@ -107,7 +108,7 @@
     "q0": "What kinds of workflows can you automate?",
     "a0": "Anything that has a clear trigger and a repeatable outcome: approval chains, data syncing between tools, report generation, lead routing, invoice processing, onboarding sequences, and more. If your team does it manually on a schedule or in response to an event, it can almost certainly be automated.",
     "q1": "How long does a typical project take?",
-    "a1": "Most workflows go live within 4–6 weeks of the first conversation. Simple, single-system automations can be done in under two weeks. Multi-system integrations with complex logic take longer. We give you a realistic timeline after the audit, not before.",
+    "a1": "Timeline depends on scope, and scope depends on the audit. We do not give estimates before we have seen the operation. After the audit, you receive a realistic timeline tied to a signed-off spec. Not a guess made before we understand the work.",
     "q2": "Do we need any technical knowledge on our end?",
     "a2": "No. We handle all the technical work. You need to be able to describe your current process clearly and tell us what a good outcome looks like. We do the architecture, the build, and the documentation. Your team learns to monitor the output, not the code.",
     "q3": "Which tools do you work with?",
@@ -118,7 +119,7 @@
     "a5": "A developer builds to your brief, which means you need to know what to brief. A no-code tool requires your team to learn it, maintain it, and debug it. We do all three: we map the process, design the logic, build the automation, and hand it over with documentation. You get the outcome without the overhead."
   },
   "footer": {
-    "tagline": "Workflow automations, websites, and applications. Built to spec, handed off complete.",
+    "tagline": "Workflow automations, websites, and applications. Built to spec, built to outlast the engagement.",
     "colCompany": "Company",
     "colServices": "Services",
     "colContact": "Contact Us",
@@ -213,7 +214,7 @@
   "contact": {
     "heroLabel": "New Inquiry",
     "heroHeadline": "Tell us what you're building.",
-    "heroTagline": "We respond within one hour during business hours.",
+    "heroTagline": "Every brief gets a real response. No templates. No auto-replies.",
     "process01title": "Brief reviewed",
     "process01sub": "Within one hour",
     "process02title": "Discovery call",

@@ -1,32 +1,16 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from '@/i18n/navigation';
 import { ArrowRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import CTABand from '../components/CTABand';
+import { useReveal } from '@/app/hooks/useScroll';
 
 /* ── Types ────────────────────────────────────────────────── */
 interface ServiceItem {
   number: string; title: string; tagline: string; summary: string;
   href: string; image: string; panel1: string; panel2: string;
-}
-
-/* ── Scroll reveal hook ───────────────────────────────────── */
-function useReveal(threshold = 0.1) {
-  const ref  = useRef<HTMLElement>(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [threshold]);
-  return { ref, visible };
 }
 
 
@@ -79,6 +63,7 @@ function TriptychPanel({
           : 'grayscale(60%) brightness(0.28) contrast(1.08)',
         transform: isActive ? 'scale(1.04)' : 'scale(1.0)',
         transition: 'filter 1.1s cubic-bezier(0.22,1,0.36,1), transform 1.4s cubic-bezier(0.22,1,0.36,1)',
+        pointerEvents: 'none',
       }} />
 
       {/* Base tint */}
@@ -106,6 +91,7 @@ function TriptychPanel({
         transformOrigin: 'top center',
         transition: 'transform 600ms cubic-bezier(0.22,1,0.36,1)',
         opacity: 0.85,
+        pointerEvents: 'none',
       }} />
 
       {/* Content */}
@@ -299,6 +285,8 @@ function ServiceImage({
       <img
         src={service.image}
         alt={`${service.title} — Obsidia`}
+        loading="lazy"
+        decoding="async"
         style={{
           width: '100%', height: '100%', objectFit: 'cover', display: 'block',
           filter: hov
@@ -437,7 +425,7 @@ function ServiceSection({
               fontWeight: 500, letterSpacing: '0.22em', textTransform: 'uppercase',
               color: 'var(--accent)',
             }}>
-              {t('exploreLabel')} {service.number}
+              Service {service.number}
             </span>
             <div style={{ width: '28px', height: '1px', backgroundColor: 'var(--accent)', opacity: 0.4 }} />
           </div>
@@ -520,21 +508,21 @@ export default function ServicesClient() {
       number: t('automationNumber'), title: t('automationTitle'), tagline: t('automationTagline'),
       summary: t('automationSummary'),
       href: '/services/automation',
-      image: 'https://picsum.photos/seed/tech-workflow-automation/1200/900',
+      image: 'https://picsum.photos/seed/factory-machinery-pipeline/1200/900',
       panel1: t('automationPanel1'), panel2: t('automationPanel2'),
     },
     {
       number: t('websitesNumber'), title: t('websitesTitle'), tagline: t('websitesTagline'),
       summary: t('websitesSummary'),
       href: '/services/websites',
-      image: 'https://picsum.photos/seed/design-studio-creative/1200/900',
+      image: 'https://picsum.photos/seed/modern-office-desk-laptop/1200/900',
       panel1: t('websitesPanel1'), panel2: t('websitesPanel2'),
     },
     {
       number: t('appsNumber'), title: t('appsTitle'), tagline: t('appsTagline'),
       summary: t('appsSummary'),
       href: '/services/apps',
-      image: 'https://picsum.photos/seed/mobile-product-coding/1200/900',
+      image: 'https://picsum.photos/seed/smartphone-app-screen/1200/900',
       panel1: t('appsPanel1'), panel2: t('appsPanel2'),
     },
   ];

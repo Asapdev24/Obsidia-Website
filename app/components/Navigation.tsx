@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
 import { ArrowUpRight, ArrowRight, ChevronDown } from 'lucide-react';
@@ -80,12 +81,12 @@ function NavLink({
         gap: '5px',
         fontFamily: 'var(--font-body), sans-serif',
         fontSize: '13px',
-        fontWeight: 500,
+        fontWeight: active ? 700 : 500,
         letterSpacing: '0.04em',
         color: active ? 'var(--accent)' : textColor,
         textDecoration: 'none',
         padding: '8px 12px',
-        opacity: !active && hovered ? 0.7 : 1,
+        opacity: active || hovered ? 1 : 0.78,
         transition: 'color 200ms ease, opacity 200ms ease',
         whiteSpace: 'nowrap',
       }}
@@ -116,171 +117,262 @@ function NavLink({
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Single column in the Services dropdown
+   Right-panel preview — one per service, crossfades on hover
 ───────────────────────────────────────────────────────────── */
-function ServiceDropdownItem({
-  item, isActive, showDivider,
-}: {
-  item: ServiceItem;
-  isActive: boolean;
-  showDivider: boolean;
-}) {
-  const [hovered, setHovered] = useState(false);
+const EASE_NAV = 'cubic-bezier(0.22,1,0.36,1)';
 
+function DefaultPreviewPanel() {
+  const [exploreHov, setExploreHov] = useState(false);
   return (
-    <Link
-      href={item.href}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+    <div style={{
+      position: 'absolute', inset: 0,
+      padding: '32px 32px 26px',
+      display: 'flex', flexDirection: 'column',
+    }}>
+      <span style={{
+        fontFamily: 'var(--font-mono), monospace',
+        fontSize: '9px', letterSpacing: '0.2em', textTransform: 'uppercase',
+        color: 'var(--accent)', display: 'block', marginBottom: '14px',
+      }}>
+        All Services
+      </span>
+
+      <h3 style={{
+        fontFamily: 'var(--font-cormorant), Georgia, serif',
+        fontSize: '32px', fontWeight: 500,
+        letterSpacing: '-0.02em', lineHeight: 1.05,
+        color: 'var(--dark-text)', marginBottom: '14px',
+      }}>
+        Three disciplines.<br />One studio.
+      </h3>
+
+      <p style={{
+        fontFamily: 'var(--font-body), sans-serif',
+        fontSize: '13px', lineHeight: 1.7,
+        color: 'rgba(220,225,248,0.66)',
+        flex: 1, marginBottom: '22px',
+      }}>
+        Workflow automation, custom websites, and bespoke applications — built around how your business actually works.
+      </p>
+
+      <Link
+        href="/services"
+        onMouseEnter={() => setExploreHov(true)}
+        onMouseLeave={() => setExploreHov(false)}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: '6px',
+          fontFamily: 'var(--font-body), sans-serif',
+          fontSize: '11px', fontWeight: 500, letterSpacing: '0.08em',
+          color: exploreHov ? 'var(--accent)' : 'rgba(220,225,248,0.30)',
+          textDecoration: 'none',
+          transition: `color 200ms ${EASE_NAV}`,
+          alignSelf: 'flex-start',
+        }}
+      >
+        Explore all services
+        <ArrowRight
+          size={10}
+          style={{
+            transform: exploreHov ? 'translateX(4px)' : 'translateX(0)',
+            transition: `transform 200ms ${EASE_NAV}`,
+          }}
+        />
+      </Link>
+    </div>
+  );
+}
+
+function PreviewPanel({ item, active }: { item: ServiceItem; active: boolean }) {
+  const [exploreHov, setExploreHov] = useState(false);
+  return (
+    <div
       style={{
+        position: 'absolute',
+        inset: 0,
+        padding: '32px 32px 26px',
+        opacity: active ? 1 : 0,
+        transition: `opacity 200ms ease`,
+        pointerEvents: active ? 'auto' : 'none',
         display: 'flex',
         flexDirection: 'column',
-        padding: '22px 20px 18px',
-        textDecoration: 'none',
-        borderRight: showDivider ? '1px solid var(--dark-border)' : 'none',
-        backgroundColor: isActive
-          ? 'rgba(61,82,230,0.08)'
-          : hovered
-            ? 'rgba(255,255,255,0.028)'
-            : 'transparent',
-        transition: 'background-color 160ms ease',
-        gap: '7px',
       }}
     >
       <span style={{
         fontFamily: 'var(--font-mono), monospace',
-        fontSize: '9px',
-        letterSpacing: '0.18em',
-        textTransform: 'uppercase',
-        color: isActive ? 'var(--accent)' : '#383836',
-        transition: 'color 160ms ease',
+        fontSize: '9px', letterSpacing: '0.2em', textTransform: 'uppercase',
+        color: 'var(--accent)', display: 'block', marginBottom: '14px',
       }}>
         {item.tag}
       </span>
 
-      <span style={{
-        fontFamily: 'var(--font-heading), Georgia, serif',
-        fontSize: '19px',
-        fontWeight: 500,
-        letterSpacing: '-0.02em',
-        lineHeight: 1.15,
-        color: isActive || hovered ? 'var(--dark-text)' : 'rgba(220,225,248,0.45)',
-        transition: 'color 160ms ease',
+      <h3 style={{
+        fontFamily: 'var(--font-cormorant), Georgia, serif',
+        fontSize: '32px', fontWeight: 500,
+        letterSpacing: '-0.02em', lineHeight: 1.05,
+        color: 'var(--dark-text)', marginBottom: '14px',
       }}>
         {item.label}
-      </span>
+      </h3>
 
-      <span style={{
+      <p style={{
         fontFamily: 'var(--font-body), sans-serif',
-        fontSize: '12px',
-        lineHeight: 1.6,
-        color: 'rgba(220,225,248,0.32)',
-        flexGrow: 1,
-        marginTop: '2px',
+        fontSize: '13px', lineHeight: 1.7,
+        color: 'rgba(220,225,248,0.66)',
+        flex: 1, marginBottom: '22px',
       }}>
         {item.desc}
-      </span>
+      </p>
 
-      <span style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '5px',
-        fontFamily: 'var(--font-mono), monospace',
-        fontSize: '10px',
-        letterSpacing: '0.08em',
-        color: hovered || isActive ? 'var(--accent)' : 'rgba(220,225,248,0.22)',
-        transition: 'color 160ms ease, gap 160ms ease',
-        marginTop: '6px',
-      }}>
-        Explore <ArrowRight size={9} />
-      </span>
-    </Link>
+      <Link
+        href={item.href}
+        onMouseEnter={() => setExploreHov(true)}
+        onMouseLeave={() => setExploreHov(false)}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: '6px',
+          fontFamily: 'var(--font-body), sans-serif',
+          fontSize: '11px', fontWeight: 500, letterSpacing: '0.08em',
+          color: exploreHov ? 'var(--accent)' : 'rgba(220,225,248,0.30)',
+          textDecoration: 'none',
+          transition: `color 200ms ${EASE_NAV}`,
+          alignSelf: 'flex-start',
+        }}
+      >
+        Explore
+        <ArrowRight
+          size={10}
+          style={{
+            transform: exploreHov ? 'translateX(4px)' : 'translateX(0)',
+            transition: `transform 200ms ${EASE_NAV}`,
+          }}
+        />
+      </Link>
+    </div>
   );
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Services dropdown panel (desktop)
+   Services dropdown panel (desktop) — list + preview
 ───────────────────────────────────────────────────────────── */
-function ServicesDropdown({ open, pathname, items, viewAll, tagline, onFocusIn, onFocusOut }: {
-  open: boolean;
+
+function ServicesDropdown({ pathname, items, viewAll, onMouseEnter, onMouseLeave, onFocusIn, onFocusOut }: {
   pathname: string;
   items: ServiceItem[];
   viewAll: string;
-  tagline: string;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
   onFocusIn?: () => void;
   onFocusOut?: () => void;
 }) {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+
   return (
-    <div
-      role="menu"
-      aria-hidden={!open}
-      onFocus={() => { if (onFocusIn) onFocusIn(); }}
+    <div style={{ position: 'absolute', top: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
+    <motion.div
+      role="navigation"
+      aria-label="Services"
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      onFocus={() => onFocusIn?.()}
       onBlur={(e) => { if (onFocusOut && !e.currentTarget.contains(e.relatedTarget as Node)) onFocusOut(); }}
+      initial={{ opacity: 0, y: -10, scaleY: 0.96 }}
+      animate={{ opacity: 1, y: 0, scaleY: 1 }}
+      exit={{ opacity: 0, y: -8, scaleY: 0.97 }}
+      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
       style={{
-        position: 'absolute',
-        top: 'calc(100% + 10px)',
-        left: '50%',
-        transform: `translateX(-50%) translateY(${open ? '0px' : '-6px'})`,
-        width: '648px',
+        transformOrigin: 'top center',
+        width: '700px',
         backgroundColor: 'var(--dark-bg)',
-        border: '1px solid var(--dark-border)',
-        borderTop: '2px solid var(--accent)',
-        boxShadow: '0 28px 72px rgba(0,0,0,0.7), 0 1px 0 rgba(255,255,255,0.025) inset',
-        opacity: open ? 1 : 0,
-        pointerEvents: open ? 'auto' : 'none',
-        transition: 'opacity 190ms ease, transform 190ms cubic-bezier(0.22,1,0.36,1)',
-        zIndex: 10,
+        border: '1px solid rgba(255,255,255,0.07)',
+        borderTop: `2px solid var(--accent)`,
+        boxShadow: '0 28px 72px rgba(0,0,0,0.72), 0 1px 0 rgba(255,255,255,0.025) inset',
         overflow: 'hidden',
+        display: 'grid',
+        gridTemplateColumns: '270px 1fr',
       }}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
-        {items.map((item, i) => (
-          <ServiceDropdownItem
-            key={item.href}
-            item={item}
-            isActive={pathname.startsWith(item.href)}
-            showDivider={i < items.length - 1}
-          />
-        ))}
-      </div>
-
-      <div style={{
-        borderTop: '1px solid var(--dark-border)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '11px 20px',
-        backgroundColor: 'rgba(255,255,255,0.012)',
-      }}>
+      {/* ── Left: service list ── */}
+      <div style={{ borderRight: '1px solid rgba(255,255,255,0.09)', padding: '8px 0' }}>
+        {/* View all — top of list */}
         <Link
           href="/services"
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
+            display: 'flex', alignItems: 'center', gap: '6px',
+            padding: '9px 20px',
+            marginBottom: '4px',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
             fontFamily: 'var(--font-body), sans-serif',
-            fontSize: '11px',
-            fontWeight: 500,
-            letterSpacing: '0.06em',
-            color: 'var(--muted)',
+            fontSize: '10px', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase',
+            color: 'rgba(220,225,248,0.62)',
             textDecoration: 'none',
-            transition: 'color 160ms ease',
+            transition: `color 200ms ${EASE_NAV}`,
           }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--dark-text)'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--muted)'; }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--dark-text)'; setHoveredIdx(null); }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'rgba(220,225,248,0.62)'; }}
         >
-          {viewAll} <ArrowRight size={11} />
+          {viewAll} <ArrowRight size={9} />
         </Link>
-        <span style={{
-          fontFamily: 'var(--font-mono), monospace',
-          fontSize: '9px',
-          letterSpacing: '0.14em',
-          color: 'rgba(220,225,248,0.18)',
-          textTransform: 'uppercase',
-        }}>
-          {tagline}
-        </span>
+
+        {items.map((item, i) => {
+          const isHov = hoveredIdx === i;
+          const isActive = pathname.startsWith(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onMouseEnter={() => setHoveredIdx(i)}
+              style={{
+                display: 'block',
+                padding: '10px 20px',
+                backgroundColor: isHov ? 'rgba(136,96,230,0.10)' : 'transparent',
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+                transition: `background-color 200ms ${EASE_NAV}`,
+              }}
+            >
+              <span style={{
+                display: 'block',
+                fontFamily: 'var(--font-mono), monospace',
+                fontSize: '9px', letterSpacing: '0.2em', textTransform: 'uppercase',
+                color: isHov ? 'var(--accent)' : 'rgba(61,82,230,0.38)',
+                marginBottom: '5px',
+                transition: `color 200ms ${EASE_NAV}`,
+              }}>
+                {item.tag}
+              </span>
+              <span style={{
+                display: 'block',
+                fontFamily: 'var(--font-cormorant), Georgia, serif',
+                fontSize: '20px', fontWeight: 500,
+                letterSpacing: '-0.01em', lineHeight: 1.1,
+                color: isHov ? '#FFFFFF' : 'rgba(220,225,248,0.42)',
+                transition: `color 200ms ${EASE_NAV}`,
+              }}>
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
       </div>
+
+      {/* ── Right: preview panel — sequential crossfade on service switch ── */}
+      <div style={{ position: 'relative', minHeight: '200px', backgroundColor: 'rgba(255,255,255,0.022)' }}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={hoveredIdx ?? 'default'}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.14, ease: 'easeInOut' }}
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            {hoveredIdx === null
+              ? <DefaultPreviewPanel />
+              : <PreviewPanel item={items[hoveredIdx]} active={true} />
+            }
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </motion.div>
     </div>
   );
 }
@@ -289,14 +381,13 @@ function ServicesDropdown({ open, pathname, items, viewAll, tagline, onFocusIn, 
    Services nav trigger — wraps the button + dropdown
 ───────────────────────────────────────────────────────────── */
 function ServicesNavItem({
-  pathname, textColor, label, items, viewAll, tagline,
+  pathname, textColor, label, items, viewAll,
 }: {
   pathname: string;
   textColor: string;
   label: string;
   items: ServiceItem[];
   viewAll: string;
-  tagline: string;
 }) {
   const [open, setOpen] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -314,20 +405,14 @@ function ServicesNavItem({
   };
 
   return (
-    <div
-      style={{ position: 'relative' }}
-      onMouseEnter={openMenu}
-      onMouseLeave={closeMenu}
-    >
-      <button
-        aria-haspopup="true"
+    <div style={{ position: 'relative', alignSelf: 'center' }}>
+      <Link
+        href="/services"
         aria-expanded={open}
-        onFocus={() => openMenu()}
-        onBlur={() => closeMenu()}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open ? closeMenu() : openMenu(); }
-          else if (e.key === 'Escape') { closeMenu(); }
-        }}
+        onMouseEnter={openMenu}
+        onMouseLeave={closeMenu}
+        onFocus={openMenu}
+        onBlur={closeMenu}
         style={{
           position: 'relative',
           display: 'inline-flex',
@@ -338,13 +423,12 @@ function ServicesNavItem({
           fontWeight: 500,
           letterSpacing: '0.04em',
           color: isActive ? 'var(--accent)' : textColor,
-          background: 'none',
-          border: 'none',
           cursor: 'pointer',
           padding: '8px 12px',
-          opacity: !isActive && hovered ? 0.7 : 1,
+          opacity: isActive || hovered ? 1 : 0.78,
           transition: 'color 200ms ease, opacity 200ms ease',
           whiteSpace: 'nowrap',
+          textDecoration: 'none',
         }}
       >
         {isActive && (
@@ -376,17 +460,21 @@ function ServicesNavItem({
             transition: 'transform 260ms cubic-bezier(0.76,0,0.24,1)',
           }}
         />
-      </button>
+      </Link>
 
-      <ServicesDropdown
-        open={open}
-        pathname={pathname}
-        items={items}
-        viewAll={viewAll}
-        tagline={tagline}
-        onFocusIn={() => { if (closeTimer.current) clearTimeout(closeTimer.current); }}
-        onFocusOut={closeMenu}
-      />
+      <AnimatePresence>
+        {open && (
+          <ServicesDropdown
+            pathname={pathname}
+            items={items}
+            viewAll={viewAll}
+            onMouseEnter={() => { if (closeTimer.current) clearTimeout(closeTimer.current); }}
+            onMouseLeave={closeMenu}
+            onFocusIn={() => { if (closeTimer.current) clearTimeout(closeTimer.current); }}
+            onFocusOut={closeMenu}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -747,6 +835,7 @@ export default function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [progress, setProgress] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isDarkSection, setIsDarkSection] = useState(true);
   const pathname = usePathname();
   const t = useTranslations('nav');
 
@@ -763,17 +852,30 @@ export default function Navigation() {
     { label: t('contact'),  href: '/contact'  },
   ];
 
+  const detectNavTheme = useCallback(() => {
+    const elements = document.elementsFromPoint(window.innerWidth / 2, 50) as Element[];
+    const section = elements.find(el => el.hasAttribute('data-nav-theme'));
+    const theme = section?.getAttribute('data-nav-theme') ?? 'dark';
+    setIsDarkSection(theme === 'dark');
+  }, []);
+
   useEffect(() => {
     const handle = () => {
       const y = window.scrollY;
       setScrolled(y > 48);
       const docH = document.documentElement.scrollHeight - window.innerHeight;
       setProgress(docH > 0 ? (y / docH) * 100 : 0);
+      detectNavTheme();
     };
     window.addEventListener('scroll', handle, { passive: true });
     handle();
     return () => window.removeEventListener('scroll', handle);
-  }, []);
+  }, [detectNavTheme]);
+
+  useEffect(() => {
+    const t = setTimeout(detectNavTheme, 120);
+    return () => clearTimeout(t);
+  }, [pathname, detectNavTheme]);
 
   useEffect(() => { setMenuOpen(false); }, [pathname]);
 
@@ -782,7 +884,7 @@ export default function Navigation() {
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
 
-  const linkColor = 'rgba(220,225,248,0.6)';
+  const linkColor = '#ffffff';
 
   return (
     <>
@@ -840,17 +942,33 @@ export default function Navigation() {
           <Link
             href="/"
             aria-label="Obsidia home"
-            style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', flexShrink: 0 }}
+            style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}
           >
-            <LogoMark light={true} />
-            <span style={{
-              fontFamily: 'var(--font-heading), Georgia, serif',
-              fontSize: '20px', fontWeight: 600,
-              letterSpacing: '-0.02em', lineHeight: 1,
-              color: 'var(--dark-text)',
-            }}>
-              Obsidia
-            </span>
+            <div style={{ position: 'relative', height: '64px', width: '280px' }}>
+              <img
+                src="/logos/obsidia_web_white_logo.jpeg"
+                alt="Obsidia"
+                style={{
+                  position: 'absolute', inset: 0,
+                  height: '100%', width: '100%',
+                  objectFit: 'contain', objectPosition: 'left center',
+                  opacity: isDarkSection ? 1 : 0,
+                  transition: 'opacity 300ms ease',
+                }}
+              />
+              <img
+                src="/logos/obsidia_web_black_logo.jpeg"
+                alt=""
+                aria-hidden
+                style={{
+                  position: 'absolute', inset: 0,
+                  height: '100%', width: '100%',
+                  objectFit: 'contain', objectPosition: 'left center',
+                  opacity: isDarkSection ? 0 : 1,
+                  transition: 'opacity 300ms ease',
+                }}
+              />
+            </div>
           </Link>
 
           {/* ── Desktop navigation — centered absolutely ── */}
@@ -876,7 +994,6 @@ export default function Navigation() {
                     label={label}
                     items={serviceItems}
                     viewAll={t('viewAllServices')}
-                    tagline={t('tagline')}
                   />
                 );
               }

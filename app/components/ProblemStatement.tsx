@@ -6,12 +6,13 @@ import { motion } from 'framer-motion';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
+/* Yellow → Orange → Red progression */
 const SEVERITY_META: Array<{
   cssClass: string; bars: number; label: string; pct: number; hex: string;
 }> = [
-  { cssClass: 'critical', bars: 4, label: 'CRITICAL', pct: 84, hex: '#C8201A' },
-  { cssClass: 'high',     bars: 3, label: 'HIGH',     pct: 67, hex: '#A86209' },
-  { cssClass: 'systemic', bars: 5, label: 'SYSTEMIC', pct: 93, hex: '#3D52E6' },
+  { cssClass: 'high',     bars: 3, label: 'HIGH',     pct: 78, hex: '#D4A00A' },
+  { cssClass: 'critical', bars: 4, label: 'CRITICAL', pct: 84, hex: '#D0611A' },
+  { cssClass: 'systemic', bars: 5, label: 'SYSTEMIC', pct: 83, hex: '#C8201A' },
 ];
 
 type SMeta = typeof SEVERITY_META[0];
@@ -33,39 +34,16 @@ function runCounter(
   rafRef.current = requestAnimationFrame(tick);
 }
 
-/* ──────────────────────────────────────────────
-   Card 1 — System resource monitor
-   Maps to: "capacity gaps, not insight gaps"
-   Two metric bars with staggered counters
-────────────────────────────────────────────── */
-function SystemLoadViz({ active, color }: { active: boolean; color: string }) {
-  const [c0, setC0] = useState(0);
-  const [c1, setC1] = useState(0);
-  const r0 = useRef<number | null>(null);
-  const r1 = useRef<number | null>(null);
-
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    if (active) {
-      runCounter(84, setC0, r0);
-      timer = setTimeout(() => runCounter(61, setC1, r1), 210);
-    } else {
-      if (r0.current) { cancelAnimationFrame(r0.current); r0.current = null; }
-      if (r1.current) { cancelAnimationFrame(r1.current); r1.current = null; }
-      setC0(0); setC1(0);
-    }
-    return () => {
-      if (timer !== undefined) clearTimeout(timer);
-      if (r0.current) cancelAnimationFrame(r0.current);
-      if (r1.current) cancelAnimationFrame(r1.current);
-    };
-  }, [active]);
-
-  const rows = [
-    { label: 'CAPACITY', pct: 84, count: c0, delay: 0 },
-    { label: 'COVERAGE', pct: 61, count: c1, delay: 210 },
-  ];
-
+/* Shared metric bars renderer */
+function MetricRows({
+  rows,
+  active,
+  color,
+}: {
+  rows: { label: string; pct: number; count: number; delay: number }[];
+  active: boolean;
+  color: string;
+}) {
   return (
     <div aria-hidden style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
       {rows.map(row => (
@@ -74,18 +52,16 @@ function SystemLoadViz({ active, color }: { active: boolean; color: string }) {
             fontFamily: 'var(--font-mono), monospace', fontSize: '7.5px',
             letterSpacing: '0.12em', textTransform: 'uppercase',
             color: active ? 'rgba(13,17,71,0.45)' : 'rgba(13,17,71,0.2)',
-            minWidth: '68px', transition: 'color 320ms ease',
+            minWidth: '80px', transition: 'color 320ms ease',
           }}>
             {row.label}
           </span>
           <div style={{ flex: 1, height: '2px', backgroundColor: 'rgba(13,17,71,0.07)', position: 'relative', overflow: 'hidden' }}>
             <div style={{
               position: 'absolute', top: 0, left: 0, bottom: 0,
-              width: active ? `${row.pct}%` : '0%',
+              width: `${row.count}%`,
               backgroundColor: active ? color : 'rgba(13,17,71,0.15)',
-              transition: active
-                ? `width 950ms cubic-bezier(0.22,1,0.36,1) ${row.delay}ms, background-color 380ms ease`
-                : 'width 500ms ease, background-color 380ms ease',
+              transition: 'background-color 380ms ease',
             }} />
           </div>
           <span style={{
@@ -103,151 +79,114 @@ function SystemLoadViz({ active, color }: { active: boolean; color: string }) {
 }
 
 /* ──────────────────────────────────────────────
-   Card 2 — Phase timeline
-   Maps to: "proposals describe a goal, not a schedule"
-   Three phase bars with stagger + schedule density counter
+   Card 1 — Website metrics
+   VISITORS 78% / LEADS 23% / CONVERSION 14%
 ────────────────────────────────────────────── */
-function PhaseTimelineViz({ active, color }: { active: boolean; color: string }) {
-  const [pct, setPct] = useState(0);
-  const rafRef = useRef<number | null>(null);
+function SystemLoadViz({ active, color }: { active: boolean; color: string }) {
+  const [c0, setC0] = useState(0);
+  const [c1, setC1] = useState(0);
+  const [c2, setC2] = useState(0);
+  const r0 = useRef<number | null>(null);
+  const r1 = useRef<number | null>(null);
+  const r2 = useRef<number | null>(null);
 
   useEffect(() => {
+    let t1: ReturnType<typeof setTimeout> | undefined;
+    let t2: ReturnType<typeof setTimeout> | undefined;
     if (active) {
-      runCounter(67, setPct, rafRef, 1000);
+      runCounter(78, setC0, r0);
+      t1 = setTimeout(() => runCounter(23, setC1, r1), 160);
+      t2 = setTimeout(() => runCounter(14, setC2, r2), 320);
     } else {
-      if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
-      setPct(0);
+      [r0, r1, r2].forEach(r => { if (r.current) { cancelAnimationFrame(r.current); r.current = null; } });
+      setC0(0); setC1(0); setC2(0);
     }
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+    return () => {
+      if (t1 !== undefined) clearTimeout(t1);
+      if (t2 !== undefined) clearTimeout(t2);
+      [r0, r1, r2].forEach(r => { if (r.current) cancelAnimationFrame(r.current); });
+    };
   }, [active]);
 
-  const phases = [
-    { label: 'DISCOVERY', fill: 100 },
-    { label: 'BUILD',     fill: 72  },
-    { label: 'CLOSE',     fill: 44  },
+  const rows = [
+    { label: 'VISITORS',   pct: 78, count: c0, delay: 0   },
+    { label: 'LEADS',      pct: 23, count: c1, delay: 160  },
+    { label: 'CONVERSION', pct: 14, count: c2, delay: 320  },
   ];
 
-  return (
-    <div aria-hidden>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '7px', marginBottom: '10px' }}>
-        {phases.map((p, i) => (
-          <div key={p.label} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{
-              fontFamily: 'var(--font-mono), monospace', fontSize: '7.5px',
-              letterSpacing: '0.1em', textTransform: 'uppercase',
-              color: active ? 'rgba(13,17,71,0.45)' : 'rgba(13,17,71,0.2)',
-              minWidth: '68px', transition: 'color 320ms ease',
-            }}>
-              {p.label}
-            </span>
-            <div style={{ flex: 1, height: '2px', backgroundColor: 'rgba(13,17,71,0.07)', position: 'relative', overflow: 'hidden' }}>
-              <div style={{
-                position: 'absolute', top: 0, left: 0, bottom: 0,
-                width: active ? `${p.fill}%` : '0%',
-                backgroundColor: active ? color : 'rgba(13,17,71,0.15)',
-                transition: active
-                  ? `width 800ms cubic-bezier(0.22,1,0.36,1) ${i * 130}ms, background-color 380ms ease`
-                  : 'width 400ms ease',
-              }} />
-            </div>
-          </div>
-        ))}
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'baseline', gap: '5px' }}>
-        <span style={{
-          fontFamily: 'var(--font-mono), monospace', fontSize: '7px',
-          letterSpacing: '0.12em', textTransform: 'uppercase',
-          color: 'rgba(13,17,71,0.2)',
-        }}>
-          SCHEDULE DENSITY
-        </span>
-        <span style={{
-          fontFamily: 'var(--font-mono), monospace', fontSize: '10px', fontWeight: 700,
-          color: active ? color : 'rgba(13,17,71,0.22)',
-          transition: 'color 380ms ease',
-        }}>
-          {pct}%
-        </span>
-      </div>
-    </div>
-  );
+  return <MetricRows rows={rows} active={active} color={color} />;
 }
 
 /* ──────────────────────────────────────────────
-   Card 3 — Handoff node graph
-   Maps to: "tool outlasting the engagement"
-   SVG line draw-in: BUILD → DEPLOY → HAND + 93% counter
+   Card 2 — Automation metrics
+   HOURS 84% / CAPACITY 36%
 ────────────────────────────────────────────── */
-function NodeGraphViz({ active, color }: { active: boolean; color: string }) {
-  const [pct, setPct] = useState(0);
-  const rafRef = useRef<number | null>(null);
+function PhaseTimelineViz({ active, color }: { active: boolean; color: string }) {
+  const [c0, setC0] = useState(0);
+  const [c1, setC1] = useState(0);
+  const r0 = useRef<number | null>(null);
+  const r1 = useRef<number | null>(null);
 
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
     if (active) {
-      runCounter(93, setPct, rafRef, 1000);
+      runCounter(84, setC0, r0);
+      timer = setTimeout(() => runCounter(36, setC1, r1), 210);
     } else {
-      if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
-      setPct(0);
+      [r0, r1].forEach(r => { if (r.current) { cancelAnimationFrame(r.current); r.current = null; } });
+      setC0(0); setC1(0);
     }
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+    return () => {
+      if (timer !== undefined) clearTimeout(timer);
+      [r0, r1].forEach(r => { if (r.current) cancelAnimationFrame(r.current); });
+    };
   }, [active]);
 
-  const Y = 20;
-  const nodes = [{ id: 'BUILD', x: 18 }, { id: 'DEPLOY', x: 110 }, { id: 'HAND', x: 202 }];
-  const edges = [
-    { x1: 26, x2: 102, len: 76, delay: 0 },
-    { x1: 118, x2: 194, len: 76, delay: 220 },
+  const rows = [
+    { label: 'HOURS',    pct: 84, count: c0, delay: 0   },
+    { label: 'CAPACITY', pct: 36, count: c1, delay: 210 },
   ];
 
-  return (
-    <div aria-hidden>
-      <svg width="100%" height="52" viewBox="0 0 230 52" fill="none" style={{ overflow: 'visible' }}>
-        {edges.map((e, i) => (
-          <line
-            key={i} x1={e.x1} y1={Y} x2={e.x2} y2={Y}
-            style={{
-              stroke: active ? color : 'rgba(13,17,71,0.13)',
-              strokeWidth: 1,
-              strokeDasharray: e.len,
-              strokeDashoffset: active ? 0 : e.len,
-              transition: active
-                ? `stroke-dashoffset 600ms cubic-bezier(0.22,1,0.36,1) ${e.delay}ms, stroke 380ms ease`
-                : 'stroke-dashoffset 350ms ease, stroke 380ms ease',
-            }}
-          />
-        ))}
-        {nodes.map((node, i) => (
-          <g key={node.id}>
-            <circle cx={node.x} cy={Y} r={5}
-              style={{
-                fill: active ? color : 'rgba(13,17,71,0.12)',
-                transition: `fill 380ms ease ${i * 140}ms`,
-              }}
-            />
-            <text x={node.x} y={42} textAnchor="middle"
-              style={{
-                fontFamily: 'var(--font-mono), monospace', fontSize: '7px', letterSpacing: '0.08em',
-                fill: active ? 'rgba(13,17,71,0.42)' : 'rgba(13,17,71,0.18)',
-                transition: 'fill 380ms ease',
-              }}
-            >
-              {node.id}
-            </text>
-          </g>
-        ))}
-        {/* counter near the HAND node */}
-        <text x={202} y={11} textAnchor="middle"
-          style={{
-            fontFamily: 'var(--font-mono), monospace', fontSize: '8.5px', fontWeight: 700,
-            fill: active ? color : 'rgba(13,17,71,0.18)',
-            transition: 'fill 380ms ease 300ms',
-          }}
-        >
-          {pct}%
-        </text>
-      </svg>
-    </div>
-  );
+  return <MetricRows rows={rows} active={active} color={color} />;
+}
+
+/* ──────────────────────────────────────────────
+   Card 3 — Workaround metrics
+   WORKAROUNDS 71% / GAPS 58% / FRICTION 83%
+────────────────────────────────────────────── */
+function NodeGraphViz({ active, color }: { active: boolean; color: string }) {
+  const [c0, setC0] = useState(0);
+  const [c1, setC1] = useState(0);
+  const [c2, setC2] = useState(0);
+  const r0 = useRef<number | null>(null);
+  const r1 = useRef<number | null>(null);
+  const r2 = useRef<number | null>(null);
+
+  useEffect(() => {
+    let t1: ReturnType<typeof setTimeout> | undefined;
+    let t2: ReturnType<typeof setTimeout> | undefined;
+    if (active) {
+      runCounter(71, setC0, r0);
+      t1 = setTimeout(() => runCounter(58, setC1, r1), 160);
+      t2 = setTimeout(() => runCounter(83, setC2, r2), 320);
+    } else {
+      [r0, r1, r2].forEach(r => { if (r.current) { cancelAnimationFrame(r.current); r.current = null; } });
+      setC0(0); setC1(0); setC2(0);
+    }
+    return () => {
+      if (t1 !== undefined) clearTimeout(t1);
+      if (t2 !== undefined) clearTimeout(t2);
+      [r0, r1, r2].forEach(r => { if (r.current) cancelAnimationFrame(r.current); });
+    };
+  }, [active]);
+
+  const rows = [
+    { label: 'WORKAROUNDS', pct: 71, count: c0, delay: 0   },
+    { label: 'GAPS',        pct: 58, count: c1, delay: 160  },
+    { label: 'FRICTION',    pct: 83, count: c2, delay: 320  },
+  ];
+
+  return <MetricRows rows={rows} active={active} color={color} />;
 }
 
 function CardViz({ index, active, color }: { index: number; active: boolean; color: string }) {
@@ -327,7 +266,7 @@ function FindingCard({
         {finding.note}
       </p>
 
-      {/* Techy visualization — auto margin pushes it to card bottom */}
+      {/* Metric visualization */}
       <div className="viz-border" style={{ marginTop: 'auto', paddingTop: '22px' }}>
         <CardViz index={index} active={barsOn} color={meta.hex} />
       </div>
@@ -353,14 +292,13 @@ export default function ProblemStatement() {
       data-section-label="Findings"
       style={{ backgroundColor: '#FFFFFF', padding: '96px 32px 112px', position: 'relative', overflow: 'hidden' }}
     >
-      {/* Violet ambient — top left brand presence */}
+      {/* Ambient glows */}
       <div aria-hidden style={{
         position: 'absolute', top: '-8%', left: '-5%',
         width: '600px', height: '600px',
         background: 'radial-gradient(circle, rgba(136,96,230,0.06) 0%, transparent 62%)',
         pointerEvents: 'none',
       }} />
-      {/* Cobalt ambient — bottom right */}
       <div aria-hidden style={{
         position: 'absolute', bottom: '-6%', right: '-4%',
         width: '440px', height: '440px',
@@ -379,14 +317,30 @@ export default function ProblemStatement() {
           style={{ marginBottom: '64px' }}
         >
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '32px' }}>
-            <h2 className="font-heading" style={{
-              fontSize: 'clamp(72px, 9.5vw, 128px)', fontWeight: 500,
-              letterSpacing: '-0.05em', lineHeight: 0.88,
-              color: '#0D1147', margin: 0,
-            }}>
-              {t('label')}
-              <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>.</em>
-            </h2>
+            <div>
+              <h2 className="font-heading" style={{
+                fontSize: 'clamp(52px, 7vw, 96px)', fontWeight: 500,
+                letterSpacing: '-0.045em', lineHeight: 0.92,
+                color: '#0D1147', margin: 0,
+              }}>
+                {t('label')}
+              </h2>
+              <p style={{
+                fontFamily: 'var(--font-body), sans-serif',
+                fontSize: '15px', lineHeight: 1.6,
+                color: '#0D1147',
+                margin: '18px 0 0',
+                maxWidth: '480px',
+              }}>
+                This is what costs you{' '}
+                <span style={{ color: 'var(--accent)' }}>time</span>
+                {', '}
+                <span style={{ color: 'var(--accent)' }}>money</span>
+                {', and '}
+                <span style={{ color: 'var(--accent)' }}>momentum</span>
+                {'.'}
+              </p>
+            </div>
 
             <div style={{ flexShrink: 0, textAlign: 'right', paddingBottom: '10px' }}>
               <span style={{
@@ -440,7 +394,7 @@ export default function ProblemStatement() {
           .findings-grid { grid-template-columns: 1fr; gap: 16px; }
         }
 
-        /* Card base — grayscale, no severity color */
+        /* Card base */
         .finding-card {
           display: flex;
           flex-direction: column;
@@ -462,38 +416,38 @@ export default function ProblemStatement() {
         .sev-divider { background: rgba(13,17,71,0.08); transition: background 420ms ease; }
         .viz-border  { border-top: 1px solid rgba(13,17,71,0.08); transition: border-color 420ms ease; }
 
-        /* CRITICAL */
+        /* HIGH — yellow */
+        .card-high:hover {
+          border-top-color: #D4A00A;
+          border-right-color: rgba(212,160,10,0.26);
+          border-bottom-color: rgba(212,160,10,0.26);
+          border-left-color: rgba(212,160,10,0.26);
+        }
+        .card-high:hover .sev-label   { color: #D4A00A; }
+        .card-high:hover .sev-divider { background: rgba(212,160,10,0.11); }
+        .card-high:hover .viz-border  { border-color: rgba(212,160,10,0.11); }
+
+        /* CRITICAL — orange */
         .card-critical:hover {
+          border-top-color: #D0611A;
+          border-right-color: rgba(208,97,26,0.26);
+          border-bottom-color: rgba(208,97,26,0.26);
+          border-left-color: rgba(208,97,26,0.26);
+        }
+        .card-critical:hover .sev-label   { color: #D0611A; }
+        .card-critical:hover .sev-divider { background: rgba(208,97,26,0.11); }
+        .card-critical:hover .viz-border  { border-color: rgba(208,97,26,0.11); }
+
+        /* SYSTEMIC — red */
+        .card-systemic:hover {
           border-top-color: #C8201A;
           border-right-color: rgba(200,32,26,0.26);
           border-bottom-color: rgba(200,32,26,0.26);
           border-left-color: rgba(200,32,26,0.26);
         }
-        .card-critical:hover .sev-label  { color: #C8201A; }
-        .card-critical:hover .sev-divider { background: rgba(200,32,26,0.11); }
-        .card-critical:hover .viz-border  { border-color: rgba(200,32,26,0.11); }
-
-        /* HIGH */
-        .card-high:hover {
-          border-top-color: #A86209;
-          border-right-color: rgba(168,98,9,0.26);
-          border-bottom-color: rgba(168,98,9,0.26);
-          border-left-color: rgba(168,98,9,0.26);
-        }
-        .card-high:hover .sev-label  { color: #A86209; }
-        .card-high:hover .sev-divider { background: rgba(168,98,9,0.11); }
-        .card-high:hover .viz-border  { border-color: rgba(168,98,9,0.11); }
-
-        /* SYSTEMIC */
-        .card-systemic:hover {
-          border-top-color: #3D52E6;
-          border-right-color: rgba(61,82,230,0.26);
-          border-bottom-color: rgba(61,82,230,0.26);
-          border-left-color: rgba(61,82,230,0.26);
-        }
-        .card-systemic:hover .sev-label  { color: #3D52E6; }
-        .card-systemic:hover .sev-divider { background: rgba(61,82,230,0.12); }
-        .card-systemic:hover .viz-border  { border-color: rgba(61,82,230,0.12); }
+        .card-systemic:hover .sev-label   { color: #C8201A; }
+        .card-systemic:hover .sev-divider { background: rgba(200,32,26,0.11); }
+        .card-systemic:hover .viz-border  { border-color: rgba(200,32,26,0.11); }
 
         @media (prefers-reduced-motion: reduce) {
           .finding-card, .sev-label, .sev-divider, .viz-border {

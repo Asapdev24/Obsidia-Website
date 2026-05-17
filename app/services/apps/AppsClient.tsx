@@ -6,24 +6,9 @@ import { Link } from '@/i18n/navigation';
 import { ArrowRight } from 'lucide-react';
 import CTABand from '../../components/CTABand';
 import MagneticButton from '../../components/MagneticButton';
+import { useReveal } from '@/app/hooks/useScroll';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
-
-function useReveal(threshold = 0.1) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [threshold]);
-  return { ref, visible };
-}
 
 function useCountUp(target: number, active: boolean, duration = 1500) {
   const [count, setCount] = useState(0);
@@ -89,7 +74,7 @@ function AppSkeletonVisual() {
             {rows.map((r, i) => {
               const isActive = i === activeRow;
               return (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 10px', height: '28px', backgroundColor: isActive ? 'rgba(61,82,230,0.07)' : 'transparent', borderLeft: isActive ? '2px solid var(--accent)' : '2px solid transparent', transition: 'background-color 300ms ease, border-color 300ms ease' }}>
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 10px', height: '28px', backgroundColor: isActive ? 'rgba(61,82,230,0.14)' : 'transparent', transition: 'background-color 300ms ease' }}>
                   <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '9px', color: isActive ? 'var(--accent)' : 'rgba(255,255,255,0.22)', width: '14px', textAlign: 'center', transition: 'color 300ms ease' }}>{r.icon}</span>
                   <span style={{ fontFamily: 'var(--font-body), sans-serif', fontSize: '7px', color: isActive ? '#F0EFE9' : '#5A5A58', flex: 1, transition: 'color 300ms ease' }}>{r.label}</span>
                   <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: '6px', color: isActive ? 'var(--accent)' : '#2A2A28', transition: 'color 300ms ease' }}>{r.metric}</span>
@@ -147,7 +132,7 @@ function AppSkeletonVisual() {
 
 /* ── Hero ─────────────────────────────────────────────────── */
 function AppsHero() {
-  const CYCLE = ['built for you.', 'fit for your team.', 'built your way.', 'worth the cost.'];
+  const CYCLE = ['was built for it.', 'fits how you work.', 'runs without friction.', 'scales with you.'];
   const [wordIdx, setWordIdx] = useState(0);
   useEffect(() => {
     const t = setInterval(() => setWordIdx(i => (i + 1) % CYCLE.length), 2400);
@@ -162,9 +147,10 @@ function AppsHero() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }} style={{ marginBottom: '28px' }}>
           <div className="section-label" style={{ color: 'var(--accent)' }}>Application Development</div>
         </motion.div>
-        <h1 className="font-heading" style={{ fontSize: 'clamp(44px, 5.5vw, 82px)', fontWeight: 500, lineHeight: 1.0, letterSpacing: '-0.03em', color: 'var(--dark-text)', marginBottom: '28px' }}>
+        <h1 className="font-heading" style={{ fontSize: 'clamp(44px, 5.5vw, 72px)', fontWeight: 500, lineHeight: 1.0, letterSpacing: '-0.03em', color: 'var(--dark-text)', marginBottom: '28px' }}>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.15 }}>
-            <span style={{ display: 'block', marginBottom: '0.04em' }}>Tools that are</span>
+            <span style={{ display: 'block' }}>Your operation</span>
+            <span style={{ display: 'block', whiteSpace: 'nowrap', marginBottom: '0.04em' }}>deserves software that</span>
             <AnimatePresence mode="wait">
               <motion.span key={wordIdx} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} transition={{ duration: 0.3, ease: EASE }} style={{ display: 'block', color: 'var(--accent)', fontStyle: 'italic' }}>
                 {CYCLE[wordIdx]}
@@ -242,7 +228,11 @@ function AppsProblemStatement() {
         backgroundColor: 'var(--dark-surface)',
         borderTop: '1px solid var(--dark-border)',
         borderBottom: '1px solid var(--dark-border)',
-        padding: '28px 32px',
+        minHeight: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        padding: '64px 32px',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -354,7 +344,7 @@ function AppsProblemStatement() {
                 {/* Body */}
                 <p className="font-body" style={{
                   fontSize: '12.5px', lineHeight: 1.68,
-                  color: 'rgba(220,225,248,0.58)',
+                  color: 'rgba(220,225,248,0.68)',
                   position: 'relative', zIndex: 1,
                 }}>
                   {p.body}
@@ -367,6 +357,7 @@ function AppsProblemStatement() {
                   transform: isHov ? 'scaleX(1)' : 'scaleX(0)',
                   transformOrigin: 'left center',
                   transition: 'transform 400ms cubic-bezier(0.22,1,0.36,1)',
+                  pointerEvents: 'none',
                 }} />
               </motion.div>
             );
@@ -736,7 +727,7 @@ function AppServicesGrid() {
       data-section-label="What We Build"
       style={{
         backgroundColor: 'var(--dark-bg)',
-        padding: '56px 32px',
+        padding: '28px 32px 36px',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -750,7 +741,7 @@ function AppServicesGrid() {
         {/* Section header */}
         <div
           style={{
-            marginBottom: '40px',
+            marginBottom: '24px',
             opacity: visible ? 1 : 0,
             transform: visible ? 'translateY(0)' : 'translateY(16px)',
             transition: 'opacity 600ms ease, transform 600ms ease',
@@ -767,7 +758,7 @@ function AppServicesGrid() {
         </div>
 
         {/* Main grid: phone + service list */}
-        <div className="apps-svc-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center' }}>
+        <div className="apps-svc-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'center' }}>
 
           {/* Phone mockup */}
           <motion.div
@@ -889,7 +880,7 @@ function AppServicesGrid() {
                         style={{
                           fontSize: '13.5px',
                           lineHeight: 1.78,
-                          color: 'rgba(220,225,248,0.42)',
+                          color: 'rgba(220,225,248,0.66)',
                           paddingBottom: '4px',
                           paddingTop: '4px',
                         }}
@@ -1098,7 +1089,7 @@ function AppProcessSection() {
             </h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
-            <p className="font-body" style={{ fontSize: '15px', lineHeight: 1.72, color: 'rgba(220,225,248,0.38)', textAlign: 'right' }}>
+            <p className="font-body" style={{ fontSize: '15px', lineHeight: 1.72, color: 'rgba(220,225,248,0.62)', textAlign: 'right' }}>
               Four precise phases. Constant visibility. Zero surprises.
             </p>
           </div>
@@ -1137,6 +1128,7 @@ function AppProcessSection() {
                   transform: `scaleX(${isActive ? 1 : 0})`,
                   transformOrigin: 'left center',
                   transition: 'transform 420ms cubic-bezier(0.22,1,0.36,1)',
+                  pointerEvents: 'none',
                 }} />
 
                 {/* Phase meta */}

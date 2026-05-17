@@ -1,12 +1,5 @@
-import type { Metadata } from 'next';
-import ServicesClient from './ServicesClient';
-
-export const metadata: Metadata = {
-  title: 'Services',
-  description:
-    'Three disciplines. One partner. Obsidia builds workflow automations, websites, and custom applications for businesses that are serious about how they operate.',
-};
+import { redirect } from 'next/navigation';
 
 export default function ServicesPage() {
-  return <ServicesClient />;
+  redirect('/en/services');
 }

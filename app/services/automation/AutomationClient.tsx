@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, type ReactElement } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { Link } from '@/i18n/navigation';
 import { ArrowRight } from 'lucide-react';
@@ -9,25 +9,10 @@ import WorkflowGraph from '../../components/WorkflowGraph';
 import TrustBar from '../../components/TrustBar';
 import CTABand from '../../components/CTABand';
 import MagneticButton from '../../components/MagneticButton';
+import { useReveal } from '@/app/hooks/useScroll';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 const CYCLE_COUNT = 4;
-
-function useReveal(threshold = 0.1) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [threshold]);
-  return { ref, visible };
-}
 
 
 /* ── Hero (unchanged) ─────────────────────────────────────── */
@@ -59,7 +44,7 @@ function AutomationHero() {
       data-nav-theme="dark"
       id="auto-hero"
       data-section-label="Overview"
-      style={{ position: 'relative', minHeight: '100vh', display: 'grid', gridTemplateColumns: '55% 45%', alignItems: 'stretch', overflow: 'hidden', backgroundColor: 'var(--dark-bg)', paddingTop: '76px' }}
+      style={{ position: 'relative', minHeight: '100dvh', display: 'grid', gridTemplateColumns: '55% 45%', alignItems: 'stretch', overflow: 'hidden', backgroundColor: 'var(--dark-bg)', paddingTop: '76px' }}
       className="auto-hero-grid"
     >
       <div aria-hidden style={{ position: 'absolute', inset: 0, width: '55%', backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '28px 28px', pointerEvents: 'none' }} />
@@ -163,29 +148,11 @@ const AUTO_SERVICES = [
   },
 ];
 
-const SERVICE_ICONS = [
-  <svg key="0" width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden>
-    <circle cx="7" cy="7" r="3" stroke="currentColor" strokeWidth="1.2"/>
-    <circle cx="23" cy="7" r="3" stroke="currentColor" strokeWidth="1.2"/>
-    <circle cx="15" cy="23" r="3" stroke="currentColor" strokeWidth="1.2"/>
-    <path d="M10 7h10M7 10v4a4 4 0 004 4h2M23 10v4a4 4 0 01-4 4h-2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-  </svg>,
-  <svg key="1" width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden>
-    <rect x="3" y="9" width="9" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
-    <rect x="18" y="9" width="9" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
-    <path d="M12 13h6M12 17h6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-    <path d="M12 15l2.5-2.5M12 15l2.5 2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>,
-  <svg key="2" width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden>
-    <rect x="3" y="19" width="5" height="8" rx="1" stroke="currentColor" strokeWidth="1.2"/>
-    <rect x="12" y="13" width="5" height="14" rx="1" stroke="currentColor" strokeWidth="1.2"/>
-    <rect x="21" y="7" width="5" height="20" rx="1" stroke="currentColor" strokeWidth="1.2"/>
-    <path d="M2 5h26" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" opacity="0.4"/>
-  </svg>,
-  <svg key="3" width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden>
-    <circle cx="15" cy="15" r="4" stroke="currentColor" strokeWidth="1.2"/>
-    <path d="M15 4v3M15 23v3M4 15h3M23 15h3M7.5 7.5l2.1 2.1M20.4 20.4l2.1 2.1M7.5 22.5l2.1-2.1M20.4 9.6l2.1-2.1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-  </svg>,
+const SERVICE_VIDEOS = [
+  '/outcome.mp4',
+  '/file-transfer.mp4',
+  '/growth.mp4',
+  '/process.mp4',
 ];
 
 function ServiceRow({
@@ -198,6 +165,7 @@ function ServiceRow({
   visible: boolean;
 }) {
   const rowRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const mouseX = useMotionValue(-400);
   const spotX = useTransform(mouseX, v => v - 300);
 
@@ -207,12 +175,29 @@ function ServiceRow({
     mouseX.set(e.clientX - rect.left);
   }, [mouseX]);
 
+  const handleMouseEnter = useCallback(() => {
+    mouseX.set(200);
+    onEnter();
+    const v = videoRef.current;
+    if (!v) return;
+    v.currentTime = 0;
+    v.play().catch(() => {});
+  }, [mouseX, onEnter]);
+
+  const handleMouseLeave = useCallback(() => {
+    mouseX.set(-400);
+    const v = videoRef.current;
+    if (!v) return;
+    v.pause();
+    v.currentTime = 0;
+  }, [mouseX]);
+
   return (
     <div
       ref={rowRef}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => { mouseX.set(200); onEnter(); }}
-      onMouseLeave={() => mouseX.set(-400)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       style={{
         position: 'relative', overflow: 'hidden',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
@@ -238,6 +223,7 @@ function ServiceRow({
         transformOrigin: 'center',
         transition: 'transform 500ms cubic-bezier(0.22,1,0.36,1)',
         opacity: 0.8,
+        pointerEvents: 'none',
       }} />
 
       <div style={{
@@ -283,89 +269,101 @@ function ServiceRow({
           </h3>
         </div>
 
-        {/* Icon */}
+        {/* Video icon */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
           paddingRight: '4px',
-          color: isActive ? 'var(--accent)' : '#FFFFFF',
-          transition: 'color 300ms ease',
         }} className="service-metric">
-          {SERVICE_ICONS[index]}
+          <video
+            ref={videoRef}
+            src={SERVICE_VIDEOS[index]}
+            muted
+            playsInline
+            preload="metadata"
+            style={{
+              width: '30px',
+              height: '30px',
+              objectFit: 'contain',
+              display: 'block',
+            }}
+          />
         </div>
       </div>
     </div>
   );
 }
 
-function ServicePreviewPanel({ item }: { item: typeof AUTO_SERVICES[0] }) {
+/* All four panels are always mounted; only opacity changes — no reflow. */
+function ServicePreviewPanel({ items, activeIdx }: { items: typeof AUTO_SERVICES; activeIdx: number }) {
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={item.n}
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -12 }}
-        transition={{ duration: 0.38, ease: EASE }}
-        style={{
-          border: '1px solid rgba(255,255,255,0.08)',
-          padding: '48px 44px',
-          display: 'flex', flexDirection: 'column', gap: '32px',
-        }}
-      >
-        {/* Corner accent */}
-        <div aria-hidden style={{
-          position: 'absolute', top: 0, right: 0,
-          width: '120px', height: '120px',
-          background: 'radial-gradient(circle at top right, rgba(61,82,230,0.15) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }} />
+    <div style={{ position: 'relative', flex: 1, minHeight: '320px' }}>
+      {items.map((item, i) => (
+        <motion.div
+          key={item.n}
+          animate={{ opacity: i === activeIdx ? 1 : 0 }}
+          transition={{ duration: 0.3, ease: 'easeInOut' }}
+          style={{
+            position: 'absolute', inset: 0,
+            border: '1px solid rgba(255,255,255,0.08)',
+            padding: '48px 44px',
+            display: 'flex', flexDirection: 'column', gap: '32px',
+            pointerEvents: i === activeIdx ? 'auto' : 'none',
+          }}
+        >
+          {/* Corner accent */}
+          <div aria-hidden style={{
+            position: 'absolute', top: 0, right: 0,
+            width: '120px', height: '120px',
+            background: 'radial-gradient(circle at top right, rgba(61,82,230,0.15) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }} />
 
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <span style={{
-            fontFamily: 'var(--font-mono), monospace', fontSize: '10px', fontWeight: 600,
-            letterSpacing: '0.18em', textTransform: 'uppercase',
-            color: 'var(--accent)', opacity: 0.8, display: 'block', marginBottom: '20px',
-          }}>
-            {item.n}
-          </span>
-
-          <h3 className="font-heading" style={{
-            fontSize: 'clamp(26px, 2.6vw, 36px)', fontWeight: 500,
-            letterSpacing: '-0.025em', lineHeight: 1.1,
-            color: '#F0EFE9', marginBottom: '20px',
-          }}>
-            {item.title}
-          </h3>
-
-          <div style={{ height: '1px', background: 'linear-gradient(90deg, var(--accent) 0%, transparent 70%)', marginBottom: '24px', opacity: 0.4 }} />
-
-          <p className="font-body" style={{
-            fontSize: '15px', lineHeight: 1.8,
-            color: 'rgba(240,239,233,0.55)',
-            marginBottom: '32px',
-          }}>
-            {item.body}
-          </p>
-
-          {/* Outcome badge */}
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: '10px',
-            backgroundColor: 'rgba(61,82,230,0.1)',
-            border: '1px solid rgba(61,82,230,0.25)',
-            padding: '10px 16px',
-          }}>
-            <div style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: 'var(--accent)', boxShadow: '0 0 8px rgba(61,82,230,0.7)', flexShrink: 0 }} />
+          <div style={{ position: 'relative', zIndex: 1 }}>
             <span style={{
-              fontFamily: 'var(--font-body), sans-serif', fontSize: '12px',
-              color: 'rgba(61,82,230,0.85)', letterSpacing: '0.02em',
+              fontFamily: 'var(--font-mono), monospace', fontSize: '10px', fontWeight: 600,
+              letterSpacing: '0.18em', textTransform: 'uppercase',
+              color: 'var(--accent)', opacity: 0.8, display: 'block', marginBottom: '20px',
             }}>
-              {item.outcome}
+              {item.n}
             </span>
-          </div>
-        </div>
 
-      </motion.div>
-    </AnimatePresence>
+            <h3 className="font-heading" style={{
+              fontSize: 'clamp(26px, 2.6vw, 36px)', fontWeight: 500,
+              letterSpacing: '-0.025em', lineHeight: 1.1,
+              color: '#F0EFE9', marginBottom: '20px',
+            }}>
+              {item.title}
+            </h3>
+
+            <div style={{ height: '1px', background: 'linear-gradient(90deg, var(--accent) 0%, transparent 70%)', marginBottom: '24px', opacity: 0.4 }} />
+
+            <p className="font-body" style={{
+              fontSize: '15px', lineHeight: 1.8,
+              color: 'rgba(240,239,233,0.55)',
+              marginBottom: '32px',
+            }}>
+              {item.body}
+            </p>
+
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '10px',
+              backgroundColor: 'rgba(61,82,230,0.1)',
+              border: '1px solid rgba(61,82,230,0.25)',
+              padding: '10px 16px',
+            }}>
+              <div style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: 'var(--accent)', boxShadow: '0 0 8px rgba(61,82,230,0.7)', flexShrink: 0 }} />
+              <span style={{
+                fontFamily: 'var(--font-body), sans-serif', fontSize: '12px',
+                color: 'rgba(61,82,230,0.85)', letterSpacing: '0.02em',
+              }}>
+                {item.outcome}
+              </span>
+            </div>
+          </div>
+
+        </motion.div>
+      ))}
+    </div>
   );
 }
 
@@ -450,9 +448,9 @@ function AutomationServicesSection() {
             ))}
           </div>
 
-          {/* Right: preview panel */}
-          <div className="services-preview">
-            <ServicePreviewPanel item={AUTO_SERVICES[activeIdx]} />
+          {/* Right: preview panel — fixed-height container, opacity-only crossfade */}
+          <div className="services-preview" style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
+            <ServicePreviewPanel items={AUTO_SERVICES} activeIdx={activeIdx} />
           </div>
         </div>
       </div>
@@ -576,12 +574,774 @@ function AutoProcessTimeline() {
   );
 }
 
+/* ── Pain / Problem cards ─────────────────────────────────── */
+type HoverCard = 'none' | 'left' | 'center' | 'right';
+type CardPos   = 'left' | 'center' | 'right';
+
+const FLIP_EASE = 'cubic-bezier(0.22,1,0.36,1)';  // kept for box-shadow transitions
+const FM_EASE   = [0.22, 1, 0.36, 1] as const;     // Framer Motion format
+
+/* Card is 272px wide × 290px tall.
+   Outer wrapper sits at left:50%/top:50%; FM x/y offset from that origin.
+   CX/CY centre the card on that anchor point, fan offsets shift from there. */
+const CX = -136; // -(272 / 2)
+const CY = -145; // -(290 / 2)
+
+type FMCard = { x: number; y: number; rotate: number; scale: number };
+
+/* Fan durations — 900ms active, 800ms passive. Nothing shorter than 500ms.
+   Flip duration — 1400ms. Logged in PainCards useEffect on mount. */
+const CARD_FM: Record<CardPos, Record<HoverCard, FMCard>> = {
+  left: {
+    none:   { x: CX - 248, y: CY + 18,  rotate: -7, scale: 1    },
+    left:   { x: CX - 248, y: CY - 22,  rotate:  0, scale: 1.06 },
+    center: { x: CX - 282, y: CY + 28,  rotate: -9, scale: 1    },
+    right:  { x: CX - 282, y: CY + 28,  rotate: -9, scale: 1    },
+  },
+  center: {
+    none:   { x: CX +   0, y: CY +  0,  rotate:  0, scale: 1    },
+    left:   { x: CX +  14, y: CY + 12,  rotate:  4, scale: 1    },
+    center: { x: CX +   0, y: CY - 22,  rotate:  0, scale: 1.06 },
+    right:  { x: CX -  14, y: CY + 12,  rotate: -4, scale: 1    },
+  },
+  right: {
+    none:   { x: CX + 248, y: CY + 18,  rotate:  7, scale: 1    },
+    left:   { x: CX + 282, y: CY + 28,  rotate:  9, scale: 1    },
+    center: { x: CX + 282, y: CY + 28,  rotate:  9, scale: 1    },
+    right:  { x: CX + 248, y: CY - 22,  rotate:  0, scale: 1.06 },
+  },
+};
+
+/* Resting order: left=1 (bottom), center=2 (middle), right=3 (top).
+   Hovered card always rises to 4; non-hovered cards keep their relative left-to-right order. */
+const CARD_Z: Record<CardPos, Record<HoverCard, number>> = {
+  left:   { none: 1, left: 4, center: 1, right: 1 },
+  center: { none: 2, left: 2, center: 4, right: 2 },
+  right:  { none: 3, left: 3, center: 3, right: 4 },
+};
+
+const CARD_SHADOW: Record<CardPos, Record<HoverCard, string>> = {
+  left: {
+    none:   '0 6px 28px rgba(0,0,0,0.38)',
+    left:   '0 28px 72px rgba(0,0,0,0.62), 0 4px 16px rgba(0,0,0,0.3)',
+    center: '0 2px 10px rgba(0,0,0,0.22)',
+    right:  '0 2px 10px rgba(0,0,0,0.22)',
+  },
+  center: {
+    none:   '0 14px 44px rgba(0,0,0,0.52), 0 4px 16px rgba(0,0,0,0.28)',
+    left:   '0 4px 20px rgba(0,0,0,0.28)',
+    center: '0 32px 80px rgba(0,0,0,0.68), 0 6px 20px rgba(0,0,0,0.32)',
+    right:  '0 4px 20px rgba(0,0,0,0.28)',
+  },
+  right: {
+    none:   '0 6px 28px rgba(0,0,0,0.38)',
+    left:   '0 2px 10px rgba(0,0,0,0.22)',
+    center: '0 2px 10px rgba(0,0,0,0.22)',
+    right:  '0 28px 72px rgba(0,0,0,0.62), 0 4px 16px rgba(0,0,0,0.3)',
+  },
+};
+
+function IconHourglass() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+      stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 4h14" /><path d="M5 20h14" />
+      <path d="M7 4v3.5l5 4.5-5 4.5V20" /><path d="M17 4v3.5l-5 4.5 5 4.5V20" />
+    </svg>
+  );
+}
+function IconTransfer() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+      stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="8" height="8" rx="1.5" />
+      <rect x="14" y="3" width="8" height="8" rx="1.5" />
+      <rect x="14" y="13" width="8" height="8" rx="1.5" />
+      <rect x="2" y="13" width="8" height="8" rx="1.5" />
+      <path d="M10 7h4M6 11v2M18 11v2" strokeDasharray="2.5 2" />
+    </svg>
+  );
+}
+function IconNodes() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+      stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="5" cy="12" r="2.5" />
+      <circle cx="19" cy="5.5" r="2.5" />
+      <circle cx="19" cy="18.5" r="2.5" />
+      <line x1="7.5" y1="11.1" x2="16.5" y2="6.5" strokeDasharray="2.5 2.5" />
+      <line x1="7.5" y1="12.9" x2="16.5" y2="17.5" strokeDasharray="2.5 2.5" />
+    </svg>
+  );
+}
+
+const PAIN_CARDS: {
+  pos: CardPos;
+  Icon: () => ReactElement;
+  title: string;
+  front: string;
+  back: string;
+}[] = [
+  {
+    pos: 'left',
+    Icon: IconHourglass,
+    title: 'Approval Delays',
+    front: 'Every signature that should take minutes sits in an inbox for days.',
+    back: 'The decision was already made. The process was not built to move it forward. Every day it waits is a day the business fell behind.',
+  },
+  {
+    pos: 'center',
+    Icon: IconTransfer,
+    title: 'Manual Data Entry',
+    front: 'Your team moves data that should move itself.',
+    back: 'One in twenty-five transfers contains an error. Most go unnoticed until they cannot be quietly fixed.',
+  },
+  {
+    pos: 'right',
+    Icon: IconNodes,
+    title: 'Disconnected Tools',
+    front: 'Your operation runs on disconnected systems.',
+    back: 'Every gap between them gets filled by a person. The same gap, every day, never actually closed.',
+  },
+];
+
+function PainCards() {
+  const [hover, setHover]     = useState<HoverCard>('none');
+  const [flipped, setFlipped] = useState<HoverCard>('none');
+  const [btnReady, setBtnReady] = useState<HoverCard>('none');
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleEnter = useCallback((pos: CardPos) => {
+    setHover(pos);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setBtnReady(pos), 1000);
+  }, []);
+
+  const handleLeave = useCallback(() => {
+    setHover('none');
+    setBtnReady('none');
+    if (timerRef.current) clearTimeout(timerRef.current);
+  }, []);
+
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+
+  // Confirm applied durations — remove after QA
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[PainCards] fan-active=900ms fan-passive=800ms flip=1400ms ease=[0.22,1,0.36,1]');
+    }
+  }, []);
+
+  return (
+    <section
+      id="auto-pain"
+      data-section-label="The Problem"
+      data-nav-theme="dark"
+      style={{
+        backgroundColor: 'var(--dark-bg)',
+        height: '100dvh',
+        padding: '0 32px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Faint ambient glow */}
+      <div aria-hidden style={{
+        position: 'absolute', top: '30%', left: '50%', transform: 'translateX(-50%)',
+        width: '900px', height: '500px',
+        background: 'radial-gradient(ellipse, rgba(61,82,230,0.055) 0%, transparent 65%)',
+        pointerEvents: 'none',
+      }} />
+
+      <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
+
+        {/* ── Headline ── */}
+        <div style={{ textAlign: 'center', marginBottom: '52px' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '32px' }}>
+            <div style={{ width: '22px', height: '1px', backgroundColor: 'var(--accent)', opacity: 0.55 }} />
+            <span style={{
+              fontFamily: 'var(--font-mono), monospace',
+              fontSize: '9px', fontWeight: 500, letterSpacing: '0.24em', textTransform: 'uppercase',
+              color: 'var(--accent)',
+            }}>
+              The Problem
+            </span>
+            <div style={{ width: '22px', height: '1px', backgroundColor: 'var(--accent)', opacity: 0.55 }} />
+          </div>
+
+          <h2 style={{
+            fontFamily: 'var(--font-cormorant), Georgia, serif',
+            fontSize: 'clamp(44px, 5.8vw, 74px)',
+            fontWeight: 500,
+            letterSpacing: '-0.03em',
+            lineHeight: 1.06,
+            color: 'var(--dark-text)',
+          }}>
+            Your team is capable.<br />
+            <em style={{ fontStyle: 'italic', color: 'var(--accent)' }}>Your processes are not.</em>
+          </h2>
+        </div>
+
+        {/* ── Fan cards ── */}
+        <div
+          className="pain-fan"
+          style={{
+            position: 'relative',
+            height: '400px',
+            maxWidth: '920px',
+            margin: '0 auto',
+          }}
+        >
+          {PAIN_CARDS.map(({ pos, Icon, title, front, back }) => {
+            const isFlipped = flipped === pos;
+            return (
+              /* Outer wrapper — positions + fans the card via FM x/y/rotate/scale.
+                 transformStyle:preserve-3d is REQUIRED here so FM's own transform
+                 does not flatten the child flip wrapper's 3D context. */
+              <motion.div
+                key={pos}
+                onMouseEnter={() => handleEnter(pos)}
+                onMouseLeave={handleLeave}
+                animate={CARD_FM[pos][hover]}
+                transition={{ duration: hover === pos ? 0.9 : 0.8, ease: FM_EASE }}
+                style={{
+                  position: 'absolute',
+                  left: '50%',
+                  top: '50%',
+                  width: '272px',
+                  zIndex: CARD_Z[pos][hover],
+                  cursor: 'default',
+                  transformStyle: 'preserve-3d',
+                  perspective: '1600px',
+                }}
+              >
+                {/* Flip wrapper — rotates around Y axis via FM animate.
+                    duration: 1.4s / ease: [0.22,1,0.36,1] */}
+                <motion.div
+                  animate={{ rotateY: isFlipped ? 180 : 0 }}
+                  transition={{ duration: 1.4, ease: FM_EASE }}
+                  style={{
+                    position: 'relative',
+                    width: '100%',
+                    height: '290px',
+                    transformStyle: 'preserve-3d',
+                  }}
+                >
+
+                  {/* ── Front face ── */}
+                  <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    backgroundColor: '#111423',
+                    border: '1px solid rgba(255,255,255,0.07)',
+                    borderRadius: '16px',
+                    padding: '36px 28px 32px',
+                    boxShadow: CARD_SHADOW[pos][hover],
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    textAlign: 'center',
+                    transition: `box-shadow 500ms ${FLIP_EASE}`,
+                  }}>
+                    <div style={{ marginBottom: '22px', flexShrink: 0 }}>
+                      <Icon />
+                    </div>
+
+                    <h3 className="font-heading" style={{
+                      fontSize: '28px',
+                      fontWeight: 500,
+                      letterSpacing: '-0.02em',
+                      lineHeight: 1.1,
+                      color: '#FFFFFF',
+                      marginBottom: '18px',
+                      flexShrink: 0,
+                    }}>
+                      {title}
+                    </h3>
+
+                    <p style={{
+                      fontFamily: 'var(--font-body), sans-serif',
+                      fontSize: '12.5px',
+                      lineHeight: 1.75,
+                      color: 'rgba(220,225,248,0.66)',
+                    }}>
+                      {front}
+                    </p>
+
+                    {/* Flip button — appears 1000ms after hover starts.
+                        motion.div wrapper handles opacity/y; plain button avoids
+                        transform conflicts with Framer Motion's own transform system. */}
+                    <AnimatePresence>
+                      {btnReady === pos && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 4 }}
+                          transition={{ duration: 0.28, ease: EASE }}
+                          style={{
+                            position: 'absolute',
+                            bottom: '18px',
+                            left: 0, right: 0,
+                            display: 'flex',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFlipped(f => f === pos ? 'none' : pos);
+                            }}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              border: '1px solid rgba(61,82,230,0.4)',
+                              backgroundColor: 'rgba(61,82,230,0.14)',
+                              borderRadius: '50px',
+                              padding: '5px 13px',
+                              color: 'rgba(220,225,248,0.85)',
+                              fontSize: '9.5px',
+                              fontFamily: 'var(--font-body), sans-serif',
+                              fontWeight: 500,
+                              letterSpacing: '0.08em',
+                              textTransform: 'uppercase',
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            Read more
+                            <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden>
+                              <path d="M4.5 1v7M1 4.5l3.5-3.5 3.5 3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" transform="rotate(90 4.5 4.5)" />
+                            </svg>
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* ── Back face ── */}
+                  <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    transform: 'rotateY(180deg)',
+                    backgroundColor: '#111423',
+                    border: '1px solid rgba(255,255,255,0.07)',
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    textAlign: 'center',
+                    boxShadow: CARD_SHADOW[pos][hover],
+                  }}>
+                    {/* Electric Cobalt top accent */}
+                    <div style={{
+                      width: '100%',
+                      height: '2px',
+                      backgroundColor: 'var(--accent)',
+                      flexShrink: 0,
+                    }} />
+
+                    <div style={{
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      padding: '28px 28px 30px',
+                    }}>
+                      <p style={{
+                        fontFamily: 'var(--font-body), sans-serif',
+                        fontSize: '13px',
+                        lineHeight: 1.84,
+                        color: 'rgba(220,225,248,0.72)',
+                      }}>
+                        {back}
+                      </p>
+
+                      {/* Back-to-front button */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setFlipped('none'); }}
+                        style={{
+                          marginTop: '20px',
+                          alignSelf: 'center',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          border: '1px solid rgba(255,255,255,0.12)',
+                          backgroundColor: 'transparent',
+                          borderRadius: '50px',
+                          padding: '5px 13px',
+                          color: 'rgba(220,225,248,0.5)',
+                          fontSize: '9.5px',
+                          fontFamily: 'var(--font-body), sans-serif',
+                          fontWeight: 500,
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden>
+                          <path d="M4.5 1v7M1 4.5l3.5-3.5 3.5 3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" transform="rotate(270 4.5 4.5)" />
+                        </svg>
+                        Back
+                      </button>
+                    </div>
+                  </div>
+
+                </motion.div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* ── Mobile fallback: stacked cards ── */}
+        <div
+          className="pain-stack"
+          style={{
+            display: 'none',
+            flexDirection: 'column',
+            gap: '16px',
+            maxWidth: '420px',
+            margin: '0 auto',
+          }}
+        >
+          {PAIN_CARDS.map(({ pos, Icon, title, back }) => (
+            <div
+              key={pos}
+              style={{
+                backgroundColor: '#111423',
+                border: '1px solid rgba(255,255,255,0.07)',
+                borderRadius: '16px',
+                overflow: 'hidden',
+              }}
+            >
+              <div style={{ width: '100%', height: '2px', backgroundColor: 'var(--accent)' }} />
+              <div style={{ padding: '28px 26px 30px', textAlign: 'center' }}>
+                <div style={{ marginBottom: '18px', display: 'flex', justifyContent: 'center' }}>
+                  <Icon />
+                </div>
+                <h3 style={{
+                  fontFamily: 'var(--font-body), sans-serif',
+                  fontSize: '22px',
+                  fontWeight: 700,
+                  letterSpacing: '-0.02em',
+                  lineHeight: 1.1,
+                  color: '#FFFFFF',
+                  marginBottom: '14px',
+                }}>
+                  {title}
+                </h3>
+                <p style={{
+                  fontFamily: 'var(--font-body), sans-serif',
+                  fontSize: '13px',
+                  lineHeight: 1.8,
+                  color: 'rgba(220,225,248,0.72)',
+                }}>
+                  {back}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+      </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .pain-fan { display: none !important; }
+          .pain-stack { display: flex !important; }
+        }
+      `}</style>
+    </section>
+  );
+}
+
+/* ── What You Get at Handoff ──────────────────────────────── */
+const DELIVERABLES = [
+  {
+    number: '01',
+    title: 'Process Map.',
+    body: 'A full diagram of every workflow we built or touched. What triggers it, what it does, where it goes. Not a summary — the actual map.',
+    image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1600&q=80',
+  },
+  {
+    number: '02',
+    title: 'Documented Workflows.',
+    body: 'Step-by-step documentation written for the person who will run it, not the person who built it. No technical jargon. No assumptions.',
+    image: 'https://images.unsplash.com/photo-1456324504439-367cee3b3c32?auto=format&fit=crop&w=1600&q=80',
+  },
+  {
+    number: '03',
+    title: 'Team Walkthrough.',
+    body: 'A live session with the people who will use the system daily. Questions answered, edge cases covered, your team confident before we close the engagement.',
+    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1600&q=80',
+  },
+  {
+    number: '04',
+    title: 'Everything Yours.',
+    body: 'Every credential, every integration, every file. Nothing hosted on our infrastructure. Nothing that stops working if you stop working with us.',
+    image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&w=1600&q=80',
+  },
+];
+
+function DeliverableCard({ item, index }: { item: typeof DELIVERABLES[0]; index: number }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const mouseX = useMotionValue(-300);
+  const mouseY = useMotionValue(-300);
+  const spotX = useTransform(mouseX, v => v - 140);
+  const spotY = useTransform(mouseY, v => v - 140);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const rect = cardRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    mouseX.set(e.clientX - rect.left);
+    mouseY.set(e.clientY - rect.top);
+  }, [mouseX, mouseY]);
+
+  const handleMouseLeave = useCallback(() => {
+    mouseX.set(-300);
+    mouseY.set(-300);
+  }, [mouseX, mouseY]);
+
+  return (
+    <motion.div
+      ref={cardRef as React.RefObject<HTMLDivElement>}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      initial="hidden"
+      whileInView="visible"
+      whileHover="hovered"
+      viewport={{ once: true, amount: 0.2 }}
+      variants={{
+        hidden: { opacity: 0, y: 18 },
+        visible: {
+          opacity: 1, y: 0,
+          transition: { duration: 0.6, ease: EASE, delay: index * 0.09 + 0.1 },
+        },
+        hovered: { opacity: 1, y: 0 },
+      }}
+      style={{
+        position: 'relative',
+        overflow: 'hidden',
+        cursor: 'default',
+        backgroundColor: 'var(--dark-bg)',
+        width: '100%',
+        height: '100%',
+        borderRight: index % 2 === 0 ? '1px solid var(--dark-border)' : 'none',
+        borderBottom: index < 2 ? '1px solid var(--dark-border)' : 'none',
+      }}
+    >
+      {/* Background image — contained within card, fades on hover */}
+      <motion.div
+        variants={{
+          hidden: { opacity: 0 },
+          visible: { opacity: 0 },
+          hovered: { opacity: 1 },
+        }}
+        transition={{ duration: 0.5 }}
+        style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: `url(${item.image})`,
+          backgroundSize: 'cover', backgroundPosition: 'center',
+          filter: 'grayscale(60%) brightness(0.22)',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }}
+      />
+
+      {/* Top accent line — scales in from left on hover */}
+      <motion.div
+        variants={{
+          hidden: { scaleX: 0 },
+          visible: { scaleX: 0 },
+          hovered: { scaleX: 1 },
+        }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        style={{
+          position: 'absolute', top: 0, left: 0, right: 0, height: 1,
+          backgroundColor: 'var(--accent)', transformOrigin: 'left center',
+          pointerEvents: 'none',
+          zIndex: 2,
+        }}
+      />
+
+      {/* Cursor spotlight */}
+      <motion.div
+        style={{
+          position: 'absolute', top: 0, left: 0,
+          x: spotX, y: spotY,
+          width: 280, height: 280,
+          background: 'radial-gradient(circle, rgba(61,82,230,0.11) 0%, transparent 65%)',
+          pointerEvents: 'none', zIndex: 1,
+        }}
+      />
+
+      {/* Card content */}
+      <div style={{
+        position: 'relative', zIndex: 3,
+        height: '100%', padding: '28px 28px 32px',
+        display: 'flex', flexDirection: 'column',
+      }}>
+        {/* Ghost number — top-left, floats above content */}
+        <motion.div
+          variants={{
+            hidden: { color: 'rgba(255,255,255,0.04)' },
+            visible: { color: 'rgba(255,255,255,0.05)' },
+            hovered: { color: 'rgba(61,82,230,0.58)' },
+          }}
+          transition={{ duration: 0.28 }}
+          style={{
+            fontFamily: 'var(--font-mono), monospace',
+            fontSize: 'clamp(52px, 5.5vw, 68px)',
+            fontWeight: 300, letterSpacing: '-0.04em', lineHeight: 1,
+            userSelect: 'none', flexShrink: 0,
+            marginBottom: 'auto',
+          }}
+        >
+          {item.number}
+        </motion.div>
+
+        {/* Title + body — anchored to bottom */}
+        <div style={{ paddingTop: 20 }}>
+          <motion.h3
+            className="font-heading"
+            variants={{
+              hidden: { color: 'rgba(220,225,248,0.72)' },
+              visible: { color: 'rgba(220,225,248,0.72)' },
+              hovered: { color: '#ffffff' },
+            }}
+            transition={{ duration: 0.22 }}
+            style={{
+              fontSize: 'clamp(20px, 2vw, 28px)',
+              fontWeight: 500, letterSpacing: '-0.025em', lineHeight: 1.1,
+              marginBottom: 12,
+            }}
+          >
+            {item.title}
+          </motion.h3>
+
+          <motion.p
+            className="font-body"
+            variants={{
+              hidden: { color: 'rgba(220,225,248,0.62)' },
+              visible: { color: 'rgba(220,225,248,0.62)' },
+              hovered: { color: 'rgba(220,225,248,0.9)' },
+            }}
+            transition={{ duration: 0.22 }}
+            style={{ fontSize: 13, lineHeight: 1.82 }}
+          >
+            {item.body}
+          </motion.p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function HandoffDeliverables() {
+  return (
+    <section
+      id="auto-deliverables"
+      data-section-label="The Deliverables"
+      data-nav-theme="dark"
+      style={{
+        backgroundColor: 'var(--dark-bg)',
+        borderTop: '1px solid var(--dark-border)',
+        minHeight: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '0 32px',
+      }}
+    >
+      <div style={{
+        maxWidth: '1200px', width: '100%', margin: '0 auto',
+        flex: 1, minHeight: 0,
+        display: 'flex', flexDirection: 'column',
+        paddingTop: 52, paddingBottom: 52,
+      }}>
+
+        {/* Header — compact, headline left, subtext right */}
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.5 }}
+          transition={{ duration: 0.65, ease: EASE }}
+          style={{ marginBottom: 32, flexShrink: 0 }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+            <div style={{ width: 28, height: 1, backgroundColor: 'var(--accent)', opacity: 0.7 }} />
+            <span style={{
+              fontFamily: 'var(--font-mono), monospace',
+              fontSize: 10, fontWeight: 500, letterSpacing: '0.22em',
+              textTransform: 'uppercase', color: 'var(--accent)', opacity: 0.8,
+            }}>
+              The Deliverables
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
+            <h2 className="font-heading" style={{
+              fontSize: 'clamp(30px, 3.8vw, 52px)',
+              fontWeight: 500, letterSpacing: '-0.032em',
+              color: 'var(--dark-text)', lineHeight: 1.02,
+            }}>
+              Built to run without us.
+            </h2>
+            <p style={{
+              fontFamily: 'var(--font-body), sans-serif',
+              fontSize: 14, color: 'var(--dark-muted)',
+              lineHeight: 1.7, maxWidth: '340px',
+              textAlign: 'right', flexShrink: 0,
+            }}>
+              Every engagement closes with a complete handoff package.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* 2×2 grid — hairline gaps via bg color bleed-through */}
+        <div
+          className="deliv-grid"
+          style={{
+            flex: 1, minHeight: 0,
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gridTemplateRows: '1fr 1fr',
+            gap: 0,
+          }}
+        >
+          {DELIVERABLES.map((d, i) => (
+            <DeliverableCard key={d.number} item={d} index={i} />
+          ))}
+        </div>
+
+      </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .deliv-grid {
+            grid-template-columns: 1fr !important;
+            grid-template-rows: repeat(4, auto) !important;
+          }
+        }
+      `}</style>
+    </section>
+  );
+}
+
 /* ── Main export ──────────────────────────────────────────── */
 export default function AutomationClient() {
   return (
     <>
       <AutomationHero />
+      <PainCards />
       <AutomationServicesSection />
+      <HandoffDeliverables />
       <TrustBar />
       <CTABand />
     </>

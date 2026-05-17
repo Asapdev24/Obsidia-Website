@@ -9,13 +9,12 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
-import Script from 'next/script';
 import '../globals.css';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
-import CustomCursor from '../components/CustomCursor';
 import SideNav from '../components/ui/SideNav';
 import BackToTop from '../components/ui/BackToTop';
+import CustomCursor from '../components/CustomCursor';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -96,18 +95,17 @@ export default async function LocaleLayout({
     >
       <body>
         <NextIntlClientProvider messages={messages}>
+          <CustomCursor />
           <a href="#main-content" className="skip-to-content">
             Skip to content
           </a>
           <div className="grain-overlay" aria-hidden />
-          <CustomCursor />
           <Navigation />
           <SideNav />
           <BackToTop />
           <main id="main-content">{children}</main>
           <Footer />
         </NextIntlClientProvider>
-        <Script src="http://localhost:8400/live.js" strategy="afterInteractive" />
       </body>
     </html>
   );

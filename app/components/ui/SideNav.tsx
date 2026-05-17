@@ -30,7 +30,6 @@ function SideNavItem({
       <div
         style={{
           display: 'flex', alignItems: 'center', height: '14px',
-          gap: '8px',
         }}
         onMouseEnter={() => setItemHovered(true)}
         onMouseLeave={() => setItemHovered(false)}
@@ -41,6 +40,7 @@ function SideNavItem({
           gridTemplateColumns: navHovered ? '1fr' : '0fr',
           transition: 'grid-template-columns 280ms cubic-bezier(0.22,1,0.36,1)',
           overflow: 'hidden',
+          paddingRight: navHovered ? '8px' : '0px',
         }}>
           <button
             onClick={onClick}
@@ -99,7 +99,7 @@ function SideNavItem({
           style={{
             width: '1px',
             height: '16px',
-            marginRight: '3px',
+            marginRight: '2.5px',
             background: 'rgba(255,255,255,0.22)',
             boxShadow: '1px 0 0 rgba(0,0,0,0.12)',
             flexShrink: 0,
@@ -161,7 +161,6 @@ export default function SideNav() {
   }, [pathname, discoverSections]);
 
   if (sections.length < 2) return null;
-  if (pathname.includes('/services')) return null;
 
   const scrollToSection = (element: HTMLElement) => {
     // Dynamically measure the sticky nav so offset is always exact

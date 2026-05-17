@@ -461,7 +461,7 @@ export default function HomepageServicesHub() {
                 fontSize: 'clamp(34px, 4vw, 52px)',
                 fontWeight: 500,
                 letterSpacing: '-0.025em',
-                color: 'var(--dark-text)',
+                color: 'var(--accent)',
                 lineHeight: 1.1,
               }}
             >

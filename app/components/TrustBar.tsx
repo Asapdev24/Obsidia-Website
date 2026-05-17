@@ -7,37 +7,16 @@ const ICON_SZ = 80;
 const CDN = 'https://cdn.simpleicons.org';
 
 function AppLogo({ slug, alt, href, svgNode }: { slug?: string; alt: string; href: string; svgNode?: React.ReactNode }) {
-  const [hovered, setHovered] = useState(false);
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer noopener"
       aria-label={`Visit ${alt} website`}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textDecoration: 'none',
-        flexShrink: 0,
-        transform: hovered ? 'translateY(-4px) scale(1.08)' : 'translateY(0) scale(1)',
-        transition: 'transform 300ms cubic-bezier(0.22,1,0.36,1)',
-      }}
+      className="tb-logo"
     >
       {svgNode ? (
-        <div style={{
-          width: `${ICON_SZ}px`,
-          height: `${ICON_SZ}px`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#08090E',
-          opacity: hovered ? 1 : 0.55,
-          filter: hovered ? 'none' : 'grayscale(20%)',
-          transition: 'opacity 280ms ease, filter 280ms ease',
-        }}>
+        <div className="tb-media tb-media-svg">
           {svgNode}
         </div>
       ) : (
@@ -47,19 +26,10 @@ function AppLogo({ slug, alt, href, svgNode }: { slug?: string; alt: string; hre
           width={ICON_SZ}
           height={ICON_SZ}
           draggable={false}
-          loading="eager"
+          loading="lazy"
           decoding="async"
           onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = '0'; }}
-          style={{
-            width: `${ICON_SZ}px`,
-            height: `${ICON_SZ}px`,
-            objectFit: 'contain',
-            display: 'block',
-            opacity: hovered ? 1 : 0.55,
-            filter: hovered ? 'none' : 'grayscale(20%)',
-            transition: 'opacity 280ms ease, filter 280ms ease',
-            flexShrink: 0,
-          }}
+          className="tb-media tb-media-img"
         />
       )}
     </a>
@@ -148,7 +118,7 @@ export default function TrustBar() {
           gap={120}
           pauseOnHover
           fadeOut
-          fadeOutColor="var(--bg, #F5F6FF)"
+          fadeOutColor="var(--bg, #FBFBFE)"
           ariaLabel="Integration partners"
         />
       </div>

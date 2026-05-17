@@ -105,7 +105,7 @@ export default async function NotFound() {
           style={{
             fontSize: '15px',
             lineHeight: 1.8,
-            color: 'rgba(220,225,248,0.4)',
+            color: 'rgba(220,225,248,0.62)',
             maxWidth: '400px',
             marginBottom: '48px',
           }}
@@ -145,7 +145,7 @@ export default async function NotFound() {
               fontWeight: 500,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              color: 'rgba(220,225,248,0.5)',
+              color: 'rgba(220,225,248,0.66)',
               textDecoration: 'none',
               borderBottom: '1px solid rgba(255,255,255,0.12)',
               paddingBottom: '3px',

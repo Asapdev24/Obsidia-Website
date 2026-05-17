@@ -212,14 +212,14 @@ export default function HomeServicesSignpost() {
           align-items: flex-end; margin-bottom: 56px;
         }
         .svc3-h2 {
-          font-size: clamp(46px, 5.5vw, 76px);
+          font-size: clamp(52px, 7vw, 96px);
           font-weight: 500;
-          letter-spacing: -0.04em;
-          line-height: 0.96;
-          color: var(--text);
+          letter-spacing: -0.045em;
+          line-height: 0.92;
+          color: #0D1147;
           margin-bottom: 14px;
         }
-        .svc3-sub { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+        .svc3-sub { font-size: 14px; color: var(--accent); line-height: 1.6; }
         .svc3-link {
           font-family: var(--font-body), sans-serif; font-size: 11px; font-weight: 600;
           letter-spacing: 0.1em; text-transform: uppercase; color: #fff;
@@ -392,7 +392,12 @@ export default function HomeServicesSignpost() {
         >
           <div>
             <h2 className="font-heading svc3-h2">{t('sectionLabel')}</h2>
-            <p className="font-body svc3-sub">{t('tagline')}</p>
+            <p className="font-body svc3-sub" style={{ color: 'var(--accent)' }}>
+              <span style={{ color: '#0D1147' }}>Three</span>
+              {' '}Disciplines.{' '}
+              <span style={{ color: '#0D1147' }}>One</span>
+              {' '}Partner.
+            </p>
           </div>
           <Link href="/services" className="svc3-link">
             {t('allServices')} <ArrowRight size={10} />

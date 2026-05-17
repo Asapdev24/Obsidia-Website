@@ -197,29 +197,29 @@ export default function ValuePillars() {
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', position: 'relative', zIndex: 1 }}>
 
-        {/* Compact header */}
+        {/* Header — big heading first, section label below */}
         <div style={{ marginBottom: '40px' }}>
-          <span style={{
-            fontFamily: 'var(--font-mono), monospace',
-            fontSize: '10px', fontWeight: 500, letterSpacing: '0.22em',
-            textTransform: 'uppercase', color: 'var(--accent)',
-            opacity: 0.6, display: 'block', marginBottom: '18px',
+          <h2 className="font-heading" style={{
+            fontSize: 'clamp(52px, 7vw, 96px)',
+            fontWeight: 500, letterSpacing: '-0.045em',
+            lineHeight: 0.92, color: '#0D1147',
+            marginBottom: '18px',
           }}>
-            {t('label')}
-          </span>
+            {t('headline1')}
+            <br />
+            <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>{t('headlineAccent')}</em>
+          </h2>
 
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-            <h2 className="font-heading" style={{
-              fontSize: 'clamp(36px, 4.5vw, 62px)',
-              fontWeight: 500, letterSpacing: '-0.03em',
-              lineHeight: 1.08, color: '#0D1147',
-            }}>
-              {t('headline1')}
-              <br />
-              <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>{t('headlineAccent')}</em>
-            </h2>
-
-          </div>
+          <p className="font-body" style={{
+            fontSize: '14px', lineHeight: 1.6,
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+            margin: 0,
+          }}>
+            <span style={{ color: '#0D1147' }}>Obsidia</span>
+            {' '}
+            <span style={{ color: 'var(--accent)' }}>Standards</span>
+          </p>
         </div>
 
         {/* Separator */}

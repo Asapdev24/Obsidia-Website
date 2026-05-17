@@ -32,18 +32,16 @@ export default function Footer() {
             href="/"
             className="footer-brand"
             style={{
-              fontFamily: 'var(--font-heading), Georgia, serif',
-              fontSize: '28px',
-              fontWeight: 600,
-              letterSpacing: '-0.02em',
-              color: 'var(--dark-text)',
-              textDecoration: 'none',
-              display: 'block',
-              lineHeight: 1,
+              display: 'inline-block',
               marginBottom: '16px',
+              textDecoration: 'none',
             }}
           >
-            Obsidia
+            <img
+              src="/logos/obsidia_web_black_logo.jpeg"
+              alt="Obsidia"
+              style={{ height: '64px', width: 'auto', display: 'block' }}
+            />
           </Link>
           <p
             style={{
@@ -60,7 +58,7 @@ export default function Footer() {
 
         {/* Navigation */}
         <div>
-          <p className="footer-col-label">{t('colCompany')}</p>
+          <Link href="/approach" className="footer-col-label footer-col-link" style={{ textAlign: 'left' }}>{t('colCompany')}</Link>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {[
               { label: t('linkServices'),  href: '/services'  },
@@ -78,7 +76,7 @@ export default function Footer() {
 
         {/* Services */}
         <div>
-          <p className="footer-col-label">{t('colServices')}</p>
+          <Link href="/services" className="footer-col-label footer-col-link" style={{ textAlign: 'left' }}>{t('colServices')}</Link>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {[
               { label: t('linkAutomation'), href: '/services/automation' },
@@ -96,16 +94,38 @@ export default function Footer() {
 
         {/* Contact Us */}
         <div>
-          <p className="footer-col-label">{t('colContact')}</p>
+          <Link href="/contact" className="footer-col-label footer-col-link" style={{ textAlign: 'left' }}>{t('colContact')}</Link>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <li>
               <a
-                href="https://linkedin.com"
-                className="footer-link"
+                href="https://www.linkedin.com/company/obsidia-space/"
+                className="footer-link footer-social-link"
                 target="_blank"
                 rel="noopener noreferrer"
               >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0 }}>
+                  <path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" />
+                  <path d="M8 11l0 5" />
+                  <path d="M8 8l0 .01" />
+                  <path d="M12 16l0 -5" />
+                  <path d="M16 16v-3a2 2 0 0 0 -4 0" />
+                </svg>
                 {t('linkLinkedIn')}
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://www.instagram.com/obsidiaspace/"
+                className="footer-link footer-social-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0 }}>
+                  <path d="M4 4m0 4a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4z" />
+                  <path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+                  <path d="M16.5 7.5l0 .01" />
+                </svg>
+                Instagram
               </a>
             </li>
             <li>
@@ -157,14 +177,21 @@ export default function Footer() {
 
       <style>{`
         .footer-col-label {
+          display: block;
           font-family: var(--font-body), sans-serif;
-          font-size: 10px;
-          font-weight: 500;
-          letter-spacing: 0.16em;
+          font-size: 13px;
+          font-weight: 700;
+          letter-spacing: 0.1em;
           text-transform: uppercase;
           color: var(--accent);
           margin-bottom: 20px;
+          text-align: center;
         }
+        a.footer-col-label {
+          text-decoration: none;
+          transition: opacity 200ms ease;
+        }
+        a.footer-col-label:hover { opacity: 0.72; }
         .footer-link {
           font-family: var(--font-body), sans-serif;
           font-size: 13px;
@@ -173,6 +200,11 @@ export default function Footer() {
           transition: color 200ms ease;
         }
         .footer-link:hover { color: var(--dark-text); }
+        .footer-social-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
         .footer-legal-link {
           font-family: var(--font-body), sans-serif;
           font-size: 11px;
