@@ -5,8 +5,7 @@ import {
   JetBrains_Mono,
 } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
-import { notFound } from 'next/navigation';
+import { getMessages, setRequestLocale } from 'next-intl/server';
 import { routing } from '@/i18n/routing';
 import '../globals.css';
 import Navigation from '../components/Navigation';
@@ -39,7 +38,6 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 });
 
-
 export const viewport: Viewport = {
   themeColor: '#06080F',
 };
@@ -66,6 +64,10 @@ export const metadata: Metadata = {
   },
 };
 
+export function generateStaticParams() {
+  return routing.locales.map(locale => ({ locale }));
+}
+
 export default async function LocaleLayout({
   children,
   params,
@@ -74,10 +76,7 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-
-  if (!routing.locales.includes(locale as 'en')) {
-    notFound();
-  }
+  setRequestLocale(locale);
 
   const messages = await getMessages();
 
@@ -89,19 +88,19 @@ export default async function LocaleLayout({
     >
       <body>
         <StyledComponentsRegistry>
-        <NextIntlClientProvider messages={messages}>
-          <PageLoader />
-          <CustomCursor />
-          <a href="#main-content" className="skip-to-content">
-            Skip to content
-          </a>
-          <div className="grain-overlay" aria-hidden />
-          <Navigation />
-          <SideNav />
-          <BackToTop />
-          <main id="main-content">{children}</main>
-          <Footer />
-        </NextIntlClientProvider>
+          <NextIntlClientProvider messages={messages}>
+            <PageLoader />
+            <CustomCursor />
+            <a href="#main-content" className="skip-to-content">
+              Skip to content
+            </a>
+            <div className="grain-overlay" aria-hidden />
+            <Navigation />
+            <SideNav />
+            <BackToTop />
+            <main id="main-content">{children}</main>
+            <Footer />
+          </NextIntlClientProvider>
         </StyledComponentsRegistry>
       </body>
     </html>

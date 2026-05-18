@@ -1,10 +1,7 @@
-import { getTranslations } from 'next-intl/server';
-import { Link } from '@/i18n/navigation';
+import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
-export default async function NotFound() {
-  const t = await getTranslations('notFound');
-
+export default function NotFound() {
   return (
     <section
       style={{
@@ -81,7 +78,7 @@ export default async function NotFound() {
             marginBottom: '28px',
           }}
         >
-          {t('label')}
+          Error 404
         </span>
 
         <h1
@@ -95,9 +92,9 @@ export default async function NotFound() {
             marginBottom: '24px',
           }}
         >
-          {t('headline1')}
+          This page does not
           <br />
-          <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>{t('headlineAccent')}</em>
+          <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>exist.</em>
         </h1>
 
         <p
@@ -110,7 +107,7 @@ export default async function NotFound() {
             marginBottom: '48px',
           }}
         >
-          {t('body')}
+          The page you are looking for has been moved, deleted, or never existed.
         </p>
 
         <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -131,7 +128,7 @@ export default async function NotFound() {
               padding: '14px 28px',
             }}
           >
-            {t('backHome')} <ArrowRight size={13} />
+            Back to home <ArrowRight size={13} />
           </Link>
 
           <Link
@@ -151,7 +148,7 @@ export default async function NotFound() {
               paddingBottom: '3px',
             }}
           >
-            {t('startProject')} <ArrowRight size={12} />
+            Start a project <ArrowRight size={12} />
           </Link>
         </div>
       </div>
