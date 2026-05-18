@@ -33,7 +33,11 @@ function EmailChooser({ email }: { email: string }) {
   const t = useTranslations('contact');
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const platform = detectPlatform();
+  const [platform, setPlatform] = useState<'ios' | 'mac' | 'android' | 'other'>('other');
+
+  useEffect(() => {
+    setPlatform(detectPlatform());
+  }, []);
 
   useEffect(() => {
     if (!open) return;
