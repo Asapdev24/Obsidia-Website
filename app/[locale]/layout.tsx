@@ -3,7 +3,6 @@ import {
   Cormorant_Garamond,
   DM_Sans,
   JetBrains_Mono,
-  Tajawal,
 } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
@@ -40,12 +39,6 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 });
 
-const tajawal = Tajawal({
-  subsets: ['arabic'],
-  weight: ['300', '400', '500', '700'],
-  variable: '--font-tajawal',
-  display: 'swap',
-});
 
 export const viewport: Viewport = {
   themeColor: '#06080F',
@@ -82,18 +75,17 @@ export default async function LocaleLayout({
 }) {
   const { locale } = await params;
 
-  if (!routing.locales.includes(locale as 'en' | 'ar')) {
+  if (!routing.locales.includes(locale as 'en')) {
     notFound();
   }
 
   const messages = await getMessages();
-  const isArabic = locale === 'ar';
 
   return (
     <html
       lang={locale}
-      dir={isArabic ? 'rtl' : 'ltr'}
-      className={`${cormorant.variable} ${dmSans.variable} ${jetbrainsMono.variable} ${tajawal.variable}`}
+      dir="ltr"
+      className={`${cormorant.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}
     >
       <body>
         <StyledComponentsRegistry>
