@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
-import { Link } from '@/i18n/navigation';
+import Link from 'next/link';
 import { ArrowRight, Check } from 'lucide-react';
 import CTABand from '../../components/CTABand';
 import MagneticButton from '../../components/MagneticButton';

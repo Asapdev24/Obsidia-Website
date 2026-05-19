@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
+import Link from 'next/link';
 
 export default function Footer() {
   const t = useTranslations('footer');
@@ -40,7 +40,7 @@ export default function Footer() {
             <img
               src="/logos/obsidia_web_black_logo.png"
               alt="Obsidia"
-              style={{ height: '64px', width: 'auto', display: 'block' }}
+              style={{ height: '96px', width: 'auto', display: 'block' }}
             />
           </Link>
           <p

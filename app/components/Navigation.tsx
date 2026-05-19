@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
-import { Link, usePathname } from '@/i18n/navigation';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ArrowUpRight, ArrowRight, ChevronDown } from 'lucide-react';
 import BorderGlow from './ui/BorderGlow';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -928,7 +929,7 @@ export default function Navigation() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            height: scrolled ? '58px' : '66px',
+            height: scrolled ? '68px' : '78px',
             backgroundColor: scrolled ? 'rgba(6,8,15,0.72)' : 'rgba(6,8,15,0.42)',
             backdropFilter: 'blur(32px) saturate(2.2)',
             WebkitBackdropFilter: 'blur(32px) saturate(2.2)',
@@ -947,7 +948,7 @@ export default function Navigation() {
             aria-label="Obsidia home"
             style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}
           >
-            <div style={{ position: 'relative', height: '64px', width: '280px' }}>
+            <div style={{ position: 'relative', height: '76px', width: '320px' }}>
               <img
                 src="/logos/obsidia_web_black_logo.png"
                 alt="Obsidia"

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { Link } from '@/i18n/navigation';
+import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import GlareHover from './GlareHover';
 

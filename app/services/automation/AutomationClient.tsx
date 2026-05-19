@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, type ReactElement } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, useInView } from 'framer-motion';
-import { Link } from '@/i18n/navigation';
+import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import WorkflowGraph from '../../components/WorkflowGraph';
