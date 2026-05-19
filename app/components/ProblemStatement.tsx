@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -278,12 +277,10 @@ function FindingCard({
    Section
 ────────────────────────────────────────────── */
 export default function ProblemStatement() {
-  const t = useTranslations('problem');
-
   const FINDINGS = [
-    { code: t('d01code'), statement: t('d01statement'), note: t('d01note') },
-    { code: t('d02code'), statement: t('d02statement'), note: t('d02note') },
-    { code: t('d03code'), statement: t('d03statement'), note: t('d03note') },
+    { code: 'D-01', statement: 'Your website exists. It does not work for you.',            note: 'A site that does not convert visitors into leads is a cost with a logo on it.' },
+    { code: 'D-02', statement: 'Your team is doing work that should not require a human.',  note: 'Every hour spent on approvals and data entry is an hour your business is not growing.' },
+    { code: 'D-03', statement: 'You are managing your operation through workarounds.',       note: 'Spreadsheets, WhatsApp threads, manual handoffs. Built to cope, not to scale.' },
   ];
 
   return (
@@ -323,7 +320,7 @@ export default function ProblemStatement() {
                 letterSpacing: '-0.045em', lineHeight: 0.92,
                 color: '#0D1147', margin: 0,
               }}>
-                {t('label')}
+                The Diagnosis
               </h2>
               <p style={{
                 fontFamily: 'var(--font-body), sans-serif',

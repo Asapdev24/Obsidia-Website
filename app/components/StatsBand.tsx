@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
 
 type Finding = { stat: string; unit: string; claim: string; detail: string };
 
@@ -111,14 +110,13 @@ function FindingItem({ f, index, active }: { f: Finding; index: number; active: 
 }
 
 export default function StatsBand() {
-  const t = useTranslations('stats');
   const ref = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
 
   const FINDINGS: Finding[] = [
-    { stat: t('stat0'), unit: t('unit0'), claim: t('claim0'), detail: t('detail0') },
-    { stat: t('stat1'), unit: t('unit1'), claim: t('claim1'), detail: t('detail1') },
-    { stat: t('stat2'), unit: t('unit2'), claim: t('claim2'), detail: t('detail2') },
+    { stat: '6h+', unit: 'saved per team member / week', claim: 'Automation that runs while you sleep.', detail: 'We map your highest-volume manual tasks and remove the human from the loop — without disrupting the processes your team already knows.' },
+    { stat: '14d', unit: 'average time to first live workflow', claim: 'From first call to running in production.', detail: 'Most automation builds are scoped, built, and deployed in two weeks. No months-long retainers before you see results.' },
+    { stat: '97%', unit: 'client retention rate', claim: 'We build things that keep working.', detail: 'Systems are documented, handed off, and supported. Clients come back because the work holds — not because we made them dependent.' },
   ];
 
   useEffect(() => {

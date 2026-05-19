@@ -3,7 +3,6 @@
 import { useRef, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import {
   motion,
   useMotionValue,
@@ -141,11 +140,10 @@ function ServiceCard({ s, idx }: { s: Svc; idx: number }) {
 }
 
 export default function HomeServicesSignpost() {
-  const t = useTranslations('homeServices');
   const SERVICES: Svc[] = [
-    { n: '01', title: t('automationTitle'), desc: t('automationDesc'), href: '/services/automation', time: t('automationTime') },
-    { n: '02', title: t('websitesTitle'),   desc: t('websitesDesc'),   href: '/services/websites',   time: t('websitesTime')   },
-    { n: '03', title: t('appsTitle'),       desc: t('appsDesc'),       href: '/services/apps',       time: t('appsTime')       },
+    { n: '01', title: 'Workflow\nAutomation',    desc: 'Replace manual processes with digital workflows that run themselves. Approvals, data sync, reporting.', href: '/services/automation', time: 'Built to operate without us.' },
+    { n: '02', title: 'Website\nDevelopment',    desc: 'Sites built to convert visitors into leads. Engineered for performance.',                               href: '/services/websites',   time: 'Yours to run from day one.' },
+    { n: '03', title: 'Application\nDevelopment',desc: 'Custom tools for exactly how your team operates. Internal portals, dashboards, integrations.',          href: '/services/apps',       time: 'Fully documented at handoff.' },
   ];
 
   return (
@@ -377,7 +375,7 @@ export default function HomeServicesSignpost() {
           transition={{ duration: 0.62, ease: EASE, delay: 0.28 }}
         >
           <div>
-            <h2 className="font-heading svc3-h2">{t('sectionLabel')}</h2>
+            <h2 className="font-heading svc3-h2">What We Build</h2>
             <p className="font-body svc3-sub" style={{ color: 'var(--accent)' }}>
               <span style={{ color: '#0D1147' }}>Three</span>
               {' '}Disciplines.{' '}
@@ -386,7 +384,7 @@ export default function HomeServicesSignpost() {
             </p>
           </div>
           <Link href="/services" className="svc3-link">
-            {t('allServices')} <ArrowRight size={10} />
+            All Services <ArrowRight size={10} />
           </Link>
         </motion.div>
 

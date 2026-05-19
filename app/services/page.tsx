@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import ServicesClient from '../../services/ServicesClient';
+import ServicesClient from './ServicesClient';
 
 export const metadata: Metadata = {
   title: 'Services',

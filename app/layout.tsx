@@ -6,6 +6,13 @@ import {
   JetBrains_Mono,
 } from 'next/font/google';
 import './globals.css';
+import Navigation from './components/Navigation';
+import Footer from './components/Footer';
+import SideNav from './components/ui/SideNav';
+import BackToTop from './components/ui/BackToTop';
+import CustomCursor from './components/CustomCursor';
+import StyledComponentsRegistry from './lib/StyledComponentsRegistry';
+import PageLoader from './components/ui/PageLoader';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -62,7 +69,21 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       dir="ltr"
       className={`${cormorant.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <StyledComponentsRegistry>
+          <PageLoader />
+          <CustomCursor />
+          <a href="#main-content" className="skip-to-content">
+            Skip to content
+          </a>
+          <div className="grain-overlay" aria-hidden />
+          <Navigation />
+          <SideNav />
+          <BackToTop />
+          <main id="main-content">{children}</main>
+          <Footer />
+        </StyledComponentsRegistry>
+      </body>
     </html>
   );
 }

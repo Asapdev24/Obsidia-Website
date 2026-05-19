@@ -4,7 +4,6 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
@@ -339,21 +338,20 @@ function PhaseNode({ number }: { number: string }) {
 
 /* ── Page ─────────────────────────────────────────────────── */
 export default function ApproachClient() {
-  const t = useTranslations('approach');
   const [lineDrawn, setLineDrawn] = useState(false);
   const scrollDir = useScrollDirection();
 
   const PHASES: Phase[] = [
-    { number: '01', name: t('phase01name'), id: 'phase-audit',   descriptor: t('phase01descriptor'), deliverables: [t('phase01d0'), t('phase01d1'), t('phase01d2')], body: t('phase01body'), image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80' },
-    { number: '02', name: t('phase02name'), id: 'phase-design',  descriptor: t('phase02descriptor'), deliverables: [t('phase02d0'), t('phase02d1'), t('phase02d2')], body: t('phase02body'), image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=1200&q=80' },
-    { number: '03', name: t('phase03name'), id: 'phase-build',   descriptor: t('phase03descriptor'), deliverables: [t('phase03d0'), t('phase03d1'), t('phase03d2')], body: t('phase03body'), image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80' },
-    { number: '04', name: t('phase04name'), id: 'phase-handoff', descriptor: t('phase04descriptor'), deliverables: [t('phase04d0'), t('phase04d1'), t('phase04d2')], body: t('phase04body'), image: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=1200&q=80' },
+    { number: '01', name: 'Audit',   id: 'phase-audit',   descriptor: 'Map every manual step before we design anything.',         deliverables: ['Process map', 'ROI ranking', 'Automation scope'],             body: 'We find where your time actually goes, rank the manual tasks bleeding the most hours, and prioritize those first.',                                                                              image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80' },
+    { number: '02', name: 'Design',  id: 'phase-design',  descriptor: 'Full logic blueprint, reviewed and signed off by you.',     deliverables: ['Logic blueprint', 'Error handling spec', 'Client sign-off'], body: 'Every decision point and branch condition mapped and reviewed with you line by line before build begins.',                                                                                    image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=1200&q=80' },
+    { number: '03', name: 'Build',   id: 'phase-build',   descriptor: 'Staged build, tested against real data and edge cases.',    deliverables: ['Staging build', 'Test log', 'Full documentation'],           body: 'Every workflow is tested against real-world scenarios. Edge cases get caught in staging, not in your live operation.',                                                                         image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80' },
+    { number: '04', name: 'Handoff', id: 'phase-handoff', descriptor: 'Deployed with your team present. 30 days included.',        deliverables: ['Production deploy', 'Team walkthrough', '30-day support'],   body: 'Deployed with your team present. Full documentation, admin access, and 30 days of support included.',                                                                                       image: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=1200&q=80' },
   ];
 
   const PRINCIPLES: Principle[] = [
-    { number: '01', title: t('p01title'), body: t('p01body'), image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1600&q=80' },
-    { number: '02', title: t('p02title'), body: t('p02body'), image: 'https://images.unsplash.com/photo-1521737852567-6949f3f9f2b5?auto=format&fit=crop&w=1600&q=80' },
-    { number: '03', title: t('p03title'), body: t('p03body'), image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1600&q=80' },
+    { number: '01', title: 'We audit before we build.',  body: 'Every project starts with a process map. We never design automation for a workflow we have not observed ourselves. The brief is never complete until we have seen the work.',                                  image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1600&q=80' },
+    { number: '02', title: 'We build to hand off.',      body: 'You should be able to run what we build without us present. Full documentation and a team walkthrough are required deliverables on every engagement, without exception.',                                     image: 'https://images.unsplash.com/photo-1521737852567-6949f3f9f2b5?auto=format&fit=crop&w=1600&q=80' },
+    { number: '03', title: 'We measure the outcome.',    body: 'Every automation has a defined success metric agreed before build begins. If we cannot measure it, we have not scoped it correctly.',                                                                          image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1600&q=80' },
   ];
 
   useEffect(() => {
@@ -451,7 +449,7 @@ export default function ApproachClient() {
               fontSize: 11, fontWeight: 500, letterSpacing: '0.22em',
               textTransform: 'uppercase', color: 'var(--accent)',
             }}>
-              {t('heroLabel')}
+              Obsidia / Approach
             </span>
           </motion.div>
 
@@ -564,11 +562,11 @@ export default function ApproachClient() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
               <div style={{ width: 28, height: 1, backgroundColor: 'var(--accent)' }} />
-              <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: 10, fontWeight: 500, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--accent)' }}>{t('processLabel')}</span>
+              <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: 10, fontWeight: 500, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--accent)' }}>The Process</span>
             </div>
             <h2 className="font-heading" style={{ fontSize: 'clamp(42px, 5.8vw, 78px)', fontWeight: 500, letterSpacing: '-0.038em', color: 'var(--text)', lineHeight: 0.97, marginBottom: 24 }}>
-              {t('processHeadline')}<br />
-              <em style={{ fontStyle: 'italic', color: 'var(--accent)', fontWeight: 400 }}>{t('processHeadlineAccent')}</em>
+              Four phases.<br />
+              <em style={{ fontStyle: 'italic', color: 'var(--accent)', fontWeight: 400 }}>Every time.</em>
             </h2>
             <p className="font-body" style={{ fontSize: 15, lineHeight: 1.8, color: 'var(--text-secondary)', maxWidth: '400px', marginTop: 8 }}>
               Every engagement runs through the same four phases, in the same order, without exception.
@@ -660,7 +658,7 @@ export default function ApproachClient() {
                 fontSize: 10, fontWeight: 500, letterSpacing: '0.22em',
                 textTransform: 'uppercase', color: 'var(--accent)', opacity: 0.8,
               }}>
-                {t('principlesLabel')}
+                Principles
               </span>
             </div>
             <h2 className="font-heading" style={{
@@ -668,7 +666,7 @@ export default function ApproachClient() {
               fontWeight: 500, letterSpacing: '-0.032em',
               color: 'var(--dark-text)', lineHeight: 1.02, marginBottom: 14,
             }}>
-              {t('principlesHeadline')}
+              The standards we hold ourselves to.
             </h2>
             <p style={{
               fontFamily: 'var(--font-body), sans-serif',
@@ -841,7 +839,7 @@ export default function ApproachClient() {
                     fontSize: 10, fontWeight: 500, letterSpacing: '0.22em',
                     textTransform: 'uppercase', color: 'var(--accent)', opacity: 0.7,
                   }}>
-                    {t('ctaLabel')}
+                    Start a Project
                   </span>
                 </div>
 
@@ -868,7 +866,7 @@ export default function ApproachClient() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'flex-start' }}>
                   <Link href="/contact" className="approach-cta-btn">
-                    {t('ctaButton')} <ArrowRight size={14} />
+                    Start a Project <ArrowRight size={14} />
                   </Link>
                 </div>
               </div>

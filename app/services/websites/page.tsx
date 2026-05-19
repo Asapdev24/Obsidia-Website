@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import WebsitesClient from '../../../services/websites/WebsitesClient';
+import WebsitesClient from './WebsitesClient';
 
 export const metadata: Metadata = { title: 'Website Development' };
 

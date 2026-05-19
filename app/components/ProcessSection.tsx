@@ -1,7 +1,6 @@
 ﻿'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
 
 const ACCENT     = 'var(--accent)';
 const LINE_COLOR = '#E5E5E3';
@@ -153,27 +152,26 @@ export default function ProcessSection({
   stats?:    PSStat[];
   variant?:  'default' | 'pipeline';
 } = {}) {
-  const t = useTranslations('process');
   const ref = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
 
   const defaultSteps: PSStep[] = [
-    { number: '01', title: t('defaultStep01title'), detail: t('defaultStep01detail'), deliverable: t('defaultStep01deliverable') },
-    { number: '02', title: t('defaultStep02title'), detail: t('defaultStep02detail'), deliverable: t('defaultStep02deliverable') },
-    { number: '03', title: t('defaultStep03title'), detail: t('defaultStep03detail'), deliverable: t('defaultStep03deliverable') },
-    { number: '04', title: t('defaultStep04title'), detail: t('defaultStep04detail'), deliverable: t('defaultStep04deliverable') },
+    { number: '01', title: 'Audit', detail: 'We map your current processes, identify what is costing you time and money, and deliver a clear brief before we build anything.', deliverable: 'Process audit & scope document' },
+    { number: '02', title: 'Design', detail: 'We design the solution architecture and present it for your sign-off. Nothing is built until the structure is agreed.', deliverable: 'Signed-off solution design' },
+    { number: '03', title: 'Build', detail: 'Development against a staging environment with regular reviews. You see progress throughout — no surprises at handoff.', deliverable: 'Tested, documented build' },
+    { number: '04', title: 'Handoff', detail: 'Deployment, training, full documentation, and 30 days of post-launch support. Your team owns the outcome from day one.', deliverable: 'Full handover with 30-day support' },
   ];
 
   const defaultStats: PSStat[] = [
-    { value: t('defaultStat0value'), label: t('defaultStat0label') },
-    { value: t('defaultStat1value'), label: t('defaultStat1label') },
-    { value: t('defaultStat2value'), label: t('defaultStat2label') },
+    { value: '2–4 wks', label: 'Typical delivery window' },
+    { value: '30 days', label: 'Post-launch support included' },
+    { value: '100%', label: 'Documented and handed off' },
   ];
 
-  const resolvedHeadline = headline ?? t('defaultHeadline');
+  const resolvedHeadline = headline ?? 'How we work.';
   const resolvedSteps = steps ?? defaultSteps;
   const resolvedStats = stats ?? defaultStats;
-  const deliverableLabel = t('deliverableLabel');
+  const deliverableLabel = 'Deliverable';
 
   useEffect(() => {
     const el = ref.current;
@@ -197,7 +195,7 @@ export default function ProcessSection({
           transform:  active ? 'translateY(0)' : 'translateY(18px)',
           transition: 'opacity 700ms ease, transform 700ms ease',
         }}>
-          <div className="section-label" style={{ marginBottom: '20px' }}>{t('label')}</div>
+          <div className="section-label" style={{ marginBottom: '20px' }}>Process</div>
           <h2 className="font-heading" style={{
             fontSize:      'clamp(36px, 4vw, 56px)',
             fontWeight:    500, letterSpacing: '-0.025em',

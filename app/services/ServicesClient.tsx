@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import CTABand from '../components/CTABand';
 import { motion } from 'framer-motion';
 
@@ -31,7 +30,6 @@ function TriptychPanel({
   onLeave: () => void;
   vis: boolean;
 }) {
-  const t = useTranslations('services');
   const isActive  = activePanel === index;
   const isDimmed  = activePanel !== null && !isActive;
 
@@ -172,7 +170,7 @@ function TriptychPanel({
               letterSpacing: '0.14em', textTransform: 'uppercase',
               color: 'var(--accent)',
             }}>
-              {t('exploreLabel')}
+              Explore
             </span>
             <ArrowRight size={10} color="var(--accent)" />
           </div>
@@ -362,7 +360,6 @@ function ServiceSection({
   service: ServiceItem;
   index: number;
 }) {
-  const t = useTranslations('services');
   const isReversed = index % 2 === 1;
 
   return (
@@ -470,7 +467,7 @@ function ServiceSection({
               el.style.color = 'var(--dark-text)';
             }}
           >
-            {t('exploreLabel')} {service.title} <ArrowRight size={12} />
+            Explore {service.title} <ArrowRight size={12} />
           </Link>
         </motion.div>
 
@@ -498,33 +495,31 @@ function ServiceSection({
 
 /* ── Main export ──────────────────────────────────────────── */
 export default function ServicesClient() {
-  const t = useTranslations('services');
-
   const SERVICES: ServiceItem[] = [
     {
-      number: t('automationNumber'), title: t('automationTitle'), tagline: t('automationTagline'),
-      summary: t('automationSummary'),
+      number: '01', title: 'Workflow Automation', tagline: 'Replace manual processes with self-executing digital workflows.',
+      summary: 'We replace the manual, repetitive processes your team runs every day with digital workflows that execute themselves — approval chains, data syncs, reporting pipelines, and custom operations built to your exact specification.',
       href: '/services/automation',
       image: '/auto_service_photo.png',
       imgPosition: 'left center',
       bgImage: '/main_services_page_hero.jpg',
-      panel1: t('automationPanel1'), panel2: t('automationPanel2'),
+      panel1: 'Automate', panel2: 'the routine.',
     },
     {
-      number: t('websitesNumber'), title: t('websitesTitle'), tagline: t('websitesTagline'),
-      summary: t('websitesSummary'),
+      number: '02', title: 'Website Development', tagline: 'Sites built to convert, not just to exist.',
+      summary: 'We build websites that do real work: landing pages that convert, corporate sites that establish credibility, and web applications that users actually come back to. Fast, precise, and built to last.',
       href: '/services/websites',
       image: '/web_dev_service_photo.png',
       bgImage: '/main_services_page_hero.jpg',
-      panel1: t('websitesPanel1'), panel2: t('websitesPanel2'),
+      panel1: 'Build sites', panel2: 'that convert.',
     },
     {
-      number: t('appsNumber'), title: t('appsTitle'), tagline: t('appsTagline'),
-      summary: t('appsSummary'),
+      number: '03', title: 'Application Development', tagline: 'Software built for how your team actually operates.',
+      summary: 'We build the software your team actually needs — mobile apps, internal tools, client portals, and dashboards designed around how your business works, not how off-the-shelf software wants it to work.',
       href: '/services/apps',
       image: '/app_dev_service_photo.png',
       bgImage: '/main_services_page_hero.jpg',
-      panel1: t('appsPanel1'), panel2: t('appsPanel2'),
+      panel1: 'Software', panel2: 'to your spec.',
     },
   ];
 

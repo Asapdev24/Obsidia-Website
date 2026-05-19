@@ -1,10 +1,8 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
 export default function Footer() {
-  const t = useTranslations('footer');
   const year = new Date().getFullYear();
 
   return (
@@ -52,18 +50,18 @@ export default function Footer() {
               maxWidth: '260px',
             }}
           >
-            {t('tagline')}
+            Workflow automations, websites, and applications. Built to spec, built to outlast the engagement.
           </p>
         </div>
 
         {/* Navigation */}
         <div>
-          <Link href="/approach" className="footer-col-label footer-col-link" style={{ textAlign: 'left' }}>{t('colCompany')}</Link>
+          <Link href="/approach" className="footer-col-label footer-col-link" style={{ textAlign: 'left' }}>Company</Link>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {[
-              { label: t('linkServices'),  href: '/services'  },
-              { label: t('linkApproach'),  href: '/approach'  },
-              { label: t('linkContact'),   href: '/contact'   },
+              { label: 'Services',  href: '/services'  },
+              { label: 'Approach',  href: '/approach'  },
+              { label: 'Contact',   href: '/contact'   },
             ].map(({ label, href }) => (
               <li key={href}>
                 <Link href={href} className="footer-link">
@@ -76,12 +74,12 @@ export default function Footer() {
 
         {/* Services */}
         <div>
-          <Link href="/services" className="footer-col-label footer-col-link" style={{ textAlign: 'left' }}>{t('colServices')}</Link>
+          <Link href="/services" className="footer-col-label footer-col-link" style={{ textAlign: 'left' }}>Services</Link>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {[
-              { label: t('linkAutomation'), href: '/services/automation' },
-              { label: t('linkWebsites'),   href: '/services/websites'   },
-              { label: t('linkApps'),       href: '/services/apps'       },
+              { label: 'Workflow Automation',    href: '/services/automation' },
+              { label: 'Website Development',    href: '/services/websites'   },
+              { label: 'Application Development',href: '/services/apps'       },
             ].map(({ label, href }) => (
               <li key={href}>
                 <Link href={href} className="footer-link">
@@ -94,7 +92,7 @@ export default function Footer() {
 
         {/* Contact Us */}
         <div>
-          <Link href="/contact" className="footer-col-label footer-col-link" style={{ textAlign: 'left' }}>{t('colContact')}</Link>
+          <Link href="/contact" className="footer-col-label footer-col-link" style={{ textAlign: 'left' }}>Contact Us</Link>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <li>
               <a
@@ -110,7 +108,7 @@ export default function Footer() {
                   <path d="M12 16l0 -5" />
                   <path d="M16 16v-3a2 2 0 0 0 -4 0" />
                 </svg>
-                {t('linkLinkedIn')}
+                LinkedIn
               </a>
             </li>
             <li>
@@ -154,8 +152,8 @@ export default function Footer() {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           {[
-            { label: t('privacy'), href: '/privacy' },
-            { label: t('terms'),   href: '/terms'   },
+            { label: 'Privacy Policy', href: '/privacy' },
+            { label: 'Terms',          href: '/terms'   },
           ].map(({ label, href }) => (
             <Link key={href} href={href} className="footer-legal-link">
               {label}
@@ -171,7 +169,7 @@ export default function Footer() {
             letterSpacing: '0.04em',
           }}
         >
-          {t('rights', { year })}
+          {`© ${year} Obsidia. All rights reserved.`}
         </p>
       </div>
 

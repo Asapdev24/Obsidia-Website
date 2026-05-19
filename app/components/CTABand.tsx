@@ -3,18 +3,16 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import MagneticButton from './MagneticButton';
 
 export default function CTABand() {
-  const t = useTranslations('cta');
   const [btnHov, setBtnHov] = useState(false);
 
   const STEPS = [
-    { n: '01', label: t('step01label'), desc: t('step01desc') },
-    { n: '02', label: t('step02label'), desc: t('step02desc') },
-    { n: '03', label: t('step03label'), desc: t('step03desc') },
+    { n: '01', label: 'First Call', desc: "One conversation to find what's broken, what it's costing you, and what gets fixed first." },
+    { n: '02', label: 'Scoping',    desc: 'We map your operation and come back with a fixed-fee proposal built around reality.' },
+    { n: '03', label: 'Build',      desc: "Clean engineering, full documentation, and complete ownership when we're done." },
   ];
 
   return (
@@ -64,7 +62,7 @@ export default function CTABand() {
               marginBottom: '32px',
             }}
           >
-            {t('label')}
+            Start a Project
           </span>
           <h2
             className="font-heading"
@@ -77,9 +75,9 @@ export default function CTABand() {
               marginBottom: '28px',
             }}
           >
-            {t('headline1')}
+            One conversation.
             <br />
-            <em style={{ color: 'var(--accent)' }}>{t('headlineAccent')}</em>
+            <em style={{ color: 'var(--accent)' }}>We map the rest.</em>
           </h2>
           <p
             className="font-body"
@@ -90,7 +88,7 @@ export default function CTABand() {
               maxWidth: '380px',
             }}
           >
-            {t('subtext')}
+            The first conversation costs nothing. The last deliverable is yours to run.
           </p>
         </motion.div>
 
@@ -199,7 +197,7 @@ export default function CTABand() {
                     pointerEvents: 'none',
                   }}
                 />
-                {t('ctaButton')}{' '}
+                Start a Conversation{' '}
                 <span
                   style={{
                     display: 'inline-flex',
@@ -235,7 +233,7 @@ export default function CTABand() {
                     border: '1px solid rgba(255,255,255,0.1)',
                   }}
                 >
-                  {t('ctaSecondary')}
+                  Browse services first
                 </Link>
               </motion.div>
             </div>

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useTranslations } from 'next-intl';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -144,12 +143,10 @@ function StandardCard({ standard, index }: { standard: Standard; index: number }
 }
 
 export default function ValuePillars() {
-  const t = useTranslations('pillars');
-
   const STANDARDS: Standard[] = [
-    { n: '01', title: t('p01title'), body: t('p01body') },
-    { n: '02', title: t('p02title'), body: t('p02body') },
-    { n: '03', title: t('p03title'), body: t('p03body') },
+    { n: '01', title: 'We audit before we build.',  body: 'We map before we build. No assumptions, no proposals built on guesswork.' },
+    { n: '02', title: 'Weeks, not quarters.',       body: 'Urgency is a design constraint, not a risk. Delivery is planned before build begins.' },
+    { n: '03', title: 'Built to hand off.',         body: 'When the engagement ends, your team runs it. Full documentation and a walkthrough on every project, without exception.' },
   ];
 
   return (
@@ -218,9 +215,9 @@ export default function ValuePillars() {
             lineHeight: 0.92, color: '#0D1147',
             marginBottom: '18px',
           }}>
-            {t('headline1')}
+            Three standards.
             <br />
-            <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>{t('headlineAccent')}</em>
+            <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>No exceptions.</em>
           </h2>
 
           <p className="font-body" style={{

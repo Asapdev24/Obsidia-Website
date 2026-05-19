@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import AutomationClient from '../../../services/automation/AutomationClient';
+import AutomationClient from './AutomationClient';
 
 export const metadata: Metadata = { title: 'Workflow Automation' };
 

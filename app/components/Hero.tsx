@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
 import ServiceTriptych from './ServiceTriptych';
 import MagneticButton from './MagneticButton';
 
@@ -32,12 +31,11 @@ const FADE_UP = {
 const CYCLE_COUNT = 4;
 
 export default function Hero() {
-  const t = useTranslations('hero');
   const [wordIdx, setWordIdx] = useState(0);
 
-  const line1Words = t('headline1').split(' ');
-  const line2Words = t('headline2').split(' ');
-  const cycleWords = [t('cycle0'), t('cycle1'), t('cycle2'), t('cycle3')];
+  const line1Words = 'We build what'.split(' ');
+  const line2Words = 'your business needs.'.split(' ');
+  const cycleWords = ['Faster.', 'Smarter.', 'Cleaner.', 'Automated.'];
 
   useEffect(() => {
     const id = setInterval(() => setWordIdx(i => (i + 1) % CYCLE_COUNT), 2200);
@@ -174,7 +172,7 @@ export default function Hero() {
             marginBottom: '44px',
           }}
         >
-          {t('subheadline')}
+          Obsidia builds custom automations, websites, and applications for businesses that are serious about how they operate.
         </motion.p>
 
         {/* CTAs */}
@@ -187,12 +185,12 @@ export default function Hero() {
         >
           <MagneticButton strength={0.22}>
             <Link href="/contact" className="hero-btn-primary">
-              {t('ctaPrimary')} <ArrowRight size={13} />
+              Start a Project <ArrowRight size={13} />
             </Link>
           </MagneticButton>
 
           <Link href="/services" className="hero-btn-secondary">
-            {t('ctaSecondary')} <ArrowRight size={12} />
+            Our Services <ArrowRight size={12} />
           </Link>
         </motion.div>
 

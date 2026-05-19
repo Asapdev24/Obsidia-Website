@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import ApproachClient from '../../approach/ApproachClient';
+import ApproachClient from './ApproachClient';
 
 export const metadata: Metadata = {
   title: 'Approach',

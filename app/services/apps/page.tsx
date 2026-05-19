@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import AppsClient from '../../../services/apps/AppsClient';
+import AppsClient from './AppsClient';
 
 export const metadata: Metadata = { title: 'Application Development' };
 

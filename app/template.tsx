@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import ClickSpark from '../components/ClickSpark';
+import ClickSpark from './components/ClickSpark';
 
 export default function Template({ children }: { children: React.ReactNode }) {
   const EASE = [0.76, 0, 0.24, 1] as [number, number, number, number];

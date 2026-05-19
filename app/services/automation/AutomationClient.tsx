@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback, type ReactElement } from 'rea
 import { motion, AnimatePresence, useMotionValue, useTransform, useInView } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import WorkflowGraph from '../../components/WorkflowGraph';
 import TrustBar from '../../components/TrustBar';
 import CTABand from '../../components/CTABand';
@@ -29,10 +28,8 @@ const FADE_UP = {
 };
 
 function AutomationHero() {
-  const t = useTranslations('automation');
-  const tNav = useTranslations('nav');
   const [wordIdx, setWordIdx] = useState(0);
-  const cycleWords = [t('heroCycle0'), t('heroCycle1'), t('heroCycle2'), t('heroCycle3')];
+  const cycleWords = ['approval chains.', 'manual reports.', 'data entry.', 'repetitive ops.'];
   useEffect(() => {
     const id = setInterval(() => setWordIdx(i => (i + 1) % CYCLE_COUNT), 2400);
     return () => clearInterval(id);
@@ -51,7 +48,7 @@ function AutomationHero() {
 
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '80px 48px 80px 32px', maxWidth: '680px' }}>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }} style={{ marginBottom: '28px' }}>
-          <div className="section-label" style={{ color: 'var(--accent)' }}>{tNav('automationLabel')}</div>
+          <div className="section-label" style={{ color: 'var(--accent)' }}>Workflow Automation</div>
         </motion.div>
 
         <h1 className="font-heading" style={{ fontSize: 'clamp(44px, 5.5vw, 82px)', fontWeight: 500, lineHeight: 1.0, letterSpacing: '-0.03em', color: 'var(--dark-text)', marginBottom: '28px' }}>

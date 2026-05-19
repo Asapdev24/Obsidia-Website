@@ -2,12 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ArrowUpRight, ArrowRight, ChevronDown } from 'lucide-react';
 import BorderGlow from './ui/BorderGlow';
-import LanguageSwitcher from './LanguageSwitcher';
 
 
 /* ── Service item type ─────────────────────────────────────── */
@@ -841,19 +839,18 @@ export default function Navigation() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isDarkSection, setIsDarkSection] = useState(true);
   const pathname = usePathname();
-  const t = useTranslations('nav');
 
   const serviceItems: ServiceItem[] = [
-    { label: t('automationLabel'), href: '/services/automation', tag: t('automationTag'), desc: t('automationDesc') },
-    { label: t('websitesLabel'),   href: '/services/websites',   tag: t('websitesTag'),   desc: t('websitesDesc')   },
-    { label: t('appsLabel'),       href: '/services/apps',       tag: t('appsTag'),       desc: t('appsDesc')       },
+    { label: 'Workflow Automation',    href: '/services/automation', tag: 'Automation', desc: 'Eliminate manual tasks. Build workflows that run themselves.' },
+    { label: 'Website Development',    href: '/services/websites',   tag: 'Web',        desc: 'Sites that convert visitors, load fast, work on every device.' },
+    { label: 'Application Development',href: '/services/apps',       tag: 'Apps',       desc: 'Custom tools built for exactly how your team operates.' },
   ];
 
   const NAV_LINKS = [
-    { label: t('home'),     href: '/'         },
-    { label: t('services'), href: '/services' },
-    { label: t('approach'), href: '/approach' },
-    { label: t('contact'),  href: '/contact'  },
+    { label: 'Home',     href: '/'         },
+    { label: 'Services', href: '/services' },
+    { label: 'Approach', href: '/approach' },
+    { label: 'Contact',  href: '/contact'  },
   ];
 
   const detectNavTheme = useCallback(() => {
@@ -983,7 +980,7 @@ export default function Navigation() {
                     textColor={linkColor}
                     label={label}
                     items={serviceItems}
-                    viewAll={t('viewAllServices')}
+                    viewAll="View all services"
                   />
                 );
               }
@@ -992,11 +989,8 @@ export default function Navigation() {
             })}
           </nav>
 
-          {/* ── Right side: lang switcher + CTA + mobile toggle ── */}
+          {/* ── Right side: CTA + mobile toggle ── */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-            <div className="nav-desktop" style={{ flexShrink: 0 }}>
-              <LanguageSwitcher />
-            </div>
             <div className="nav-desktop" style={{ flexShrink: 0 }}>
               <BorderGlow
                 backgroundColor="#3D52E6"
@@ -1024,13 +1018,13 @@ export default function Navigation() {
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.gap = '10px'; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.gap = '7px'; }}
                 >
-                  {t('startProject')} <ArrowUpRight size={11} />
+                  Start a Project <ArrowUpRight size={11} />
                 </Link>
               </BorderGlow>
             </div>
 
             <button
-              aria-label={menuOpen ? t('closeNav') : t('openNav')}
+              aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
               onClick={() => setMenuOpen((v) => !v)}
               className="nav-mobile-toggle"
               style={{
@@ -1051,10 +1045,10 @@ export default function Navigation() {
         pathname={pathname}
         links={NAV_LINKS}
         serviceItems={serviceItems}
-        allServicesLabel={t('viewAllServices')}
-        startProjectLabel={t('startProject')}
-        companyLabel={t('company')}
-        youAreHereLabel={t('youAreHere')}
+        allServicesLabel="View all services"
+        startProjectLabel="Start a Project"
+        companyLabel="An Obsidia Company"
+        youAreHereLabel="You are here"
       />
 
       {/* ── Responsive rules ── */}

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ArrowLeft, Check, Mail, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import FAQAccordion from '../../components/FAQAccordion';
+import FAQAccordion from '../components/FAQAccordion';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 const EMAIL = 'sales@obsidia.space';

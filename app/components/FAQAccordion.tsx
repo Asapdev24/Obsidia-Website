@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 
 interface ItemProps {
@@ -136,12 +135,18 @@ export default function FAQAccordion({
   heading,
   label,
 }: FAQAccordionProps) {
-  const t = useTranslations('faq');
-  const resolvedHeading = heading ?? t('defaultHeading');
-  const resolvedLabel = label ?? t('defaultLabel');
+  const resolvedHeading = heading ?? 'Common questions.';
+  const resolvedLabel = label ?? 'FAQ';
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
-  const FAQS = [0, 1, 2, 3, 4, 5].map(i => ({ q: t(`q${i}`), a: t(`a${i}`) }));
+  const FAQS = [
+    { q: 'What kinds of workflows can you automate?', a: 'Anything that has a clear trigger and a repeatable outcome. Invoice approvals, lead routing, report generation, data syncing between tools, onboarding sequences, internal notifications. If your team does the same thing more than twice a week, it is a candidate.' },
+    { q: 'How long does a typical project take?', a: 'Timeline depends on scope, but most automation builds are delivered in two to four weeks. Website projects run four to eight weeks. Custom applications vary more widely and are scoped individually after an audit.' },
+    { q: 'Do we need any technical knowledge on our end?', a: 'No. We handle all the technical work and document everything we build. You will know what the system does and how to manage it, without needing to know how it was built.' },
+    { q: 'Which tools do you work with?', a: 'We work with any tool that has an API or native integration support. Common platforms include HubSpot, Notion, Airtable, Slack, Google Workspace, Zapier, Make, and most CRMs or project management tools. If you use something specific, ask us.' },
+    { q: 'What happens if something breaks after launch?', a: 'The first 30 days of fixes and adjustments are included. After that, we offer ongoing support arrangements if you need them. We also document every system so your team can make minor changes independently.' },
+    { q: 'How is Obsidia different from hiring a developer or agency?', a: 'A developer builds to your brief. An agency adds layers of account management. We audit first, which means we often catch scope problems before they become budget problems. We also build with handoff in mind, so you are not dependent on us to keep the lights on.' },
+  ];
 
   return (
     <div>
